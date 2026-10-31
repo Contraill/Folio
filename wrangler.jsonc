@@ -1,0 +1,26 @@
+{
+  "name": "folio",
+  "compatibility_date": "2026-10-31",
+  // Static site only: no Worker script, every request is served from ./public.
+  // The custom domain oztozlu.dev is attached in the Cloudflare dashboard, so no routes here.
+  "assets": {
+    "directory": "./public"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    },
+    "traces": {
+      "enabled": false
+    },
+    "issues": {
+      "enabled": true
+    }
+  }
+}

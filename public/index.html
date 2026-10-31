@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>İzzet Can Öztozlu</title>
+  <meta name="description" content="İzzet Can Öztozlu’s corner of the internet is coming soon: a home for projects, experiments and half-finished ideas. Until then, the letters are loose.">
+  <meta name="author" content="İzzet Can Öztozlu">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#141a45">
+  <link rel="canonical" href="https://oztozlu.dev/">
+  <link rel="icon" href="data:,">
+  <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://oztozlu.dev/">
+  <meta property="og:site_name" content="Öztozlu">
+  <meta property="og:title" content="İzzet Can Öztozlu: coming soon">
+  <meta property="og:description" content="A home for projects, experiments and half-finished ideas is on its way.">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="tr_TR">
+  <meta name="twitter:card" content="summary">
+
+  <!-- Picks the language before first paint: saved choice, then browser preference, then English. -->
+  <script>
+    (() => {
+      const root = document.documentElement;
+      let lang;
+      try { lang = localStorage.getItem("lang"); } catch (e) {}
+      if (lang !== "tr" && lang !== "en") {
+        const prefs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"];
+        lang = prefs.map((l) => l.toLowerCase().slice(0, 2)).find((l) => l === "tr" || l === "en") || "en";
+      }
+      root.lang = lang;
+      root.classList.add("js");
+      if (lang !== "en") root.classList.add("i18n-pending");
+    })();
+  </script>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="mark" href="/" aria-label="Öztozlu, home" data-i18n-label="home">Öztozlu</a>
+    <div class="lang" role="group" aria-label="Language" data-i18n-label="langGroup">
+      <button type="button" data-lang="en" lang="en" title="English" aria-pressed="true">EN</button>
+      <button type="button" data-lang="tr" lang="tr" title="Türkçe" aria-pressed="false">TR</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="sky" aria-hidden="true"></div>
+      <p class="hello" data-i18n="hello">Hi, I’m İzzet Can Öztozlu.</p>
+      <h1 class="headline">
+        <span class="sr" data-i18n="headline">Coming soon.</span>
+        <span class="letters" aria-hidden="true">Coming soon.</span>
+      </h1>
+      <p class="sign" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="ground">
+      <p class="hint">
+        <svg class="hint-arrow" viewBox="0 0 28 48" aria-hidden="true"><path d="M14 45c-6-8 6-14 0-22S10 9 14 4M14 4 7 12M14 4l7 8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="hintFine" class="hint-fine">Psst, these letters aren’t glued down. Grab one and throw it, or type one.</span>
+        <span data-i18n="hintTouch" class="hint-touch">Psst, these letters aren’t glued down. Drag one and let go.</span>
+      </p>
+
+      <div class="about">
+        <p class="intro" data-i18n="intro">I’m putting together a place for my projects, experiments and the half-finished ideas that deserve better. It isn’t ready yet, so for now you get the scaffolding and a few loose letters. Want to say hi before it opens?</p>
+        <ul class="contact">
+          <li>
+            <a href="mailto:izzet@oztozlu.dev">
+              <span class="k" data-i18n="emailLabel">Say hello</span>
+              <span class="v">izzet@oztozlu.dev</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/Contraill" rel="me">
+              <span class="k" data-i18n="githubLabel">Peek at the code</span>
+              <span class="v">github.com/Contraill</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>© 2026 İzzet Can Öztozlu</p>
+    <p data-i18n="made">Handmade with HTML, CSS, plain JavaScript and a lot of fiddling.</p>
+  </footer>
+</body>
+</html>
