@@ -4,7 +4,7 @@ Personal website of İzzet Can Öztozlu, for [oztozlu.dev](https://oztozlu.dev).
 
 This branch holds the production application: a highly interactive portfolio on Astro and Cloudflare Workers, with persistent admin-managed content on the way. The live site still serves the coming-soon page from `main`.
 
-**Status:** the foundation and shared design system are in place. Most pages are still stubs. See the [roadmap](docs/roadmap.md).
+**Status:** all public pages are migrated in English and Turkish, from seed content. The content store and admin panel come next. See the [roadmap](docs/roadmap.md).
 
 ## Stack
 

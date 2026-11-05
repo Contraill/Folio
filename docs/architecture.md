@@ -53,7 +53,10 @@ How it fits together:
 - `Base.astro` persists the top bar island and `#overlays`, the container Radix portals render into. Without that container, the body swap would remove portal content that React still owns.
 - `src/lib/shell.ts` runs once and listens to the router's lifecycle: it computes the direction from menu order, carries the skin over to the incoming document and reinstalls the reveal and tilt layer.
 - CSS in `motion.css` drives the animations through the `page`, `bar` and `media` transition names, as in the prototype.
+- Project filters change the URL without a page transition. `ProjectsBrowser` handles their history entries ahead of the router, which would otherwise reload the page, and keeps the router's state on them so returning from another page works.
 - Without JavaScript the site is a normal multi-page site.
+
+Nothing on the page can be clicked during a transition, about 0.9 seconds, because the elements being animated are not hit-testable. The prototype behaves the same way.
 
 ## Content Security Policy **(built)**
 
@@ -71,7 +74,7 @@ Astro's documentation lists `ClientRouter` as unsupported with `security.csp`. I
 | `styles/ui.css` | Overlay primitives (dialogs, sheets, popover, palette) |
 | `styles/adaptations.css` | **Every intentional deviation from the prototype, in one place** |
 
-Tailwind and the prototype's component scaffold are gone: Tailwind only served six overlay wrappers, which `ui.css` and direct Radix usage replace. Keeping the original stylesheets unchanged means any visual difference is explained by `adaptations.css`. They will be split per page and pruned once all pages have moved over.
+Tailwind and the prototype's component scaffold are gone: Tailwind only served six overlay wrappers, which `ui.css` and direct Radix usage replace. Keeping the original stylesheets unchanged means any visual difference is explained by `adaptations.css`. All pages share one stylesheet, 18 KB compressed: splitting it would save little and its rules depend on their order.
 
 Skins are applied before first paint by a small inline script (`lib/prepaint.ts`), allowed by its hash in the CSP.
 

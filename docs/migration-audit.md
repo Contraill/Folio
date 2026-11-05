@@ -8,18 +8,18 @@ The prototype used hash routes; production uses real paths.
 
 | Prototype | Production | Interactive islands | Status |
 | --- | --- | --- | --- |
-| `#home` | `/` | Hero stages (orrery, theme demo, Mochi), Selected work tilt and parallax, Mochi device | Stub |
-| `#projects`, `#projects-<area>` | `/projects`, `/projects?area=<area>` | Gallery and index, filters with FLIP, hover peek | Stub |
-| `#project-<id>` | `/projects/<id>` | Gallery, lightbox, master-detail, shared media morph | Stub |
-| `#lab` | `/lab` | Contour field | Stub |
-| `#play` | `/play` | Toy box physics | Stub |
-| `#about` | `/about` | Mochi device | Stub |
-| `#cv` | `/cv` | Language switch, copy, print | **Migrated** |
-| `#uses` | `/uses` (unlisted) | None | Stub |
-| `#now` | `/now` (unlisted) | None | Stub |
-| `#secret` | `/secret` (unlisted) | Draggable letters, unlocks star in Play | Stub |
+| `#home` | `/` | Hero stages, Mochi; tilt and parallax from the motion layer | Migrated |
+| `#projects`, `#projects-<area>` | `/projects`, `/projects?area=<area>` | Gallery and index, filters with FLIP, hover peek | Migrated |
+| `#project-<id>` | `/projects/<id>` | Gallery, lightbox, master-detail, shared media morph | Migrated |
+| `#lab` | `/lab` | Contour field | Migrated |
+| `#play` | `/play` | Toy box physics | Migrated |
+| `#about` | `/about` | Mochi | Migrated |
+| `#cv` | `/cv` | Language switch, copy, print | Migrated |
+| `#uses` | `/uses` (unlisted) | None | Migrated |
+| `#now` | `/now` (unlisted) | None | Migrated |
+| `#secret` | `/secret` (unlisted) | Draggable letters, unlocks a star in Play | Migrated |
 | `#admin` | Removed; replaced by `admin.oztozlu.dev` in M4 | | Gone |
-| anything else | 404 | Mochi looking dizzy (M2) | Partial |
+| anything else | 404 | Mochi looking dizzy | Migrated |
 
 ## Shared system
 
@@ -33,8 +33,8 @@ The prototype used hash routes; production uses real paths.
 | Contact sheet, mobile menu, skin menu | Migrated |
 | Reveal, parallax, tilt and magnet layer | Migrated |
 | Page transitions: directional, sliding indicator | Migrated |
-| Shared media morph | M2 (needs the case-study page) |
-| First-load choreography | Topbar migrated; hero part in M2 |
+| Shared media morph | Migrated |
+| First-load choreography | Migrated |
 
 ## Differences from the prototype
 
@@ -42,20 +42,28 @@ Visual ones are listed in `src/styles/adaptations.css`. Behavioural ones:
 
 | Prototype | Production | Why |
 | --- | --- | --- |
-| Search listed unlisted pages and `/admin` | Public entries only; `/secret` still appears for its exact word | Unlisted pages must stay out of search |
+| Search listed unlisted pages and `/admin`, and `/secret` for its exact word | Public entries only | Unlisted pages must stay out of search |
 | ⌘K shown on every platform | Label follows the platform, hidden on touch | Device-dependent text |
 | Focus lost when a sheet closed | Returns to the opener, or to the new page | Keyboard accessibility |
 | Print showed a toast about the preview sandbox | Just prints | Text only made sense in the prototype |
 | Scroll always reset, even going back | Back and forward restore position | Router default, closer to expected behaviour |
 | Nothing rendered without JavaScript | Complete server-rendered pages | Production requirement |
-| Language picked only on the CV | Site-wide, with a switch in the footer legal row and the CV's own switch kept | Requirement; placement open for review |
+| Language picked only on the CV | Site-wide, with a switch in the footer and mobile menu; the CV keeps its own | Requirement |
+| "Pinned on GitHub", hard-coded | "Featured", an explicit choice | The old label claimed something nothing checked |
+| Hero: huepr, Helios, Nothing (a static image) | Helios, huepr, Mochi: every slide is live | "Things that react"; Nothing moves to Selected work |
+| Every project public | Explicit `LISTED` set, all 14 for now | Publishing must never be automatic |
+| "Each one has a write-up" on Selected work | Sentence removed | Not true of the projects shown |
+| Device-specific copy ("point at", "drag", "tap", "Keys and touch") | Neutral wording, same on every device | Requirement |
+| Filter history not part of the page transition | Same, and returning from a project restores the filter | Behaviour kept across real URLs |
+| Touching the toy box on a phone only worked sideways | Grabbing a piece works in any direction; empty space still scrolls | Touch usability |
+| Orrery labels only on hover, lost when a finger lifted | Walks through the planets by itself, keyboard support, label stays after a tap | Accessibility and touch |
 
-## Known prototype issues not yet addressed
+## Known remaining issues
 
-- In Terminal and Blueprint, notched panels keep a 24px radius, while those skins are described as square-cornered. Kept as approved; to confirm.
-- On mobile the CV toolbar sits tight against the panel and the print button shows a heavy ring. Belongs to the M2 mobile pass.
 - GitHub star counts in the seed are from a snapshot (Nothing KDE Theme shows 11, the live value is 14). Resolved by the sync in M5.
+- Placeholder notes stay visible until the content exists; see the launch checklist in [roadmap.md](roadmap.md).
+- The footer wordmark and the large case-study index are decorative, low-contrast by design and hidden from assistive technology. Automated contrast checks flag them.
 
 ## Removed from the prototype
 
-Tailwind and its plugins, the unused interface scaffold, most runtime dependencies (43 packages down to 10), the single-file build and its tooling, scaffold assets. The unused lander and snake engines go in M2.
+Tailwind and its plugins, the unused interface scaffold, most runtime dependencies (43 packages down to 10), the single-file build and its tooling, scaffold assets. The unused lander and snake engines.

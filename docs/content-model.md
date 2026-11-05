@@ -1,6 +1,6 @@
 # Content model
 
-Proposal for the persistent content store, implemented from milestone 3. Nothing here exists yet; the site currently reads seed files in `src/content/`.
+Proposal for the persistent content store, implemented from milestone 3. Nothing here exists yet; the site currently reads seed files in `src/content/`, in English and Turkish.
 
 ## Guarantees
 
@@ -72,7 +72,7 @@ CREATE TABLE project (
   entry_id      TEXT NOT NULL UNIQUE REFERENCES entry(id),  -- localized write-up and blocks
   repo_id       INTEGER REFERENCES github_repo(repo_id),    -- null for projects without a repository
   area          TEXT,
-  hidden        INTEGER NOT NULL DEFAULT 0,   -- leaves GitHub untouched
+  listed        INTEGER NOT NULL DEFAULT 0,   -- nothing is public until chosen; leaves GitHub untouched
   featured_rank INTEGER,                      -- null means not featured
   sort_rank     INTEGER NOT NULL DEFAULT 0,
   live_url      TEXT,
@@ -150,13 +150,15 @@ Each language publishes independently. On public reads, Turkish falls back to En
 Public reads use `published_id` only, and every query filters on visibility:
 
 ```text
-project is listed when: hidden = 0
+project is listed when: listed = 1
                     and entry.visibility = 'public'
                     and entry has a published revision
                     and (repo_id is null or github_repo.gone_at is null)
 ```
 
 The filter lives in one function, and public routes have no other way to reach project data.
+
+A repository found by the sync becomes a candidate and stays unpublished until it is listed, so publishing is never automatic. Until the store exists, `LISTED`, `FEATURED` and `SELECTED` in `src/content/projects.ts` hold these choices, and every public route goes through the same filter.
 
 Merged fields resolve as `override ?? github`. Clearing an override makes GitHub's value live again.
 
@@ -202,7 +204,7 @@ Restore is tested against preview. Private content is included in exports, so ex
 | --- | --- |
 | `PROJECTS` | `project` plus `github_repo`, joined by repository name |
 | `CASES` | `project` entries with blocks |
-| `PINS`, hero picks | `featured_rank` and the `home` entry |
+| `FEATURED`, `SELECTED` | `featured_rank` and the `home` entry |
 | `PATH`, patterns | `about` entry |
 | CV `T` and `P` | `cv` entry (EN and TR) |
 | `USES`, Now text | `page` entries, `unlisted` |

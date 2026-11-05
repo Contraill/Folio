@@ -6,24 +6,21 @@ Each milestone is small enough to review on its own and ends with tests, a compa
 
 Astro on the Workers runtime, TypeScript, React islands. Design tokens, skins, fonts, motion system and notched panels. Shell: top bar, footer, search, skin menu, contact sheet, mobile menu. Client router with persistent shell and directional transitions. Language negotiation with EN and TR interface strings. CSP and security headers. CV page as the first real consumer. Unit and end-to-end tests.
 
-Remaining pages are stubs.
 
-## M2 — Public pages
+## M2 — Public pages ✅
 
-Migrate Home (hero stages, selected work, statement, Lab and Play teasers), Projects (gallery, index, filters with FLIP), case studies (shared media morph, lightbox, prev/next direction), Lab, Play, About, Uses, Now, Secret and the 404 with Mochi. Content still comes from seed files.
+All public pages migrated, in English and Turkish, from seed content: Home with its live stages, Projects, case studies, Lab, Play, About, CV, Uses, Now, Secret and the 404. Lab and Play stay Work in Progress.
 
-Design issues resolved here:
+Resolved here:
 
-- [ ] Mobile compositions: About first, then the CV toolbar and the others
-- [ ] Hero interactive presentation
-- [ ] Lab and Play mobile controls, keeping their Work in Progress concepts
-- [ ] Empty or unbalanced animation states
-- [ ] Device-dependent copy ("drag", "tap", "point at")
-- [ ] Keyboard and reduced-motion paths for each interactive piece
+- Mobile compositions, About first, plus the CV toolbar, Lab and Play controls
+- Hero: every stage is live, the orrery explains itself and works from the keyboard, the wallpaper picker is no longer cut off on phones, using a stage holds the slideshow
+- Skin corners in Terminal and Blueprint, and the clipped Back to Top pill and teaser arrows
+- Copy no longer describes a device or an input method (enforced by a test)
+- Listing is explicit: a project is public only if chosen
+- `/secret` stays an easter egg, out of search, sitemap and navigation
 
-Also: code-split each engine, set bundle budgets, delete the unused lander and snake engines, write canvas alternatives, and split the stylesheets per page.
-
-**Exit:** every route matches the prototype at desktop and mobile in all skins, apart from listed fixes.
+Decided against splitting the stylesheet per page: it is 18 KB compressed for the whole site, and its rules depend on their order.
 
 ## M3 — Content store
 
@@ -53,7 +50,7 @@ Admin-created pages with the three visibility levels. Private page route and Acc
 
 ## M8 — Turkish content and themes
 
-Full Turkish content, translation status in the admin, language switcher placement review. Theme preset editor with typed tokens and contrast checks.
+Translation status in the admin, final review of Turkish copy. Theme preset editor with typed tokens and contrast checks.
 
 ## M9 — Hardening and cutover
 
@@ -79,7 +76,7 @@ Licence choice, audit of files and full Git history, contribution docs. The repo
 | Access bypassed through other hostnames | High | Production `workers.dev` route off, JWT verified in application code on every host | Partly in place |
 | A repository goes private and stays cached | Private metadata exposed | Treat absence as removal, purge pages and media | Design |
 | No repository has the discovery topic yet | Empty sync | Tag repositories or seed from the current list | Decision |
-| Notches appear only after hydration on a server-rendered page | Hero paint delay, slower LCP | Panels wait for their clip; measure on the hero in M2 and consider running the clip before hydration | Watch |
+| JavaScript on every page, about 125 KB compressed, mostly the framework and overlay library | Slower start on weak devices | Engines are split per page already; lazy-loading overlays is the next step if field data asks for it | Watch |
 | WebKit untested locally | Safari or iOS regressions | Real-device pass before launch | Planned M9 |
 | Prototype placeholders shown publicly | Unfinished content live | Launch checklist (see below) | Open |
 
