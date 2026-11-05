@@ -325,6 +325,15 @@ test.describe('shell details', () => {
     await context.close();
   });
 
+  test('the portrait note stays inside the frame', async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    await page.goto('/about');
+    const frame = (await page.locator('.portrait').boundingBox())!, note = (await page.locator('.portrait .draft-t').boundingBox())!;
+    expect(note.x + note.width).toBeLessThanOrEqual(frame.x + frame.width);
+    await context.close();
+  });
+
   test('language can be switched from the mobile menu', async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, locale: 'en-US' });
     const page = await context.newPage();

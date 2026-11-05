@@ -46,6 +46,9 @@
 .lang-links a:hover, .lang-links a[aria-current] { color: var(--ink); }
 .lang-links a[aria-current] { text-decoration: underline; text-underline-offset: 3px; }
 
+/* The portrait's size rule for its monogram was also inflating the pen icon in its note. */
+.portrait .draft svg { width: 13px; opacity: 1; }
+
 /* Placeholder notes stay quiet but readable. */
 .draft { opacity: 1; }
 .draft-k { opacity: 1; }
