@@ -1,4 +1,6 @@
 /* Runs in <head> before first paint: applies the saved skin and marks what CSS needs to know.
+   It also goes first on history traversal: a page that handles its own entries, like the project
+   filters, claims them here before the client router would reload the page.
    Kept as a string so the layout can inline it and allow exactly this text in the CSP. */
 export const PREPAINT = `(() => {
   const html = document.documentElement;
@@ -13,4 +15,5 @@ export const PREPAINT = `(() => {
   html.classList.add('js');
   if (/Mac|iPhone|iPad/.test(navigator.platform)) html.classList.add('mac');
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) html.classList.add('intro');
+  addEventListener('popstate', (e) => { if (!dispatchEvent(new Event('page-history', { cancelable: true }))) e.stopImmediatePropagation(); });
 })();`;

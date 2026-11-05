@@ -21,14 +21,14 @@ export default function ProjectsBrowser({ projects, areas, slugs, initialArea, c
   const areaFromUrl = () => { const i = slugs.indexOf(new URLSearchParams(location.search).get('area') ?? ''); return i < 0 ? null : i; };
   useEffect(() => {
     try { if (localStorage.getItem(VIEW_KEY) === '"index"') setViewState('index'); } catch { /* storage unavailable */ }
-    // Runs ahead of the client router, which would reload the page for what is only a filter change.
-    const onPop = (e: PopStateEvent) => {
+    // Claims the history step before the client router, which would reload the page for a filter change.
+    const onHistory = (e: Event) => {
       if (location.pathname !== '/projects') return;
-      e.stopImmediatePropagation();
+      e.preventDefault();
       setArea(areaFromUrl());
     };
-    addEventListener('popstate', onPop, true);
-    return () => removeEventListener('popstate', onPop, true);
+    addEventListener('page-history', onHistory);
+    return () => removeEventListener('page-history', onHistory);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const setView = (next: View) => { setViewState(next); try { localStorage.setItem(VIEW_KEY, JSON.stringify(next)); } catch { /* storage unavailable */ } };
