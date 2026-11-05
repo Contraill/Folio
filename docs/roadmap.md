@@ -28,6 +28,8 @@ Decided against splitting the stylesheet per page: it is 18 KB compressed for th
 
 **Exit:** the site renders identically from D1, and a test proves a deploy leaves content untouched.
 
+Not in M3: tables, runtimes or integrations for experiences (see M6). The content model only has to leave room for content types other than projects and pages.
+
 ## M4 — Admin foundation
 
 **Needs approval for Access configuration.** `admin.oztozlu.dev` host gate, JWT verification with tests for missing, expired, wrong-audience and wrong-email tokens. Editors for settings, navigation, footer, home and about. Drafts, preview, publish, history, rollback, export.
@@ -43,6 +45,8 @@ Sync job, repository cache, discovery topic, manual additions, overrides, hide/s
 ## M6 — Project experiences and media
 
 R2 uploads, media library, block editor, gallery/video/diagram/embed blocks, experience registry with per-engine configuration, uploadable CV PDFs.
+
+Experiences are a content type of their own: games, physics simulations, AI experiments and teaching visualisations, each built in its own repository. An experience does not have to be published as a project; it can live on Lab or Play, inside a case study, or on its own. Lab and Play stay Work in Progress until then.
 
 ## M7 — Pages and privacy
 
