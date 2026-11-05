@@ -33,7 +33,7 @@ export const pages = {
     projects: {
       title: 'Projects', eyebrow: 'Projects', lines: ['Work, mostly', 'in public.'],
       note: 'Every repo here is public on GitHub. The write-ups on top are added by hand.',
-      totals: 'Totals', repos: 'repos', languages: 'languages', stars: 'stars',
+      totals: 'Totals', repos: 'projects', languages: 'languages', stars: 'stars',
       all: 'All', filter: 'Filter by area', view: 'View', gallery: 'Gallery', galleryView: 'Gallery view', index: 'Index', indexView: 'Index view',
       count: '{n} projects', countOne: '1 project', countIn: ' in {area}', empty: 'No public projects in this area yet.',
       no: '№', project: 'Project', area: 'Area', language: 'Language', lastPush: 'Last push', starsHead: 'Stars',
@@ -70,13 +70,13 @@ export const pages = {
       patterns: [['Numbers should be sourced', 'Helios validates its data and labels anything approximate on screen, including the fallbacks.', 'helios'], ['Local first', 'CampusEats runs fully on a local network, Orbis is self-hosted, and Nodesk maps a network without port scanning.', 'campuseats'], ['Small hardware, real personality', 'Mochi fits 53 animated faces into about 820 KB and reacts to touch, petting and shaking.', 'mochi']],
       path: 'Path', pathH: 'From the first website to the latest push', pathNote: 'Dates come from GitHub. The repos are there if you want to check the work.',
       timeline: [['Fall 2023', 'First website', 'Programming Adventure: a hand-written HTML, CSS and JavaScript blog, built as a term project.', 'adventure'], ['Summer 2025', 'Internship at Up&Running', 'Breast Cancer Tracker: Vue + Firebase, later hardened with Firestore rules and tests.', 'bct'], ['2025 – 26', 'Coursework, done properly', 'Java Swing desktop apps, a bilingual PHP portal for EMU and a print-ready CSS schedule.', 'emu'], ['2026', 'Theming the desktop', 'huepr, zen-polarity and Nothing KDE Theme, the most-starred repo on the account.', 'nothing'], ['2026', 'Real data, real devices', 'Helios, CampusEats, Orbis, Mochi and Nodesk.', 'helios']],
-      formal: 'Formal version', formalLead: 'Need it on one page?', formalTail: 'The CV prints in English or Turkish.', readCv: 'Read the CV', uses: 'What I Use', now: 'What I’m On Now', next: 'Next steps', totals: 'Totals', repos: 'public repos', languages: 'languages', stars: 'stars',
+      formal: 'Formal version', formalLead: 'Need it on one page?', formalTail: 'The CV prints in English or Turkish.', readCv: 'Read the CV', uses: 'What I Use', now: 'What I’m On Now', next: 'Next steps', totals: 'Totals', repos: 'projects', languages: 'languages', stars: 'stars',
     },
     uses: {
       title: 'Uses', eyebrow: '/uses · not in the menu', h1: ['What', 'I use'], note: 'The setup behind the projects. Ask me about any of it.',
       groups: [['Desktop', [['Arch Linux', 'Daily driver'], ['Hyprland', 'Compositor'], ['KDE Plasma 6', 'Where the Nothing theme lives'], ['huepr', 'Browser theme follows the wallpaper']]], ['Code', [['VS Code + Git', 'Editor and history'], ['Docker', 'Anything self-hosted'], ['GitHub Actions', 'Tests and releases'], ['Playwright · Vitest · pytest', 'Tests that run in CI']]], ['Hardware', [['ESP32-C3 SuperMini', 'Small devices like Mochi'], ['Raspberry Pi', 'Home services and Nodesk'], ['3D printer', 'Enclosures'], ['[keyboard, monitor and other daily gear]', '']]]] as [string, [string, string][]][],
     },
-    now: { title: 'Now', eyebrow: '/now · Updated {d}', h1: 'Now', focus: 'This month’s focus goes here.', draft: 'one or two lines about what you are working on this month', pushes: 'Latest pushes, from GitHub' },
+    now: { title: 'Now', updated: '2026-11-03', eyebrow: '/now · Updated {d}', h1: 'Now', focus: 'This month’s focus goes here.', draft: 'one or two lines about what you are working on this month', pushes: 'Latest pushes, from GitHub' },
     secret: { title: 'Secret', h1: 'You found it', note: 'The letters from the old coming-soon page live here now. Throw one around. A small star now waits in the Play toy box.', letter: 'Letter {l}', open: 'Open Play' },
   },
   tr: {
@@ -112,7 +112,7 @@ export const pages = {
     projects: {
       title: 'Projeler', eyebrow: 'Projeler', lines: ['İşlerin çoğu', 'herkese açık.'],
       note: 'Buradaki her repo GitHub’da herkese açık. Üstlerindeki yazıları elle ekliyorum.',
-      totals: 'Toplamlar', repos: 'repo', languages: 'dil', stars: 'yıldız',
+      totals: 'Toplamlar', repos: 'proje', languages: 'dil', stars: 'yıldız',
       all: 'Tümü', filter: 'Alana göre filtrele', view: 'Görünüm', gallery: 'Galeri', galleryView: 'Galeri görünümü', index: 'Liste', indexView: 'Liste görünümü',
       count: '{n} proje', countOne: '1 proje', countIn: ', {area}', empty: 'Bu alanda henüz public proje yok.',
       no: '№', project: 'Proje', area: 'Alan', language: 'Dil', lastPush: 'Son push', starsHead: 'Yıldız',
@@ -149,13 +149,13 @@ export const pages = {
       patterns: [['Sayıların kaynağı olmalı', 'Helios verilerini doğruluyor; yedek veriler dahil, yaklaşık olan her şeyi ekranda belirtiyor.', 'helios'], ['Önce yerel', 'CampusEats tamamen yerel ağda çalışıyor, Orbis self-hosted, Nodesk ise port taraması yapmadan ağı haritalıyor.', 'campuseats'], ['Küçük donanım, gerçek kişilik', 'Mochi 53 animasyonlu yüzü yaklaşık 820 KB’a sığdırıyor; dokunmaya, sevmeye ve sallanmaya tepki veriyor.', 'mochi']],
       path: 'Yol', pathH: 'İlk web sitesinden son push’a', pathNote: 'Tarihler GitHub’dan geliyor. İşleri kontrol etmek istersen repolar orada.',
       timeline: [['Güz 2023', 'İlk web sitesi', 'Programming Adventure: dönem projesi olarak elle yazılmış HTML, CSS ve JavaScript blogu.', 'adventure'], ['Yaz 2025', 'Up&Running’de staj', 'Breast Cancer Tracker: Vue + Firebase, sonradan Firestore kuralları ve testlerle sağlamlaştırıldı.', 'bct'], ['2025 – 26', 'Dersler, hakkıyla', 'Java Swing masaüstü uygulamaları, EMU için iki dilli bir PHP portalı ve yazdırmaya hazır bir CSS ders programı.', 'emu'], ['2026', 'Masaüstünü temalamak', 'huepr, zen-polarity ve hesaptaki en çok yıldızlı repo olan Nothing KDE Theme.', 'nothing'], ['2026', 'Gerçek veri, gerçek cihazlar', 'Helios, CampusEats, Orbis, Mochi ve Nodesk.', 'helios']],
-      formal: 'Resmî sürüm', formalLead: 'Tek sayfada mı lazım?', formalTail: 'CV İngilizce ya da Türkçe yazdırılabiliyor.', readCv: 'CV’yi Oku', uses: 'Kullandıklarım', now: 'Şu An Ne Yapıyorum', next: 'Sonraki adımlar', totals: 'Toplamlar', repos: 'public repo', languages: 'dil', stars: 'yıldız',
+      formal: 'Resmî sürüm', formalLead: 'Tek sayfada mı lazım?', formalTail: 'CV İngilizce ya da Türkçe yazdırılabiliyor.', readCv: 'CV’yi Oku', uses: 'Kullandıklarım', now: 'Şu An Ne Yapıyorum', next: 'Sonraki adımlar', totals: 'Toplamlar', repos: 'proje', languages: 'dil', stars: 'yıldız',
     },
     uses: {
       title: 'Kullandıklarım', eyebrow: '/uses · menüde yok', h1: ['Neler', 'kullanıyorum'], note: 'Projelerin arkasındaki düzen. Herhangi biri hakkında sorabilirsin.',
       groups: [['Masaüstü', [['Arch Linux', 'Günlük sistem'], ['Hyprland', 'Compositor'], ['KDE Plasma 6', 'Nothing temasının yaşadığı yer'], ['huepr', 'Tarayıcı teması duvar kâğıdını takip ediyor']]], ['Kod', [['VS Code + Git', 'Editör ve geçmiş'], ['Docker', 'Self-hosted her şey'], ['GitHub Actions', 'Testler ve sürümler'], ['Playwright · Vitest · pytest', 'CI’da çalışan testler']]], ['Donanım', [['ESP32-C3 SuperMini', 'Mochi gibi küçük cihazlar'], ['Raspberry Pi', 'Ev servisleri ve Nodesk'], ['3D yazıcı', 'Kasalar'], ['[klavye, monitör ve günlük diğer ekipmanlar]', '']]]] as [string, [string, string][]][],
     },
-    now: { title: 'Şimdi', eyebrow: '/now · Güncelleme: {d}', h1: 'Şimdi', focus: 'Bu ayın odağı buraya gelecek.', draft: 'bu ay üzerinde çalıştığın şeyi bir iki satırla yaz', pushes: 'Son push’lar, GitHub’dan' },
+    now: { title: 'Şimdi', updated: '2026-11-03', eyebrow: '/now · Güncelleme: {d}', h1: 'Şimdi', focus: 'Bu ayın odağı buraya gelecek.', draft: 'bu ay üzerinde çalıştığın şeyi bir iki satırla yaz', pushes: 'Son push’lar, GitHub’dan' },
     secret: { title: 'Sır', h1: 'Buldun', note: 'Eski coming-soon sayfasının harfleri artık burada yaşıyor. Birini savur. Play’deki oyuncak kutusunda da seni küçük bir yıldız bekliyor.', letter: 'Harf {l}', open: 'Play’i Aç' },
   },
 };

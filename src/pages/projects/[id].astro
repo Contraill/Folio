@@ -7,14 +7,14 @@ import { Arrow } from '@/components/kit';
 import MasterDetail from '@/components/MasterDetail';
 import { casesFor } from '@/content/cases';
 import { pages } from '@/content/pages';
-import { areasFor, GH, listedProjects, type Img } from '@/content/projects';
+import { areasFor, GH, publishedProjects, type Img } from '@/content/projects';
 import { messages } from '@/i18n/messages';
 import Base from '@/layouts/Base.astro';
 
 const locale = Astro.locals.locale;
 const content = pages[locale];
 const c = content.case;
-const projects = listedProjects(locale);
+const projects = publishedProjects(locale);
 const index = projects.findIndex((p) => p.id === Astro.params.id);
 if (index < 0) return new Response(null, { status: 404 });
 const p = projects[index];

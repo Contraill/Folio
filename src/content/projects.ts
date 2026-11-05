@@ -1,5 +1,5 @@
-/* Seed data until the content store exists. These are candidates: a project is public only once it is
-   in LISTED below. Public repositories only: never add private work here. */
+/* Seed data until the content store exists. Every project here is a candidate; only those in PUBLISHED
+   appear on the site. Public repositories only: never add private work here. */
 import type { Locale } from '../i18n/locale';
 
 export type Kind = 'img' | 'browser' | 'pixel';
@@ -33,8 +33,9 @@ export const PROJECTS: Project[] = [
 export const GH = 'https://github.com/Contraill';
 export const EMAIL = 'izzet@oztozlu.dev';
 
-/* Explicit choices, never derived from GitHub. The admin panel takes these over. */
-export const LISTED = ['huepr', 'helios', 'nothing', 'orbis', 'campuseats', 'bct', 'nodesk', 'mochi', 'zen', 'architect', 'grading', 'emu', 'schedule', 'adventure'];
+/* Explicit choices, never derived from GitHub, until the admin panel takes them over.
+   PUBLISHED: what the site shows, in this order. Add an id from PROJECTS above to publish it. */
+export const PUBLISHED = ['huepr', 'helios', 'nothing', 'orbis', 'campuseats', 'bct', 'mochi'];
 export const FEATURED = ['helios', 'huepr', 'mochi'];
 export const SELECTED = ['orbis', 'campuseats', 'bct', 'nothing'];
 
@@ -57,10 +58,10 @@ const TR: Record<string, { desc: string; since: string }> = {
 const AREAS: Record<Locale, string[]> = { en: DOMAINS, tr: ['Web', 'Masaüstü ve tema', 'Self-hosted', 'Donanım', 'Masaüstü uygulamaları'] };
 export const areasFor = (locale: Locale) => AREAS[locale];
 
-/** Keeps only the listed projects, in the listed order. Everything public goes through this. */
-export const pickListed = (all: Project[], ids: string[]) => ids.map((id) => all.find((p) => p.id === id)).filter((p): p is Project => !!p);
+/** Keeps only the published projects, in their order. Everything public goes through this. */
+export const pickPublished = (all: Project[], ids: string[]) => ids.map((id) => all.find((p) => p.id === id)).filter((p): p is Project => !!p);
 
 const localized = (p: Project, locale: Locale): Project => (locale === 'tr' && TR[p.id] ? { ...p, ...TR[p.id] } : p);
-export const listedProjects = (locale: Locale) => pickListed(PROJECTS, LISTED).map((p) => localized(p, locale));
-export const projectById = (id: string, locale: Locale) => listedProjects(locale).find((p) => p.id === id);
-export const projectsIn = (ids: string[], locale: Locale) => pickListed(listedProjects(locale), ids);
+export const publishedProjects = (locale: Locale) => pickPublished(PROJECTS, PUBLISHED).map((p) => localized(p, locale));
+export const projectById = (id: string, locale: Locale) => publishedProjects(locale).find((p) => p.id === id);
+export const projectsIn = (ids: string[], locale: Locale) => pickPublished(publishedProjects(locale), ids);

@@ -108,11 +108,15 @@ CREATE TABLE audit_log (
 | `home` | one | Hero text, hero source and picks, ordered configurable sections |
 | `about` | one | Intro, photo, skills, patterns, timeline, call to action |
 | `cv` | one | Structured CV, and the media id of an uploaded PDF per language |
-| `page` | many | Title, description, blocks |
+| `page` | many | Title, description, blocks, and for pages like `/now` a "last updated" date (below) |
 | `project` | many | Lede, stack, facts, blocks; any field may override GitHub's value |
 | `theme` | many | Name, token values |
 
 Project ordering and featuring are columns on `project`, deliberately outside the per-language body: the order is the same in both languages.
+
+### Dates that describe content
+
+Some pages show when their content was last reviewed, such as `/now`. That date is content, not a deploy or save timestamp: the body holds an optional `updated_on` the admin sets, and pages fall back to the revision's `published_at` when it is empty. Fixing a typo then doesn't make the page look freshly updated. Until the store exists, the date lives in `src/content/pages.ts`.
 
 ## Blocks
 
@@ -158,7 +162,7 @@ project is listed when: listed = 1
 
 The filter lives in one function, and public routes have no other way to reach project data.
 
-A repository found by the sync becomes a candidate and stays unpublished until it is listed, so publishing is never automatic. Until the store exists, `LISTED`, `FEATURED` and `SELECTED` in `src/content/projects.ts` hold these choices, and every public route goes through the same filter.
+A repository found by the sync becomes a candidate and stays unpublished until it is listed, so publishing is never automatic. Until the store exists, `PUBLISHED`, `FEATURED` and `SELECTED` in `src/content/projects.ts` hold these choices, and every public route goes through the same filter. The seed publishes the seven featured and selected projects; the other public repositories stay candidates.
 
 Merged fields resolve as `override ?? github`. Clearing an override makes GitHub's value live again.
 

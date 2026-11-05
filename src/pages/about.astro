@@ -3,13 +3,13 @@ import { ArrowRight } from 'lucide-react';
 import Draft from '@/components/Draft.astro';
 import Mochi from '@/components/mochi';
 import { pages } from '@/content/pages';
-import { listedProjects, projectById } from '@/content/projects';
+import { publishedProjects, projectById } from '@/content/projects';
 import Base from '@/layouts/Base.astro';
 
 const locale = Astro.locals.locale;
 const content = pages[locale];
 const c = content.about;
-const projects = listedProjects(locale);
+const projects = publishedProjects(locale);
 const languages = new Set(projects.map((p) => p.lang)).size;
 const stars = projects.reduce((sum, p) => sum + p.stars, 0);
 const nameOf = (id: string) => projectById(id, locale)?.name;

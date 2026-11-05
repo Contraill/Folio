@@ -2,13 +2,13 @@
 import { Lines } from '@/components/kit';
 import ProjectsBrowser from '@/components/ProjectsBrowser';
 import { pages } from '@/content/pages';
-import { areasFor, DOMAIN_SLUG, listedProjects } from '@/content/projects';
+import { areasFor, DOMAIN_SLUG, publishedProjects } from '@/content/projects';
 import Base from '@/layouts/Base.astro';
 
 const locale = Astro.locals.locale;
 const content = pages[locale];
 const c = content.projects;
-const projects = listedProjects(locale);
+const projects = publishedProjects(locale);
 const slug = DOMAIN_SLUG.indexOf(Astro.url.searchParams.get('area') ?? '');
 const stars = projects.reduce((sum, p) => sum + p.stars, 0);
 const languages = new Set(projects.map((p) => p.lang)).size;

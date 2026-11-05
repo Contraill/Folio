@@ -2,20 +2,20 @@
 import Cover from '@/components/Cover';
 import Draft from '@/components/Draft.astro';
 import { pages } from '@/content/pages';
-import { listedProjects } from '@/content/projects';
+import { publishedProjects } from '@/content/projects';
 import Base from '@/layouts/Base.astro';
 
 const locale = Astro.locals.locale;
 const content = pages[locale];
 const c = content.now;
 const day = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-const recent = [...listedProjects(locale)].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+const recent = [...publishedProjects(locale)].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
 ---
 <Base title={c.title} noindex>
   <section class="nowp" aria-labelledby="n-h">
     <div class="slab img" style="overflow: hidden">{recent[0] && <Cover p={recent[0]} variant="hero" eager c={content.stage} altSuffix={content.case.screenshot} />}</div>
     <div class="slab pad dark">
-      <div><p class="eyebrow">{c.eyebrow.replace('{d}', day.format(new Date('2026-11-03')))}</p><h1 id="n-h" class="display" style="font-size: clamp(44px, 5vw, 80px); margin-top: 16px">{c.h1}</h1></div>
+      <div><p class="eyebrow">{c.eyebrow.replace('{d}', day.format(new Date(c.updated)))}</p><h1 id="n-h" class="display" style="font-size: clamp(44px, 5vw, 80px); margin-top: 16px">{c.h1}</h1></div>
       <div><p style="font-size: clamp(22px, 2.2vw, 30px); line-height: 1.25; margin: 0 0 12px; opacity: .55">{c.focus}</p><Draft>{c.draft}</Draft></div>
       <div>
         <p class="eyebrow plain" style="margin-bottom: 6px">{c.pushes}</p>
