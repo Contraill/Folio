@@ -1,11 +1,17 @@
 {
-  "name": "folio",
+  // Not "folio": that is the production Worker serving the coming-soon page.
+  // Workers Builds fails when this name differs from the connected Worker, so a
+  // merge to main cannot replace production by accident. See docs/deployment.md.
+  "name": "folio-dev",
   "compatibility_date": "2026-10-31",
-  // Static site only: no Worker script, every request is served from ./public.
-  // The custom domain oztozlu.dev is attached in the Cloudflare dashboard, so no routes here.
+  "main": "@astrojs/cloudflare/entrypoints/server",
   "assets": {
-    "directory": "./public"
+    "directory": "./dist",
+    "binding": "ASSETS"
   },
+  // Only custom domains may reach the app, so Access can never be bypassed through these.
+  "workers_dev": false,
+  "preview_urls": false,
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
