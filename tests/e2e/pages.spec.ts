@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './access';
 
 const settled = (page: Page) => page.waitForFunction(() => !document.documentElement.classList.contains('intro'), undefined, { timeout: 5000 });
 async function watchForProblems(page: Page) {

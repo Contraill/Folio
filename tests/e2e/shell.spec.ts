@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './access';
 
 /** Fails the test on any page error, console error or CSP violation. */
 async function watchForProblems(page: Page) {

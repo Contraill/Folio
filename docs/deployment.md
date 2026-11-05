@@ -52,7 +52,7 @@ Not enabled, each needing a decision or affecting production:
 
 Preview URLs are **public by default**, and each Preview keeps up to 100 Unique Deployment URLs, so anything pushed to a branch stays reachable. Cloudflare adds `X-Robots-Tag: noindex` on `workers.dev` Preview hostnames. Never push secrets or private content to any branch.
 
-To restrict them: Workers & Pages → `folio` → Access → Protect this Worker behind Access → **Previews only**, then choose a policy. Production stays unprotected, as it is today. This is required before a Preview holds any non-public content, so at the latest before milestone 3.
+They are restricted: Workers & Pages → `folio` → Access → Protect this Worker behind Access → **Previews only**, with a policy for the owner and a Service Auth policy for automated tests. Production stays unprotected, as it is today.
 
 With Static Assets, Cloudflare does not pass `ctx.access` to the Worker, so application code must verify the `Cf-Access-Jwt-Assertion` header itself.
 
@@ -85,6 +85,8 @@ pnpm test:e2e    # end-to-end against a running preview, Chromium and Firefox
 First run of the end-to-end tests needs `pnpm exec playwright install chromium firefox`.
 
 CSP is only active in `build` + `preview`, not in `dev`, so end-to-end tests run against the preview.
+
+Against a deployed Preview, which sits behind Access, export the Access service token as `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`, then run `BASE_URL=https://develop-folio.<subdomain>.workers.dev pnpm test:e2e`. The token's headers are added only to requests for that host, and API requests don't follow redirects, so the token cannot reach another host. `tests/e2e/access.spec.ts` checks that requests with no credentials or a made-up token are stopped by Access on pages, data, fonts and icons alike. Never put the token in the repository, in logs or in reports.
 
 Avoid running `wrangler deploy` from this repository: the configured Worker is the production one.
 

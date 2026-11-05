@@ -70,7 +70,7 @@ Licence choice, audit of files and full Git history, contribution docs. The repo
 | --- | --- | --- | --- |
 | A merge to `main` replaces the live coming-soon page | High | No technical guard exists. Merge only with explicit approval; add a branch rule on `main` if the plan allows | **Process only** |
 | The empty Build command doesn't suit Astro in production | Launch failure | Previews build through their own command; set the Build command right before the cutover merge | Planned M9 |
-| Previews are public by default | Unfinished work visible, later data exposure | No bindings or private data today; Access set to Previews only before M3 | **Decision** |
+| Previews are public by default | Unfinished work visible, later data exposure | Access on Previews only, with a service token for tests; a test checks that requests without valid credentials are stopped | In place |
 | Same URL serves two languages | Mixed cache variants, Turkish unindexed | `Vary`, cache keyed on language, `?lang=tr` canonical with `hreflang` | Headers in place; cache M3 |
 | CSP and client router are officially unsupported together | Hydration breaks after an upgrade | Regression tests fail on any violation; documented fallback | In place |
 | Request data leaking through module scope in Workers | Cross-visitor data exposure | Store is browser-only; rule documented | In place; review in M4 |
