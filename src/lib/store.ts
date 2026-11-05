@@ -6,7 +6,7 @@ export type SkinKey = 'auto' | 'graphite' | 'paper' | 'blueprint' | 'terminal';
 export type EffectiveSkin = Exclude<SkinKey, 'auto'>;
 export const SKIN_KEYS: SkinKey[] = ['auto', 'graphite', 'paper', 'blueprint', 'terminal'];
 
-type State = { skin: SkinKey; effective: EffectiveSkin; path: string; searchOpen: boolean; contactOpen: boolean };
+type State = { skin: SkinKey; effective: EffectiveSkin; path: string; repo: string; searchOpen: boolean; contactOpen: boolean };
 
 const STORAGE_KEY = 'fx-skin';
 const THEME_COLOR: Record<EffectiveSkin, string> = { graphite: '#0f0f10', paper: '#e6e2d9', blueprint: '#061529', terminal: '#000000' };
@@ -21,10 +21,10 @@ function storedSkin(): SkinKey | null {
 
 /* What the server rendered. Workers reuse module scope across requests, so this object must never
    hold request data: state only changes in the browser and everything per-request goes through props. */
-const SERVER: State = { skin: 'graphite', effective: 'graphite', path: '/', searchOpen: false, contactOpen: false };
+const SERVER: State = { skin: 'graphite', effective: 'graphite', path: '/', repo: '', searchOpen: false, contactOpen: false };
 
 let state: State = inBrowser
-  ? { ...SERVER, skin: storedSkin() ?? 'graphite', effective: document.documentElement.dataset.skin as EffectiveSkin, path: location.pathname }
+  ? { ...SERVER, skin: storedSkin() ?? 'graphite', effective: document.documentElement.dataset.skin as EffectiveSkin, path: location.pathname, repo: document.querySelector<HTMLElement>('main')?.dataset.repo ?? '' }
   : SERVER;
 
 const listeners = new Set<() => void>();
@@ -37,7 +37,7 @@ export function useStore<T>(select: (s: State) => T, server: T = select(SERVER))
   return useSyncExternalStore(subscribe, () => select(state), () => server);
 }
 
-export const setPath = (path: string) => set({ path });
+export const setPage = (path: string, repo: string) => set({ path, repo });
 export const setSearchOpen = (searchOpen: boolean) => set({ searchOpen });
 export const setContactOpen = (contactOpen: boolean) => set({ contactOpen });
 

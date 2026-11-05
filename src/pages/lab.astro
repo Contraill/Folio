@@ -1,0 +1,18 @@
+---
+import LabStage from '@/components/LabStage';
+import { pages } from '@/content/pages';
+import Base from '@/layouts/Base.astro';
+
+const c = pages[Astro.locals.locale].lab;
+---
+<Base title={c.title}>
+  <div class="lab">
+    <LabStage client:load c={c} />
+    <section class="slab pad lab-plan" aria-labelledby="plan-h">
+      <h2 id="plan-h" class="lab-h2" data-reveal>{c.planH}</h2>
+      <ol class="plan">
+        {c.plan.map(([title, text], i) => <li data-reveal style={`--i: ${i}`}><span class="pi tnum">0{i + 1}</span><b>{title}</b><p>{text}</p><span class="tag">{c.planned}</span></li>)}
+      </ol>
+    </section>
+  </div>
+</Base>

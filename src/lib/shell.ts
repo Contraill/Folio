@@ -1,9 +1,10 @@
 import type { TransitionBeforeSwapEvent, TransitionBeforePreparationEvent } from 'astro:transitions/client';
 import { LOCALE_COOKIE } from '../i18n/locale';
 import { copyText } from './copy';
+import { applyAllCuts } from './cut';
 import { installMotion, reducedMotion } from './motion';
-import { directionOf } from './route';
-import { getState, setContactOpen, setPath, startAutoSkinClock, subscribe, THEME_COLOR } from './store';
+import { directionOf, sectionOf } from './route';
+import { getState, setContactOpen, setPage, startAutoSkinClock, subscribe, THEME_COLOR } from './store';
 
 /* Everything the static parts of the page need in the browser. Runs once; the client router keeps
    this module alive across navigations, so page-specific setup happens on astro:page-load. */
@@ -11,24 +12,56 @@ let direction = 'up';
 let uninstallMotion: (() => void) | undefined;
 let firstLoad = true;
 
+let returningFrom = '';
+
+/* Shared media: a card's cover morphs into the case-study panel, and back again when returning. */
+function prepareSharedMedia(from: URL, to: URL, source: Element | undefined) {
+  returningFrom = '';
+  if (!document.startViewTransition || reducedMotion()) return;
+  const html = document.documentElement;
+  if (sectionOf(to.pathname) === 'project' && source) {
+    const media = source.querySelector<HTMLElement>('[data-media]') ?? source.closest('.cut')?.querySelector<HTMLElement>(':scope > .cut-fill');
+    if (!media) return;
+    media.style.setProperty('view-transition-name', 'media');
+    media.setAttribute('data-vt-media', '');
+    html.classList.add('vt-media');
+  } else if (sectionOf(from.pathname) === 'project' && ['projects', 'home'].includes(sectionOf(to.pathname))) {
+    returningFrom = from.pathname;
+    html.classList.add('vt-media');
+  }
+}
+
+function clearSharedMedia() {
+  document.documentElement.classList.remove('vt-media');
+  document.querySelectorAll<HTMLElement>('[data-vt-media]').forEach((el) => { el.style.removeProperty('view-transition-name'); el.removeAttribute('data-vt-media'); });
+}
+
 document.addEventListener('astro:before-preparation', (event) => {
-  const { from, to } = event as TransitionBeforePreparationEvent;
-  direction = directionOf(from.pathname, to.pathname);
+  const { from, to, sourceElement } = event as TransitionBeforePreparationEvent;
+  direction = (sourceElement as HTMLElement | undefined)?.dataset?.dir ?? directionOf(from.pathname, to.pathname);
+  prepareSharedMedia(from, to, sourceElement);
 });
 
 document.addEventListener('astro:before-swap', (event) => {
   // The router copies <html> attributes from the incoming page, whose skin is the server default.
-  const next = (event as TransitionBeforeSwapEvent).newDocument;
+  const { newDocument: next, viewTransition } = event as TransitionBeforeSwapEvent;
   const html = next.documentElement, current = document.documentElement;
   html.dataset.skin = current.dataset.skin;
   html.dataset.dir = direction;
   html.className = current.className;
   next.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[getState().effective]);
+  viewTransition.finished.finally(clearSharedMedia);
   uninstallMotion?.();
 });
 
 document.addEventListener('astro:after-swap', () => {
-  setPath(location.pathname);
+  setPage(location.pathname, document.querySelector<HTMLElement>('main')?.dataset.repo ?? '');
+  if (returningFrom) {
+    const media = document.querySelector<HTMLElement>(`a[href='${returningFrom}'] [data-media]`);
+    const box = media?.getBoundingClientRect();
+    if (media && box && box.top < innerHeight && box.bottom > 0) { media.style.setProperty('view-transition-name', 'media'); media.setAttribute('data-vt-media', ''); }
+    else document.documentElement.classList.remove('vt-media');
+  }
   if (!document.startViewTransition) {
     const main = document.querySelector('main');
     main?.classList.remove('page-in');
@@ -37,6 +70,8 @@ document.addEventListener('astro:after-swap', () => {
 });
 
 document.addEventListener('astro:page-load', () => {
+  // Panels are clipped here, ahead of hydration, so they never wait on the framework to appear.
+  applyAllCuts();
   uninstallMotion = installMotion(document.body);
   syncSkinLabel();
   if (firstLoad) { firstLoad = false; return; }
@@ -65,4 +100,5 @@ function syncSkinLabel() {
 
 subscribe(syncSkinLabel);
 startAutoSkinClock();
-window.setTimeout(() => document.documentElement.classList.remove('intro'), 2600);
+// Removed as soon as the choreography ends: browsers don't count text as painted before this.
+window.setTimeout(() => document.documentElement.classList.remove('intro'), document.querySelector('.hero') ? 2000 : 1600);

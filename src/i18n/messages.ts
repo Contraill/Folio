@@ -16,6 +16,7 @@ export const messages = {
     searchProjects: 'Projects',
     searchPages: 'Pages',
     github: 'GitHub profile',
+    repository: 'Repository on GitHub',
     printCv: 'Print the CV',
     menu: 'Menu',
     openMenu: 'Open menu',
@@ -50,7 +51,6 @@ export const messages = {
     seeProjects: 'See Projects',
     title: 'İzzet Can — Developer portfolio',
     description: 'İzzet Can Öztozlu builds web apps on real data, Linux theming tools, self-hosted services and small devices with a face.',
-    migrating: 'This page moves over in the next milestone.',
   },
   tr: {
     skip: 'İçeriğe geç',
@@ -66,6 +66,7 @@ export const messages = {
     searchProjects: 'Projeler',
     searchPages: 'Sayfalar',
     github: 'GitHub profili',
+    repository: 'GitHub’daki repo',
     printCv: 'CV’yi yazdır',
     menu: 'Menü',
     openMenu: 'Menüyü aç',
@@ -100,7 +101,6 @@ export const messages = {
     seeProjects: 'Projeleri Gör',
     title: 'İzzet Can — Geliştirici portfolyosu',
     description: 'İzzet Can Öztozlu gerçek veriyle çalışan web uygulamaları, Linux tema araçları, self-hosted servisler ve yüzü olan küçük cihazlar geliştiriyor.',
-    migrating: 'Bu sayfa bir sonraki aşamada taşınacak.',
   },
 } as const;
 

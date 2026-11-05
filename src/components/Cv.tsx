@@ -28,14 +28,14 @@ export default function Cv({ locale, t }: { locale: Locale; t: Messages }) {
   ].join('\n');
   return (
     <Cut as="section" className="slab pad cvwrap" label="CV">
-      <div className="cut-fill" />
+      <div className="cut-fill" suppressHydrationWarning />
       <div className="dock cvbar" data-cut>
         <Seg label={t.language}>
           <button type="button" aria-pressed={lang === 'en'} onClick={() => pick('en')}>English</button>
           <button type="button" aria-pressed={lang === 'tr'} onClick={() => pick('tr')}>Türkçe</button>
         </Seg>
-        <button type="button" className="btn btn-2 btn-sm" style={{ background: 'var(--slab)' }} onClick={() => copyText(asText(), c.copied, t.copyBlocked)} data-magnet aria-label={c.copyLabel}><Copy size={15} aria-hidden="true" /><span className="lbl">{c.copyText}</span></button>
-        <button type="button" className="btn btn-1 cv-pdf" onClick={() => window.print()} aria-label={c.pdfLabel}><span className="lbl">{c.pdf}</span><span className="ic"><Printer size={15} aria-hidden="true" /></span></button>
+        <button type="button" className="btn btn-2 btn-sm" style={{ background: 'var(--slab)' }} onClick={() => copyText(asText(), c.copied, t.copyBlocked)} data-magnet aria-label={c.copyText}><Copy size={15} aria-hidden="true" /><span className="lbl">{c.copyText}</span></button>
+        <button type="button" className="btn btn-1 cv-pdf" onClick={() => window.print()} aria-label={c.pdf}><span className="lbl">{c.pdf}</span><span className="ic"><Printer size={15} aria-hidden="true" /></span></button>
       </div>
       {/* The motion layer may add its class before this island hydrates. */}
       <div className="cv-head" data-reveal suppressHydrationWarning>

@@ -1,0 +1,121 @@
+---
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import CaseMedia from '@/components/CaseMedia';
+import Cover from '@/components/Cover';
+import Draft from '@/components/Draft.astro';
+import { Arrow } from '@/components/kit';
+import MasterDetail from '@/components/MasterDetail';
+import { casesFor } from '@/content/cases';
+import { pages } from '@/content/pages';
+import { areasFor, GH, listedProjects, type Img } from '@/content/projects';
+import { messages } from '@/i18n/messages';
+import Base from '@/layouts/Base.astro';
+
+const locale = Astro.locals.locale;
+const content = pages[locale];
+const c = content.case;
+const projects = listedProjects(locale);
+const index = projects.findIndex((p) => p.id === Astro.params.id);
+if (index < 0) return new Response(null, { status: 404 });
+const p = projects[index];
+const study = casesFor(locale)[p.id];
+const previous = projects[(index - 1 + projects.length) % projects.length];
+const next = projects[(index + 1) % projects.length];
+const repoUrl = `${GH}/${p.repo}`;
+const gallery: [Img, string][] = study?.sections.find((s) => s.gal)?.gal ?? (p.img ? [[p.img, c.screenshot.replace('{n}', p.name)]] : []);
+const two = (n: number) => String(n).padStart(2, '0');
+const split = (text: string): [string, string] => { const i = text.search(/[.:]\s/); return i < 0 ? [text, ''] : [text.slice(0, i + 1), text.slice(i + 1)]; };
+const [ledeHead, ledeTail] = study ? split(study.lede) : [p.desc, ''];
+let lists = 0;
+const facts = [[c.language, p.lang], [c.area, areasFor(locale)[p.d]], [c.started, p.since], [c.stars, p.stars ? `★ ${p.stars}` : c.noStars]];
+const coverProps = { c: content.stage, altSuffix: c.screenshot };
+---
+<Base title={p.name} description={p.desc} repo={repoUrl}>
+  <article class="slab pad" aria-labelledby="cs-h">
+    <div class="crumbs">
+      <nav aria-label={c.breadcrumb}><a href="/projects">{c.projects}</a><span aria-hidden="true">/</span><span aria-current="page">{p.name}</span></nav>
+      <div style="display: flex; align-items: center; gap: 6px">
+        <span class="pager tnum">{two(index + 1)} / {two(projects.length)}</span>
+        <a class="circle" data-magnet data-dir="back" href={`/projects/${previous.id}`} aria-label={c.previous.replace('{n}', previous.name)}><ChevronLeft size={17} aria-hidden="true" /></a>
+        <a class="circle" data-magnet data-dir="fwd" href={`/projects/${next.id}`} aria-label={c.next.replace('{n}', next.name)}><ChevronRight size={17} aria-hidden="true" /></a>
+      </div>
+    </div>
+    <h1 id="cs-h" class="display fit lines" data-reveal="fade"><span class="ln"><span data-fit="260" style={`display: inline-block; white-space: nowrap; --n: ${p.name.length}`}>{p.name}</span></span></h1>
+
+    <div class="trip">
+      <div class="left" data-reveal style="--i: 1">
+        <p class="two-tone" style="font-size: clamp(20px, 1.7vw, 24px)">{ledeHead}<span class="tail">{ledeTail}</span></p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          {p.home && <a class="btn btn-1" href={p.home} target="_blank" rel="noreferrer">{c.live}<span class="ic"><Arrow size={16} /></span></a>}
+          <a class:list={['btn', p.home ? 'btn-2' : 'btn-1']} href={repoUrl} target="_blank" rel="noreferrer">{c.repo}{p.home ? <Arrow size={16} /> : <span class="ic"><Arrow size={16} /></span>}</a>
+        </div>
+        {study && <p class="small mono" style="font-size: 12.5px">{study.stack}</p>}
+      </div>
+
+      <div class="center"><CaseMedia client:load p={p} gallery={gallery} c={c} stage={content.stage} mochi={content.mochi} close={messages[locale].close} /></div>
+
+      <aside aria-label={c.specs} data-reveal style="--i: 2">
+        <ul class="specs">
+          {facts.map(([label, value]) => <li><span>{label}</span><span class="tnum">{value}</span></li>)}
+          <li><span>{c.topics}</span><span class="topics">{p.topics.map((topic) => <span class="chip" translate="no">{topic}</span>)}</span></li>
+        </ul>
+        {study?.facts && <div class="facts tnum">{study.facts.map(([value, label]) => <div><b>{value}</b><span>{label}</span></div>)}</div>}
+      </aside>
+    </div>
+  </article>
+
+  {study ? study.sections.filter((s) => !s.gal).map((s) => {
+    if (s.kind === 'overview') {
+      const [head, tail] = split(s.paras![0]);
+      return <section class="slab pad" aria-label={s.title}><p class="eyebrow" data-reveal>{s.title}</p><p class="two-tone" data-reveal style="margin-top: 20px; max-width: 30ch; --i: 1">{head}<span class="tail">{tail}</span></p></section>;
+    }
+    if (s.todo) return (
+      <section class="pq" aria-label={s.title}>
+        <div class="slab" style="overflow: hidden; position: relative; min-height: 300px">{p.kind === 'pixel' ? <Cover client:visible p={p} {...coverProps} /> : <Cover p={p} {...coverProps} />}</div>
+        <div class="slab pad quote" data-reveal><p class="eyebrow plain" style="color: inherit; opacity: .7">{s.title}</p><p class="q-ghost">{c.lesson.replace('{n}', p.name)}</p><Draft block>{s.paras![0].replace(/^\[|\]$/g, '')}</Draft></div>
+      </section>
+    );
+    const detailed = s.list && lists++ === 1;
+    const id = `s-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    return (
+      <section class="slab pad" aria-labelledby={id}>
+        <div class="shead" style="margin-bottom: 28px" data-reveal><h2 id={id} class="display" style="font-size: clamp(34px, 4vw, 56px)">{s.title}</h2>{!detailed && s.paras && <p class="small" style="max-width: 44ch">{s.paras[0]}</p>}</div>
+        {detailed ? <MasterDetail client:load items={s.list!} paras={s.paras} /> : s.list && (
+          <div class="cgrid">{s.list.map(([title, text], i) => <div data-reveal style={`--i: ${i % 3}`}><span class="idx tnum">{two(i + 1)}</span><h3>{title}</h3><p>{text}</p></div>)}</div>
+        )}
+      </section>
+    );
+  }) : (
+    <section class="slab pad" aria-label={c.about}>
+      <p class="eyebrow">{c.fromReadme}</p>
+      <p class="two-tone" style="margin-top: 20px; max-width: 30ch">{p.desc}</p>
+      <p class="small" style="margin-top: 22px">{c.noWriteUp}</p>
+    </section>
+  )}
+
+  {study && gallery.length > 1 && (
+    <section class="slab pad" aria-labelledby="scr-h">
+      <div class="shead" style="margin-bottom: 30px" data-reveal><h2 id="scr-h" class="display stair" style="font-size: clamp(34px, 4vw, 56px); --indent: 1em"><span>{c.screens[0]}</span><span>{c.screens[1]}</span></h2></div>
+      <div class="collage">
+        {gallery.slice(0, 3).map(([im, caption], i) => (
+          <figure class={`f${i + 1}`} data-reveal="mask" style={`--i: ${i}`}>
+            <button type="button" data-lightbox={i} aria-label={c.enlarge.replace('{n}', caption)}><img src={im.src} width={im.w} height={im.h} alt={caption} loading="lazy" /></button>
+            <figcaption>{caption}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <nav class="nextp" aria-label={c.nextProject}>
+    <a class="slab ov" href={`/projects/${next.id}`} data-dir="fwd" data-tilt="3">{next.kind === 'pixel' ? <Cover client:visible p={next} variant="hero" {...coverProps} /> : <Cover p={next} variant="hero" {...coverProps} />}<span class="display word">{next.name}</span></a>
+    <div class="slab pad" style="display: flex; flex-direction: column; justify-content: space-between; gap: 26px">
+      <p class="eyebrow">{c.nextProject}</p>
+      <p class="two-tone" style="font-size: clamp(22px, 2vw, 30px)">{next.name}. <span class="tail">{next.desc}</span></p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <a class="btn btn-1" href={`/projects/${next.id}`} data-dir="fwd">{c.readNext}<span class="ic"><ArrowRight size={16} aria-hidden="true" /></span></a>
+        <a class="btn btn-2" href="/projects"><ArrowLeft size={16} aria-hidden="true" /> {c.allProjects}</a>
+      </div>
+    </div>
+  </nav>
+</Base>

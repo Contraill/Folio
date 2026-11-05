@@ -1,5 +1,7 @@
 ---
 import { ArrowRight } from 'lucide-react';
+import { DizzyMochi } from '@/components/mochi';
+import { pages } from '@/content/pages';
 import { messages } from '@/i18n/messages';
 import Base from '@/layouts/Base.astro';
 
@@ -9,6 +11,7 @@ const t = messages[Astro.locals.locale];
   <section class="slab pad four" aria-labelledby="nf-h">
     <p class="wordmark" aria-hidden="true">404</p>
     <div class="mid">
+      <div class="oledmini"><DizzyMochi client:load label={pages[Astro.locals.locale].mochi.shortLabel} /></div>
       <h1 id="nf-h" class="display" style="font-size: clamp(28px, 3vw, 40px)">{t.notFound}</h1>
       <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center">
         <a class="btn btn-1" href="/">{t.goHome}<span class="ic"><ArrowRight size={16} aria-hidden="true" /></span></a>

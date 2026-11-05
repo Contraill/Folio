@@ -1,0 +1,23 @@
+---
+import Draft from '@/components/Draft.astro';
+import { pages } from '@/content/pages';
+import Base from '@/layouts/Base.astro';
+
+const c = pages[Astro.locals.locale].uses;
+---
+<Base title={c.title} noindex>
+  <section class="slab pad" aria-labelledby="u-h">
+    <div class="phead">
+      <div><p class="eyebrow">{c.eyebrow}</p><h1 id="u-h" class="display stair" style="margin-top: 18px; --indent: 1em"><span>{c.h1[0]}</span><span>{c.h1[1]}</span></h1></div>
+      <p class="small" style="max-width: 34ch">{c.note}</p>
+    </div>
+    <table class="uses-tbl" style="margin-top: 20px">
+      {c.groups.map(([group, rows]) => (
+        <tbody>
+          <tr><th scope="rowgroup" colspan="2">{group}</th></tr>
+          {rows.map(([name, note]) => <tr><td>{name.startsWith('[') ? <Draft>{name.replace(/^\[|\]$/g, '')}</Draft> : name}</td><td>{note}</td></tr>)}
+        </tbody>
+      ))}
+    </table>
+  </section>
+</Base>

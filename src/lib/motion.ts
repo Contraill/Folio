@@ -43,10 +43,27 @@ export function installMotion(root: HTMLElement) {
       io.observe(parent);
     } else io.observe(el);
   });
+  // Images arrive softly once they have actually loaded, in static markup and islands alike.
+  const showLoaded = () => root.querySelectorAll<HTMLImageElement>('img.media-img:not(.ok)').forEach((img) => { if (img.complete && img.naturalWidth) img.classList.add('ok'); });
+  const onLoad = (e: Event) => { const el = e.target as Element; if (el.matches?.('img.media-img')) el.classList.add('ok'); };
+  root.addEventListener('load', onLoad, true);
+  // Large titles scale to the width of their container.
+  const fit = (el: HTMLElement) => {
+    el.style.fontSize = '100px';
+    // Two pixels spare: text width rounds differently at the final size, and the mask would clip it.
+    el.style.fontSize = Math.min(Number(el.dataset.fit) || 400, 100 * ((el.parentElement!.clientWidth - 2) / el.scrollWidth)) + 'px';
+  };
+  const fitted = root.querySelectorAll<HTMLElement>('[data-fit]');
+  const fitAll = () => fitted.forEach(fit);
+  fitAll();
+  document.fonts?.ready.then(fitAll);
+  const fitObserver = new ResizeObserver(fitAll);
+  fitted.forEach((el) => fitObserver.observe(el.parentElement!));
   scan();
-  const mo = new MutationObserver(scan);
+  showLoaded();
+  const mo = new MutationObserver(() => { scan(); showLoaded(); });
   mo.observe(root, { childList: true, subtree: true });
-  cleanups.push(() => { io.disconnect(); mo.disconnect(); });
+  cleanups.push(() => { io.disconnect(); mo.disconnect(); fitObserver.disconnect(); root.removeEventListener('load', onLoad, true); });
 
   if (reduced) return () => cleanups.forEach((fn) => fn());
 
@@ -106,4 +123,25 @@ export function installMotion(root: HTMLElement) {
   cleanups.push(() => { root.removeEventListener('pointermove', onMove); document.removeEventListener('pointerleave', onLeave); root.removeEventListener('pointerdown', onLeave); cancelAnimationFrame(frame); });
 
   return () => cleanups.forEach((fn) => fn());
+}
+
+/** FLIP: animates elements from their previous box to the new one. */
+export function flip(container: HTMLElement | null, previous: Map<string, DOMRect>) {
+  const next = new Map<string, DOMRect>();
+  if (!container) return next;
+  const items = [...container.querySelectorAll<HTMLElement>('[data-key]')];
+  items.forEach((el) => next.set(el.dataset.key!, el.getBoundingClientRect()));
+  if (reducedMotion() || !previous.size) return next;
+  let entering = 0;
+  items.forEach((el) => {
+    const a = previous.get(el.dataset.key!), b = next.get(el.dataset.key!)!;
+    if (a) {
+      const dx = a.left - b.left, dy = a.top - b.top, sx = a.width / b.width, sy = a.height / b.height;
+      if (Math.abs(dx) + Math.abs(dy) > 1 || Math.abs(sx - 1) > 0.01 || Math.abs(sy - 1) > 0.01)
+        el.animate([{ transformOrigin: '0 0', transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` }, { transformOrigin: '0 0', transform: 'none' }], { duration: 560, easing: 'cubic-bezier(.16,1,.3,1)' });
+    } else {
+      el.animate([{ opacity: 0, transform: 'translateY(18px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 40 * entering++, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+    }
+  });
+  return next;
 }

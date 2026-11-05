@@ -1,0 +1,30 @@
+---
+import { Lines } from '@/components/kit';
+import ProjectsBrowser from '@/components/ProjectsBrowser';
+import { pages } from '@/content/pages';
+import { areasFor, DOMAIN_SLUG, listedProjects } from '@/content/projects';
+import Base from '@/layouts/Base.astro';
+
+const locale = Astro.locals.locale;
+const content = pages[locale];
+const c = content.projects;
+const projects = listedProjects(locale);
+const slug = DOMAIN_SLUG.indexOf(Astro.url.searchParams.get('area') ?? '');
+const stars = projects.reduce((sum, p) => sum + p.stars, 0);
+const languages = new Set(projects.map((p) => p.lang)).size;
+---
+<Base title={c.title}>
+  <section class="pj-head" aria-labelledby="pj-h">
+    <div>
+      <p class="eyebrow" data-reveal>{c.eyebrow}</p>
+      <h1 id="pj-h" class="display pj-title" data-reveal="fade"><Lines lines={c.lines} className="in-reveal" /></h1>
+    </div>
+    <div class="pj-meta" data-reveal style="--i: 2">
+      <p class="small">{c.note}</p>
+      <ul class="pj-stats tnum" aria-label={c.totals}>
+        <li><b>{projects.length}</b> {c.repos}</li><li><b>{languages}</b> {c.languages}</li><li><b>{stars}</b> {c.stars}</li>
+      </ul>
+    </div>
+  </section>
+  <ProjectsBrowser client:load projects={projects} areas={areasFor(locale)} slugs={DOMAIN_SLUG} initialArea={slug < 0 ? null : slug} c={c} stage={content.stage} locale={locale} />
+</Base>

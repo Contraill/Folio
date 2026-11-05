@@ -50,10 +50,6 @@ export default function SearchPalette({ t }: { t: Messages }) {
                     <FileText aria-hidden="true" /><span style={{ flex: 1 }}>{p.label}</span><span style={{ fontSize: 12, opacity: .6 }}>{p.note}</span>
                   </Command.Item>
                 ))}
-                {/* An easter egg, not a listing: it only ever shows for this exact word. */}
-                {q.trim().toLowerCase() === 'secret' && (
-                  <Command.Item value="secret" onSelect={() => go('/secret')}><FileText aria-hidden="true" /><span style={{ flex: 1 }}>/secret</span></Command.Item>
-                )}
               </Command.Group>
             </Command.List>
           </Command>

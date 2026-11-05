@@ -1,0 +1,95 @@
+---
+import { ArrowRight } from 'lucide-react';
+import Cover from '@/components/Cover';
+import Hero from '@/components/Hero';
+import { Go } from '@/components/kit';
+import Mochi from '@/components/mochi';
+import { pages } from '@/content/pages';
+import { areasFor, FEATURED, projectsIn, SELECTED } from '@/content/projects';
+import { messages } from '@/i18n/messages';
+import Base from '@/layouts/Base.astro';
+import { LAB_MINI_PATHS } from '@/lib/labmini';
+
+const locale = Astro.locals.locale;
+const t = messages[locale];
+const content = pages[locale];
+const c = content.home;
+const areas = areasFor(locale);
+const selected = projectsIn(SELECTED, locale);
+const depth = [0.04, 0.09, 0.02, 0.12];
+const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A', '#3ec7ff', 52, 64, 34], ['Y', '#7a5cff', 70, 72, 30], ['', '#20c997', 84, 80, 16], ['', '#ff7ac0', 8, 84, 14], ['', '#f3f3f1', 61, 86, 12]] as const;
+---
+<Base>
+  <Hero client:load projects={projectsIn(FEATURED, locale)} c={c} stage={content.stage} mochi={content.mochi} locale={locale} />
+
+  <div class="slab">
+    <section class="pad" aria-labelledby="sel-h" style="padding-top: 112px">
+      <div class="shead">
+        <h2 id="sel-h" class="display stair" data-reveal style="--indent: 1.4em"><span>{c.selected[0]}</span><span>{c.selected[1]}</span></h2>
+        <div class="side" data-reveal style="--i: 1">
+          <p class="small">{c.selectedNote}</p>
+          <a class="btn btn-2 btn-sm" href="/projects">{c.allShort} <ArrowRight size={15} aria-hidden="true" /></a>
+        </div>
+      </div>
+      <div class="stairs">
+        {selected.map((p, j) => (
+          <div class="stair-slot">
+            <div data-depth={depth[j]}>
+              <a class="scard" href={`/projects/${p.id}`}  data-tilt="6" data-reveal="mask" style={`--i: ${j}`}>
+                <span class="scard-media" data-media><Cover p={p} c={content.stage} altSuffix="" /></span>
+                <span class="go"><Go glass /></span>
+                <span class="info glass"><span><b>{p.name}</b><span>{areas[p.d]} · {p.since}</span></span></span>
+                <span class="sr">{p.desc}</span>
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="pad statement" aria-label={c.approachLabel}>
+      <div>
+        <p class="eyebrow" style="margin-bottom: 22px" data-reveal>{c.approach}</p>
+        <p class="two-tone" data-reveal style="--i: 1">{c.lead} <span class="tail">{c.tail}</span></p>
+      </div>
+      <div class="pet-wrap" data-reveal style="--i: 2"><Mochi client:visible c={content.mochi} /></div>
+    </section>
+  </div>
+
+  <section class="trow" aria-label={c.moreLabel}>
+    <a class="slab pad tcard lab-t" href="/lab" data-reveal>
+      <div>
+        <p class="eyebrow"><span class="wip-dot"></span> {c.labStatus}</p>
+        <h3 class="lab-title">ai lab<span class="caret" aria-hidden="true">_</span></h3>
+        <p class="small" style="max-width: 38ch">{c.labTeaser}</p>
+      </div>
+      <div class="canvas-box">
+        <svg class="labmini" viewBox="0 0 400 190" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g class="drift">{LAB_MINI_PATHS.map((d, i) => <path d={d} style={`opacity: ${(0.18 + (i / LAB_MINI_PATHS.length) * 0.5).toFixed(2)}`} />)}</g>
+          <circle class="probe" cx="252" cy="88" r="4" />
+        </svg>
+      </div>
+      <span class="corner"><Go /></span>
+    </a>
+    <a class="slab pad tcard play-t" href="/play" data-reveal style="--i: 1">
+      <div>
+        <p class="eyebrow"><span class="wip-dot"></span> {c.playStatus}</p>
+        <h3 class="play-title">Play</h3>
+        <p class="small" style="max-width: 38ch">{c.playTeaser}</p>
+      </div>
+      <div class="canvas-box">
+        <div class="playmini" aria-hidden="true">
+          {pieces.map(([letter, color, x, y, r], i) => <span style={`left: ${x}%; top: ${y}%; width: ${r * 2}px; height: ${r * 2}px; margin-left: ${-r}px; margin-top: ${-r * 2}px; background: ${color}; --i: ${i}`}>{letter}</span>)}
+        </div>
+      </div>
+      <span class="corner"><Go /></span>
+    </a>
+    <div class="slab pad tcard tnarrow" data-reveal style="--i: 2">
+      <p class="eyebrow" style="color: inherit">{c.more}</p>
+      <nav class="vlinks" aria-label={c.morePages}>
+        <a href="/about">{t.nav.about} <ArrowRight size={18} aria-hidden="true" /></a>
+        <a href="/cv">{t.nav.cv} <ArrowRight size={18} aria-hidden="true" /></a>
+      </nav>
+    </div>
+  </section>
+</Base>

@@ -2,6 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Popover from '@radix-ui/react-popover';
 import { ArrowRight, Check, Copy, FolderGit2, Mail, Menu, Printer, Search, X } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import type { Locale } from '@/i18n/locale';
 import type { Messages } from '@/i18n/messages';
 import { copyText } from '@/lib/copy';
 import { overlays, useReturnFocus } from '@/lib/overlay';
@@ -78,7 +79,7 @@ function SkinMenu({ t }: { t: Messages }) {
     <Popover.Root>
       <Popover.Trigger className="tool" data-skin-trigger aria-label={`${t.skinWord}: ${t.skins[skin][0]}`}><Swatch skin={skin} size={22} /></Popover.Trigger>
       <Popover.Portal container={overlays()}>
-        <Popover.Content align="end" sideOffset={4} className="ov-pop skin-pop"><SkinList t={t} /></Popover.Content>
+        <Popover.Content align="end" sideOffset={4} className="ov-pop skin-pop" aria-label={t.skinWord}><SkinList t={t} /></Popover.Content>
       </Popover.Portal>
     </Popover.Root>
   );
@@ -107,7 +108,7 @@ function ContactSheet({ t }: { t: Messages }) {
         <p className="eyebrow">{t.contact}</p>
         <Dialog.Title className="display" style={{ fontSize: 44 }}>{t.sayHi}</Dialog.Title>
         <Dialog.Description className="small">{t.sayHiText}</Dialog.Description>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderRadius: 14, background: 'var(--slab-2)' }}>
+        <div className="contact-row" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderRadius: 14, background: 'var(--slab-2)' }}>
           <span className="mono" style={{ flex: 1, fontSize: 15 }} translate="no">{EMAIL}</span>
           <button type="button" className="circle" aria-label={t.copyEmail} onClick={() => copyText(EMAIL, t.emailCopied, t.copyBlocked)}><Copy size={16} aria-hidden="true" /></button>
         </div>
@@ -120,7 +121,7 @@ function ContactSheet({ t }: { t: Messages }) {
   );
 }
 
-function MobileMenu({ open, set, current, t }: { open: boolean; set: (open: boolean) => void; current: string; t: Messages }) {
+function MobileMenu({ open, set, current, t, locale }: { open: boolean; set: (open: boolean) => void; current: string; t: Messages; locale: Locale }) {
   return (
     <Sheet open={open} onOpenChange={set} className="ov-sheet-menu" closeLabel={t.close}>
       <Dialog.Title className="eyebrow" style={{ marginTop: 6 }}>{t.menu}</Dialog.Title>
@@ -136,12 +137,18 @@ function MobileMenu({ open, set, current, t }: { open: boolean; set: (open: bool
       <button type="button" className="btn btn-1" onClick={() => { set(false); setContactOpen(true); }}>{t.contact}<span className="ic"><Mail size={16} aria-hidden="true" /></span></button>
       <p className="eyebrow mm-skin">{t.skinWord}</p>
       <SkinList t={t} />
+      <p className="eyebrow mm-skin">{t.language}</p>
+      <Seg label={t.language}>
+        <button type="button" lang="en" data-set-lang="en" aria-pressed={locale === 'en'}>English</button>
+        <button type="button" lang="tr" data-set-lang="tr" aria-pressed={locale === 'tr'}>Türkçe</button>
+      </Seg>
     </Sheet>
   );
 }
 
-export default function Topbar({ t, path: initialPath }: { t: Messages; path: string }) {
+export default function Topbar({ t, path: initialPath, repo: initialRepo = '', locale }: { t: Messages; path: string; repo?: string; locale: Locale }) {
   const path = useStore((s) => s.path, initialPath);
+  const repo = useStore((s) => s.repo, initialRepo);
   const searchOpen = useStore((s) => s.searchOpen);
   const [menu, setMenu] = useState(false);
   const [searchUsed, setSearchUsed] = useState(false);
@@ -162,13 +169,13 @@ export default function Topbar({ t, path: initialPath }: { t: Messages; path: st
       </nav>
       <div className="cap tools">
         <button type="button" className="tool" onClick={() => setSearchOpen(true)} aria-label={t.search} aria-keyshortcuts="Control+K Meta+K"><Search size={18} aria-hidden="true" /><span className="kbd" aria-hidden="true" /></button>
-        {current === 'projects' && <a className="tool" href={GH} target="_blank" rel="noreferrer" aria-label={t.github}><FolderGit2 size={18} aria-hidden="true" /></a>}
+        {current === 'projects' && <a className="tool" href={repo || GH} target="_blank" rel="noreferrer" aria-label={repo ? t.repository : t.github}><FolderGit2 size={18} aria-hidden="true" /></a>}
         {current === 'cv' && <button type="button" className="tool" aria-label={t.printCv} onClick={() => dispatchEvent(new Event('cv-print'))}><Printer size={18} aria-hidden="true" /></button>}
         <SkinMenu t={t} />
         <button type="button" className="btn btn-1 contact-btn" onClick={() => setContactOpen(true)}>{t.contact}<span className="ic"><Mail size={15} aria-hidden="true" /></span></button>
         <button type="button" className="tool menu-btn" aria-label={t.openMenu} aria-expanded={menu} onClick={() => setMenu(true)}><Menu size={20} aria-hidden="true" /></button>
       </div>
-      <MobileMenu open={menu} set={setMenu} current={current} t={t} />
+      <MobileMenu open={menu} set={setMenu} current={current} t={t} locale={locale} />
       <ContactSheet t={t} />
       {searchUsed && <Suspense fallback={null}><SearchPalette t={t} /></Suspense>}
     </header>
