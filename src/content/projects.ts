@@ -1,4 +1,7 @@
-/* Seed data until the content store exists. Public repositories only: never list private work here. */
+/* Seed data until the content store exists. These are candidates: a project is public only once it is
+   in LISTED below. Public repositories only: never add private work here. */
+import type { Locale } from '../i18n/locale';
+
 export type Kind = 'img' | 'browser' | 'pixel';
 export type Img = { src: string; w: number; h: number };
 export type Project = {
@@ -6,7 +9,7 @@ export type Project = {
   kind: Kind; tint?: [string, string]; img?: Img; hero?: Img; pos?: string; contain?: boolean; home?: string; desc: string; topics: string[];
 };
 
-const A = (f: string, w: number, h: number): Img => ({ src: '/assets/' + f, w, h });
+export const A = (f: string, w: number, h: number): Img => ({ src: '/assets/' + f, w, h });
 
 export const DOMAINS = ['Web', 'Desktop & theming', 'Self-hosted', 'Hardware', 'Desktop apps'];
 export const DOMAIN_SLUG = ['web', 'theming', 'self-hosted', 'hardware', 'desktop-apps'];
@@ -27,6 +30,37 @@ export const PROJECTS: Project[] = [
   { id: 'bct', name: 'Breast Cancer Tracker', repo: 'Breast-Cancer-Tracker', d: 0, lang: 'Vue', date: '2025-07-27', since: 'Summer 2025', stars: 0, kind: 'img', img: A('card_bct.webp', 900, 633), pos: '50% 0%', home: 'https://breastcancertracking.web.app', desc: 'Vue + Firebase screening questionnaire with authentication and admin workflows. Started as an internship project.', topics: ['vue', 'firebase', 'firestore', 'internship-project'] },
   { id: 'adventure', name: 'Programming Adventure', repo: 'Programming-Adventure', d: 0, lang: 'HTML', date: '2023-10-15', since: 'Fall 2023', stars: 0, kind: 'img', img: A('card_adventure.webp', 900, 562), pos: '50% 0%', home: 'https://contraill.github.io/Programming-Adventure/', desc: 'Hand-written HTML/CSS/JS personal blog, built as a term project in fall 2023. Where it started.', topics: ['html', 'css', 'javascript', 'static-site'] },
 ];
-export const BY_ID: Record<string, Project> = Object.fromEntries(PROJECTS.map((p) => [p.id, p]));
 export const GH = 'https://github.com/Contraill';
 export const EMAIL = 'izzet@oztozlu.dev';
+
+/* Explicit choices, never derived from GitHub. The admin panel takes these over. */
+export const LISTED = ['huepr', 'helios', 'nothing', 'orbis', 'campuseats', 'bct', 'nodesk', 'mochi', 'zen', 'architect', 'grading', 'emu', 'schedule', 'adventure'];
+export const FEATURED = ['helios', 'huepr', 'mochi'];
+export const SELECTED = ['orbis', 'campuseats', 'bct', 'nothing'];
+
+const TR: Record<string, { desc: string; since: string }> = {
+  nodesk: { since: 'Eki 2026', desc: 'Ev ağları için canlı ağ topolojisi haritası. Raspberry Pi üzerinde çalışır, port taraması yapmaz.' },
+  mochi: { since: 'Eki 2026', desc: 'ESP32-C3 üzerinde çalışan animasyonlu OLED masa arkadaşı. Dokunmaya, sevmeye ve sallanmaya tepki verir.' },
+  orbis: { since: 'Eki 2026', desc: 'Profiller, uyarlanabilir oynatma, Watch Together ve TV arayüzleri olan self-hosted medya platformu.' },
+  nothing: { since: 'Eyl 2026', desc: 'KDE Plasma 6 için Nothing esintili tema paketi: cam görünüm, özel paneller, widget’lar ve açık/koyu uyumu.' },
+  zen: { since: 'Eyl 2026', desc: 'Yerel uyarlanabilir tema ve vurgu rengine uyan pencere kontrolleri sunan sade bir Zen Browser modu.' },
+  helios: { since: 'Tem 2026', desc: 'Kaynağı belli NASA/JPL verisi, insan ölçeğinde karşılaştırmalar ve EN/TR desteğiyle etkileşimli 3D Güneş Sistemi gezgini.' },
+  campuseats: { since: 'Haz 2026', desc: 'Tamamen yerel, QR tabanlı kampüs restoranı sipariş sistemi: yönetici panelleri, canlı siparişler ve PWA desteği.' },
+  huepr: { since: 'Mar 2026', desc: 'Hyprland duvar kâğıdından tarayıcı temasına: izin verilen sitelere Native Messaging ile CSS değişkenleri ekler.' },
+  architect: { since: 'Oca 2026', desc: 'Mimarlık ofisi için Java Swing + MySQL masaüstü uygulaması: mimarlar, müşteriler, projeler, çizimler ve ödemeler.' },
+  grading: { since: 'Oca 2026', desc: 'Öğrenciler, bölümler, dersler, notlar ve devamsızlık için Java Swing + MySQL masaüstü uygulaması.' },
+  emu: { since: 'Ara 2025', desc: 'Üniversite etkinliklerini sürdürülebilirlik ölçütleriyle etiketleyip rapor üreten iki dilli PHP portalı.' },
+  schedule: { since: 'Eyl 2025', desc: 'Saf HTML ve CSS ile yazılmış, A4 için ayarlanmış, renk kodlu ve yazdırmaya hazır haftalık ders programı.' },
+  bct: { since: 'Yaz 2025', desc: 'Kimlik doğrulama ve yönetici akışları olan Vue + Firebase tarama anketi. Staj projesi olarak başladı.' },
+  adventure: { since: 'Güz 2023', desc: 'Güz 2023’te dönem projesi olarak elle yazılmış HTML/CSS/JS kişisel blog. Her şey burada başladı.' },
+};
+const AREAS: Record<Locale, string[]> = { en: DOMAINS, tr: ['Web', 'Masaüstü ve tema', 'Self-hosted', 'Donanım', 'Masaüstü uygulamaları'] };
+export const areasFor = (locale: Locale) => AREAS[locale];
+
+/** Keeps only the listed projects, in the listed order. Everything public goes through this. */
+export const pickListed = (all: Project[], ids: string[]) => ids.map((id) => all.find((p) => p.id === id)).filter((p): p is Project => !!p);
+
+const localized = (p: Project, locale: Locale): Project => (locale === 'tr' && TR[p.id] ? { ...p, ...TR[p.id] } : p);
+export const listedProjects = (locale: Locale) => pickListed(PROJECTS, LISTED).map((p) => localized(p, locale));
+export const projectById = (id: string, locale: Locale) => listedProjects(locale).find((p) => p.id === id);
+export const projectsIn = (ids: string[], locale: Locale) => pickListed(listedProjects(locale), ids);
