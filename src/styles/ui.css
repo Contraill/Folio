@@ -12,7 +12,7 @@
 .ov-scrim[data-state='open'] { animation: ov-fade-in 150ms; }
 .ov-scrim[data-state='closed'] { animation: ov-fade-out 150ms; }
 
-.ov-close { position: absolute; right: 16px; top: 16px; border-radius: 2px; opacity: .7; background: transparent; transition: opacity 150ms; }
+.ov-close { position: absolute; right: 10px; top: 10px; padding: 6px; box-sizing: content-box; border-radius: 2px; opacity: .7; background: transparent; transition: opacity 150ms; }
 .ov-close:hover { opacity: 1; }
 .ov-close svg { width: 16px; height: 16px; }
 
@@ -26,6 +26,8 @@
 .ov-dialog[data-state='open'] { animation: ov-dialog-in 200ms; }
 .ov-dialog[data-state='closed'] { animation: ov-dialog-out 200ms; }
 .ov-palette { max-width: 560px; overflow: hidden; padding: 0; border-radius: 20px; }
+.ov-lightbox { width: auto; max-width: min(1200px, 94vw); padding: 12px; border-radius: 18px; }
+.ov-lightbox img { width: 100%; height: auto; border-radius: 10px; filter: var(--img-filter); }
 
 .ov-pop { z-index: 50; border: 1px solid hsl(var(--border)); background: hsl(var(--popover)); color: hsl(var(--popover-foreground)); box-shadow: 0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1); outline: none; transform-origin: var(--radix-popover-content-transform-origin); }
 .ov-pop[data-state='open'] { animation: ov-pop-in 150ms; }

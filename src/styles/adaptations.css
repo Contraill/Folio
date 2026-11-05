@@ -17,20 +17,83 @@
 /* Auto swatch: `.tool .sw` drew a second ring around the one inside the icon. */
 .tool .sw-auto { box-shadow: none; }
 
+/* The rounded slab was clipping whatever sat flush in its corner: the footer's Back to Top pill and the
+   arrows on the teaser cards. The slabs stop clipping, and the parts that needed it clip themselves. */
+.foot, .tcard { overflow: visible; }
+.wordmark-crop { border-radius: 0 0 var(--r-slab) var(--r-slab); }
+.tcard .canvas-box { margin: 0 calc(-1 * clamp(20px, 3.4vw, 48px)) calc(-1 * clamp(20px, 3.4vw, 48px)); border-radius: 0 0 var(--r-slab) var(--r-slab); }
+@media (max-width: 760px) {
+  .wordmark-crop { margin-left: -18px; margin-right: -18px; }
+  .tcard .canvas-box { margin: 18px -18px -22px; }
+}
+
+/* Corners follow each skin's identity: Blueprint is crisp, Terminal is square. These used fixed radii. */
+[data-skin='blueprint'] .cut { --r: 8px; --ri: 8px; }
+[data-skin='terminal'] .cut { --r: 0px; --ri: 0px; }
+[data-skin='blueprint'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .draft, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button) { border-radius: var(--r-sm) !important; }
+[data-skin='terminal'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .draft, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button, .rn, .wip-dot, .eyebrow::before, .tl li::before) { border-radius: 0 !important; }
+
+/* Keyboard users can reach the orrery; its focus ring stays inside the clipped panel. */
+.orrery:focus-visible { outline-offset: -4px; }
+
 /* Mobile menu: the title keeps its line box; the skin label sat inline next to the Contact button. */
 .ov-sheet-menu > h2.eyebrow { line-height: 1.75rem; }
 .mm-skin { display: flex; margin: 28px 0 8px; }
 
 /* Language switch in the legal row. */
 .lang-links { display: inline-flex; gap: 12px; }
-.lang-links a { opacity: .75; transition: opacity var(--t-s) ease; }
-.lang-links a:hover, .lang-links a[aria-current] { opacity: 1; color: var(--ink); }
+.lang-links a { transition: color var(--t-s) ease; }
+.lang-links a:hover, .lang-links a[aria-current] { color: var(--ink); }
+.lang-links a[aria-current] { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Placeholder notes stay quiet but readable. */
+.draft { opacity: 1; }
+.draft-k { opacity: 1; }
+.q-ghost, .quote .q-ghost { opacity: .75; }
+.nowp .dark > div:nth-child(2) > p { opacity: .75 !important; }
 
 /* Server-rendered pages must read fine before and without JavaScript. */
 html:not(.js) [data-reveal], html:not(.js) .lines .ln > span { opacity: 1 !important; transform: none !important; clip-path: none !important; }
 html:not(.js) .media-img { opacity: 1; }
+html:not(.js) [data-fit] { white-space: normal !important; }
+/* Large titles start near their fitted size, so measuring them moves nothing on slow connections. */
+.fit .ln { container-type: inline-size; }
+[data-fit] { font-size: min(260px, calc(100cqi / var(--n, 8) * 1.18)); }
 /* A notched panel waits for its clip instead of flashing the un-notched shape. */
 html.js .cut:not([data-cut-ready]) > .cut-fill { opacity: 0; }
+
+/* Mobile compositions. */
+@media (max-width: 760px) {
+  /* About: the portrait keeps the collage from desktop instead of shrinking into a strip. */
+  .ab-collage { display: block; position: relative; width: 78%; max-width: 320px; margin: 4px 0 0 auto; padding-bottom: 36px; }
+  .ab-pet { position: absolute; left: -26%; bottom: 0; width: 68%; transform: rotate(-4deg); }
+  .tl p { display: block; overflow: visible; }
+
+  /* Notes keep their label on its own line, so the text gets the full width. */
+  .draft { display: flex; flex-wrap: wrap; column-gap: 7px; row-gap: 2px; }
+  .draft-t { flex-basis: 100%; }
+  .portrait .draft { display: inline-flex; flex-wrap: nowrap; }
+  .portrait .draft-t { flex-basis: auto; }
+
+  /* Hero, huepr stage: the wallpaper picker sat partly under the card below it. */
+  .td:not(.still) .td-win { top: 58px; }
+  .td:not(.still) .td-p { display: none; }
+  .td-vars { bottom: 112px; }
+  /* Turkish headline: its longest word has to fit the same width. */
+  html[lang='tr'] .hero .hl { font-size: clamp(32px, 10.4vw, 60px); }
+  /* About: the portrait's note clears the overlapping device. */
+  .portrait figcaption { left: auto; top: 10px; bottom: auto; }
+  .portrait .draft-t { white-space: nowrap; }
+
+  /* CV: the print button matches the toolbar, and the heading clears it. */
+  .cv-pdf { height: 38px; padding: 0; background: transparent; }
+  .cv-pdf .ic { width: 38px; height: 38px; background: var(--accent); color: var(--accent-ink); }
+  .cv-head { padding-top: 12px; }
+
+  /* Lab and Play: controls span the panel and meet touch-target size. */
+  .lab-tools { align-self: stretch; margin: -64px 8px 0; }
+  .pn-btns .btn-sm { flex: 1; height: 44px; justify-content: center; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
