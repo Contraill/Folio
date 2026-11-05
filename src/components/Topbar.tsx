@@ -161,7 +161,7 @@ export default function Topbar({ t, path: initialPath, repo: initialRepo = '', l
   const current = currentMenuItem(path);
   return (
     <header className="topbar">
-      <a className="cap brand" href="/" aria-label={t.home}><Mark /></a>
+      <a className="cap brand" href="/" aria-label={t.home} aria-current={current === 'home' ? 'page' : undefined}><Mark /><span className="brand-name" aria-hidden="true">İzzet Can</span></a>
       <nav className="cap navcap" aria-label={t.navLabel}>
         <Seg label={t.pagesLabel}>
           {MENU.map((route) => <a key={route} href={hrefOf(route)} aria-current={current === route ? 'page' : undefined}>{t.nav[route]}</a>)}

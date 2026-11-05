@@ -33,6 +33,15 @@
 [data-skin='blueprint'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .draft, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button) { border-radius: var(--r-sm) !important; }
 [data-skin='terminal'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .draft, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button, .rn, .wip-dot, .eyebrow::before, .tl li::before) { border-radius: 0 !important; }
 
+/* Page transitions keep their choreography with a shorter tail, so the page is usable sooner. */
+::view-transition-new(page) { animation-duration: 620ms; animation-delay: 100ms; }
+::view-transition-group(media), ::view-transition-old(media), ::view-transition-new(media) { animation-duration: 560ms; }
+
+/* Home link: the monogram carries the name, the most familiar sign of the way home. */
+.cap.brand { width: auto; padding: 0 20px 0 15px; gap: 11px; }
+@media (max-width: 760px) { .cap.brand { padding: 0 16px 0 13px; gap: 9px; } }
+@media (max-width: 374px) { .cap.brand { width: 52px; padding: 0; } .brand-name { display: none; } }
+
 /* Keyboard users can reach the orrery; its focus ring stays inside the clipped panel. */
 .orrery:focus-visible { outline-offset: -4px; }
 
