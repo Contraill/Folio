@@ -1,0 +1,40 @@
+---
+import { ArrowUp, Copy, Mail } from 'lucide-react';
+import { EMAIL, GH } from '@/content/projects';
+import { LOCALES } from '@/i18n/locale';
+import { messages } from '@/i18n/messages';
+import { MENU } from '@/lib/route';
+
+const locale = Astro.locals.locale;
+const t = messages[locale];
+const pages = ['home', ...MENU] as const;
+const year = new Date().getFullYear();
+const names = { en: 'English', tr: 'Türkçe' };
+---
+<footer class="slab pad foot">
+  <div class="foot-top"><a class="btn btn-2 btn-sm" href="#top" data-to-top style="background: var(--slab)">{t.backToTop} <ArrowUp size={15} aria-hidden="true" /></a></div>
+  <div class="foot-grid">
+    <div>
+      <p class="eyebrow">{t.contact}</p>
+      <p class="two-tone" style="margin-top: 18px; max-width: 18ch">{t.footerLead} <span class="tail">{t.footerTail}</span></p>
+      <div class="mailrow">
+        <a class="btn btn-1" href={`mailto:${EMAIL}`} data-open-contact data-magnet>{t.sayHiButton}<span class="ic"><Mail size={16} aria-hidden="true" /></span></a>
+        <span class="mailtext" translate="no">{EMAIL}</span>
+        <button type="button" class="circle" aria-label={t.copyEmail} data-copy={EMAIL} data-copied={t.emailCopied} data-copy-blocked={t.copyBlocked}><Copy size={16} aria-hidden="true" /></button>
+      </div>
+    </div>
+    <div class="foot-cols">
+      <div><p class="eyebrow plain">{t.pagesLabel}</p><ul>{pages.map((r) => <li><a class="link-u" href={r === 'home' ? '/' : `/${r}`}>{t.nav[r]}</a></li>)}</ul></div>
+      <div><p class="eyebrow plain">{t.elsewhere}</p><ul><li><a class="link-u" href={GH} target="_blank" rel="noreferrer">GitHub ↗</a></li><li><a class="link-u" href={`mailto:${EMAIL}`}>{t.email}</a></li><li><a class="link-u" href="https://oztozlu.dev" target="_blank" rel="noreferrer" translate="no">oztozlu.dev ↗</a></li></ul></div>
+    </div>
+  </div>
+  <div class="legal">
+    <span>© {year} · oztozlu.dev</span>
+    <span>{t.skinWord} · <span data-skin-label>Graphite</span></span>
+    <span class="lang-links" role="group" aria-label={t.language}>
+      {LOCALES.map((l) => <a href={`?lang=${l}`} hreflang={l} lang={l} data-set-lang={l} data-astro-reload aria-current={l === locale ? 'true' : undefined}>{names[l]}</a>)}
+    </span>
+    <span>{t.psst}</span>
+  </div>
+  <div class="wordmark-crop" aria-hidden="true"><span class="wordmark">İZZET CAN</span></div>
+</footer>

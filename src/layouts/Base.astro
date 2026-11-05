@@ -1,0 +1,74 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Footer from '@/components/Footer.astro';
+import Toasts from '@/components/Toasts';
+import Topbar from '@/components/Topbar';
+import { DEFAULT_LOCALE, LOCALES } from '@/i18n/locale';
+import { messages } from '@/i18n/messages';
+import { PREPAINT } from '@/lib/prepaint';
+import '@/styles/reset.css';
+import '@/styles/fonts.css';
+import '@/styles/tokens.css';
+import '@/styles/site.css';
+import '@/styles/motion.css';
+import '@/styles/pages.css';
+import '@/styles/ui.css';
+import '@/styles/adaptations.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Unlisted and error pages stay out of search engines. */
+  noindex?: boolean;
+}
+
+const locale = Astro.locals.locale;
+const t = messages[locale];
+const { title, description = t.description, noindex = false } = Astro.props;
+const fullTitle = title ? `${title} · İzzet Can` : t.title;
+
+// One language per URL for crawlers and sharing: /about is English, /about?lang=tr is Turkish.
+const urlFor = (l: string) => new URL(Astro.url.pathname + (l === DEFAULT_LOCALE ? '' : `?lang=${l}`), Astro.site);
+
+const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PREPAINT));
+Astro.csp?.insertScriptHash(`sha256-${btoa(String.fromCharCode(...new Uint8Array(digest)))}`);
+---
+<!doctype html>
+<html lang={locale} data-skin="graphite">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f0f10" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="İzzet Can Öztozlu" />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={urlFor(locale)} />
+    {!noindex && LOCALES.map((l) => <link rel="alternate" hreflang={l} href={urlFor(l)} />)}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={urlFor(DEFAULT_LOCALE)} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="İzzet Can Öztozlu" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={urlFor(locale)} />
+    <meta property="og:locale" content={locale === 'tr' ? 'tr_TR' : 'en_US'} />
+    <meta name="twitter:card" content="summary" />
+    <script is:inline set:html={PREPAINT}></script>
+    <ClientRouter fallback="swap" />
+  </head>
+  <body>
+    <a class="skip" href="#main">{t.skip}</a>
+    <div class="frame" id="top">
+      <Topbar client:load transition:persist="topbar" transition:persist-props t={t} path={Astro.url.pathname} />
+      <main id="main" tabindex="-1"><slot /></main>
+      <Footer />
+    </div>
+    <div id="overlays" transition:persist="overlays"><Toasts client:load /></div>
+    <script>
+      import '@/lib/shell';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+/* Every intentional deviation from the approved prototype lives here, loaded last.
+   tokens, site, motion and pages.css are otherwise unchanged from it. */
+
+/* Footer wordmark: sized in CSS so it is right from first paint and without JavaScript.
+   --wm-k is font-size / width for "İZZET CAN" at each skin's font stretch. */
+:root, [data-skin='graphite'], [data-skin='paper'] { --wm-k: .15198; }
+[data-skin='blueprint'] { --wm-k: .17065; }
+[data-skin='terminal'] { --wm-k: .19841; }
+.wordmark-crop { container-type: inline-size; height: auto; aspect-ratio: 1 / calc(var(--wm-k) * .6); }
+.wordmark-crop .wordmark { display: inline-block; font-size: calc(100cqi * var(--wm-k)); }
+
+/* Search shortcut: names the right key for the platform, and stays away from touch devices. */
+.kbd::after { content: 'Ctrl K'; }
+.mac .kbd::after { content: '⌘K'; }
+@media (hover: none) { .tools .kbd { display: none; } }
+
+/* Auto swatch: `.tool .sw` drew a second ring around the one inside the icon. */
+.tool .sw-auto { box-shadow: none; }
+
+/* Mobile menu: the title keeps its line box; the skin label sat inline next to the Contact button. */
+.ov-sheet-menu > h2.eyebrow { line-height: 1.75rem; }
+.mm-skin { display: flex; margin: 28px 0 8px; }
+
+/* Language switch in the legal row. */
+.lang-links { display: inline-flex; gap: 12px; }
+.lang-links a { opacity: .75; transition: opacity var(--t-s) ease; }
+.lang-links a:hover, .lang-links a[aria-current] { opacity: 1; color: var(--ink); }
+
+/* Server-rendered pages must read fine before and without JavaScript. */
+html:not(.js) [data-reveal], html:not(.js) .lines .ln > span { opacity: 1 !important; transform: none !important; clip-path: none !important; }
+html:not(.js) .media-img { opacity: 1; }
+/* A notched panel waits for its clip instead of flashing the un-notched shape. */
+html.js .cut:not([data-cut-ready]) > .cut-fill { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}

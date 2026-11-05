@@ -1,0 +1,32 @@
+/* Seed data until the content store exists. Public repositories only: never list private work here. */
+export type Kind = 'img' | 'browser' | 'pixel';
+export type Img = { src: string; w: number; h: number };
+export type Project = {
+  id: string; name: string; repo: string; d: number; lang: string; date: string; since: string; stars: number;
+  kind: Kind; tint?: [string, string]; img?: Img; hero?: Img; pos?: string; contain?: boolean; home?: string; desc: string; topics: string[];
+};
+
+const A = (f: string, w: number, h: number): Img => ({ src: '/assets/' + f, w, h });
+
+export const DOMAINS = ['Web', 'Desktop & theming', 'Self-hosted', 'Hardware', 'Desktop apps'];
+export const DOMAIN_SLUG = ['web', 'theming', 'self-hosted', 'hardware', 'desktop-apps'];
+
+export const PROJECTS: Project[] = [
+  { id: 'nodesk', name: 'Nodesk', repo: 'Nodesk', d: 2, lang: 'Python', date: '2026-10-28', since: 'Oct 2026', stars: 0, kind: 'img', img: A('card_nodesk.webp', 900, 562), pos: '50% 0%', home: 'https://contraill.github.io/Nodesk/', desc: 'Live network topology map for home networks that runs on a Raspberry Pi and does no port scanning.', topics: ['homelab', 'network-map', 'openwrt', 'tailscale'] },
+  { id: 'mochi', name: 'Mochi', repo: 'mochi', d: 3, lang: 'C++', date: '2026-10-23', since: 'Oct 2026', stars: 0, kind: 'pixel', tint: ['#8a5a3c', '#2f3d5c'], desc: 'Animated OLED desk companion on ESP32-C3 that reacts to touch, petting and shaking.', topics: ['esp32-c3', 'arduino', 'oled', 'desk-companion'] },
+  { id: 'orbis', name: 'Orbis', repo: 'Orbis', d: 2, lang: 'Python', date: '2026-10-06', since: 'Oct 2026', stars: 0, kind: 'img', img: A('card_orbis.webp', 900, 556), hero: A('hero_orbis.webp', 1683, 1039), pos: '50% 38%', desc: 'Self-hosted cinematic media platform with profiles, adaptive playback, Watch Together and TV launchers.', topics: ['fastapi', 'react', 'docker', 'raspberry-pi'] },
+  { id: 'nothing', name: 'Nothing KDE Theme', repo: 'Nothing-Kde-Theme', d: 1, lang: 'QML', date: '2026-09-16', since: 'Sep 2026', stars: 11, kind: 'img', img: A('card_nothing_cc.webp', 700, 394), hero: A('hero_nothing.webp', 1800, 1012), pos: '70% 50%', desc: 'Nothing-inspired KDE Plasma 6 theme suite with glassy styling, custom panels, widgets and light/dark integration.', topics: ['kde-plasma', 'plasma6', 'kvantum', 'aurorae'] },
+  { id: 'zen', name: 'zen-polarity', repo: 'zen-polarity', d: 1, lang: 'Shell', date: '2026-09-13', since: 'Sep 2026', stars: 0, kind: 'img', img: A('card_zen.webp', 304, 369), contain: true, desc: 'Minimal Zen Browser mod with native adaptive theming and accent-aware window controls.', topics: ['zen-browser', 'userchrome', 'kde-plasma', 'theme'] },
+  { id: 'helios', name: 'Helios', repo: 'Helios', d: 0, lang: 'TypeScript', date: '2026-07-17', since: 'Jul 2026', stars: 0, kind: 'img', img: A('helios_cover.webp', 795, 895), hero: A('hero_helios.webp', 1600, 857), pos: '58% 50%', home: 'https://heliios.vercel.app', desc: 'Interactive 3D solar-system explorer with sourced NASA/JPL data, human-scale comparisons and EN/TR support.', topics: ['react-three-fiber', 'nextjs', 'webgl', 'nasa-api'] },
+  { id: 'campuseats', name: 'CampusEats', repo: 'CampusEats', d: 0, lang: 'JavaScript', date: '2026-06-08', since: 'Jun 2026', stars: 0, kind: 'img', img: A('card_campus.webp', 900, 562), pos: '0% 0%', desc: 'Fully local, QR-based campus restaurant ordering with admin and manager panels, live orders and PWA support.', topics: ['react', 'express', 'socket-io', 'sqlite'] },
+  { id: 'huepr', name: 'huepr', repo: 'huepr', d: 1, lang: 'JavaScript', date: '2026-03-18', since: 'Mar 2026', stars: 1, kind: 'browser', tint: ['#2f8f8a', '#5a3d8f'], img: A('huepr_aurora.webp', 1086, 804), hero: A('huepr_aurora.webp', 1086, 804), pos: '0% 0%', desc: 'Hyprland wallpaper to browser theme: injects CSS variables into allowlisted sites via Native Messaging.', topics: ['hyprland', 'webextension', 'native-messaging', 'theming'] },
+  { id: 'architect', name: 'Architect Office', repo: 'Architect-Office-MGMT-System', d: 4, lang: 'Java', date: '2026-01-05', since: 'Jan 2026', stars: 0, kind: 'img', img: A('card_architect.webp', 900, 568), pos: '50% 0%', desc: 'Java Swing + MySQL desktop app for an architecture office: architects, clients, projects, drawings and payments.', topics: ['java', 'swing', 'mysql', 'flatlaf'] },
+  { id: 'grading', name: 'Student Grading', repo: 'Student-Grading-System', d: 4, lang: 'Java', date: '2026-01-04', since: 'Jan 2026', stars: 0, kind: 'img', img: A('card_grading.webp', 900, 568), pos: '50% 0%', desc: 'Java Swing + MySQL desktop app for students, departments, courses, grades and attendance.', topics: ['java', 'swing', 'mysql', 'jdbc'] },
+  { id: 'emu', name: 'EMU Event Reporting', repo: 'EMU-Activity-and-Event-Reporting', d: 0, lang: 'PHP', date: '2025-12-27', since: 'Dec 2025', stars: 0, kind: 'img', img: A('card_emu.webp', 900, 567), pos: '50% 0%', desc: 'Bilingual PHP portal for tagging university events with sustainability criteria and exporting reports.', topics: ['php', 'bootstrap5', 'jspdf', 'sdg'] },
+  { id: 'schedule', name: 'Syntax Schedule', repo: 'Syntax-Schedule', d: 0, lang: 'HTML', date: '2025-09-27', since: 'Sep 2025', stars: 0, kind: 'img', img: A('card_schedule.webp', 700, 989), pos: '50% 0%', desc: 'Print-ready weekly course schedule in pure HTML and CSS, optimized for A4 and color-coded.', topics: ['html', 'css', 'print'] },
+  { id: 'bct', name: 'Breast Cancer Tracker', repo: 'Breast-Cancer-Tracker', d: 0, lang: 'Vue', date: '2025-07-27', since: 'Summer 2025', stars: 0, kind: 'img', img: A('card_bct.webp', 900, 633), pos: '50% 0%', home: 'https://breastcancertracking.web.app', desc: 'Vue + Firebase screening questionnaire with authentication and admin workflows. Started as an internship project.', topics: ['vue', 'firebase', 'firestore', 'internship-project'] },
+  { id: 'adventure', name: 'Programming Adventure', repo: 'Programming-Adventure', d: 0, lang: 'HTML', date: '2023-10-15', since: 'Fall 2023', stars: 0, kind: 'img', img: A('card_adventure.webp', 900, 562), pos: '50% 0%', home: 'https://contraill.github.io/Programming-Adventure/', desc: 'Hand-written HTML/CSS/JS personal blog, built as a term project in fall 2023. Where it started.', topics: ['html', 'css', 'javascript', 'static-site'] },
+];
+export const BY_ID: Record<string, Project> = Object.fromEntries(PROJECTS.map((p) => [p.id, p]));
+export const GH = 'https://github.com/Contraill';
+export const EMAIL = 'izzet@oztozlu.dev';
