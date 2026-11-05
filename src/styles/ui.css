@@ -1,0 +1,45 @@
+/* Overlay primitives: Radix Dialog / Popover and the cmdk palette. */
+@keyframes ov-fade-in { from { opacity: 0; } }
+@keyframes ov-fade-out { to { opacity: 0; } }
+@keyframes ov-sheet-in { from { transform: translateX(100%); } }
+@keyframes ov-sheet-out { to { transform: translateX(100%); } }
+@keyframes ov-dialog-in { from { opacity: 0; transform: translate(-50%, -48%) scale(.95); } }
+@keyframes ov-dialog-out { to { opacity: 0; transform: translate(-50%, -48%) scale(.95); } }
+@keyframes ov-pop-in { from { opacity: 0; transform: translateY(-8px) scale(.95); } }
+@keyframes ov-pop-out { to { opacity: 0; transform: scale(.95); } }
+
+.ov-scrim { position: fixed; inset: 0; z-index: 50; background: rgb(0 0 0 / .8); }
+.ov-scrim[data-state='open'] { animation: ov-fade-in 150ms; }
+.ov-scrim[data-state='closed'] { animation: ov-fade-out 150ms; }
+
+.ov-close { position: absolute; right: 16px; top: 16px; border-radius: 2px; opacity: .7; background: transparent; transition: opacity 150ms; }
+.ov-close:hover { opacity: 1; }
+.ov-close svg { width: 16px; height: 16px; }
+
+.ov-sheet { position: fixed; z-index: 50; top: 0; bottom: 0; right: 0; height: 100%; padding: 24px; background: var(--slab); color: var(--ink); border-left: 1px solid var(--line); box-shadow: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1); overscroll-behavior: contain; animation-timing-function: ease-in-out; }
+.ov-sheet[data-state='open'] { animation: ov-sheet-in 500ms ease-in-out; }
+.ov-sheet[data-state='closed'] { animation: ov-sheet-out 300ms ease-in-out; }
+.ov-sheet-contact { width: min(440px, 100vw); }
+.ov-sheet-menu { width: min(380px, 100vw); overflow-y: auto; }
+
+.ov-dialog { position: fixed; left: 50%; top: 50%; z-index: 50; display: grid; gap: 16px; width: 100%; transform: translate(-50%, -50%); border: 1px solid hsl(var(--border)); background: hsl(var(--background)); box-shadow: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1); }
+.ov-dialog[data-state='open'] { animation: ov-dialog-in 200ms; }
+.ov-dialog[data-state='closed'] { animation: ov-dialog-out 200ms; }
+.ov-palette { max-width: 560px; overflow: hidden; padding: 0; border-radius: 20px; }
+
+.ov-pop { z-index: 50; border: 1px solid hsl(var(--border)); background: hsl(var(--popover)); color: hsl(var(--popover-foreground)); box-shadow: 0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1); outline: none; transform-origin: var(--radix-popover-content-transform-origin); }
+.ov-pop[data-state='open'] { animation: ov-pop-in 150ms; }
+.ov-pop[data-state='closed'] { animation: ov-pop-out 150ms; }
+
+[cmdk-root] { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; border-radius: calc(var(--radius) - 2px); background: hsl(var(--popover)); color: hsl(var(--popover-foreground)); }
+[cmdk-input-wrapper] { display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid hsl(var(--border)); }
+[cmdk-input-wrapper] svg { flex: none; width: 16px; height: 16px; margin-right: 8px; opacity: .5; }
+[cmdk-input] { display: flex; width: 100%; height: 48px; padding: 12px 0; background: transparent; font-size: 14px; line-height: 20px; outline: none; }
+[cmdk-input]::placeholder { color: hsl(var(--muted-foreground)); }
+[cmdk-list] { max-height: 300px; overflow: hidden auto; }
+[cmdk-empty] { padding: 24px 0; text-align: center; font-size: 14px; line-height: 20px; }
+[cmdk-group] { overflow: hidden; padding: 4px; color: hsl(var(--foreground)); }
+[cmdk-group-heading] { padding: 6px 8px; font-size: 12px; line-height: 16px; font-weight: 500; color: hsl(var(--muted-foreground)); }
+[cmdk-item] { position: relative; display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 2px; font-size: 14px; line-height: 20px; cursor: default; user-select: none; outline: none; }
+[cmdk-item][data-selected='true'] { background: hsl(var(--accent-h)); color: hsl(var(--foreground)); }
+[cmdk-item] svg { flex: none; width: 16px; height: 16px; pointer-events: none; }
