@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './access';
 
 /* Runs against a deployed Preview only: without valid Access credentials, nothing of the site comes back. */
 const remote = process.env.BASE_URL?.startsWith('https://') ? process.env.BASE_URL : undefined;
@@ -22,4 +22,12 @@ test.describe('Cloudflare Access on the Preview', () => {
       await anonymous.dispose();
     });
   }
+
+  test('the service token from the environment reaches the site', async ({ request, page }) => {
+    test.skip(!process.env.CF_ACCESS_CLIENT_ID || !process.env.CF_ACCESS_CLIENT_SECRET, 'needs the service token');
+    for (const path of ['/', '/search-index.json', '/icons/graphite.svg']) expect((await request.get(path)).status(), path).toBe(200);
+    await page.goto('/');
+    await expect(page.locator('main#main')).toBeVisible();
+    await expect(page).toHaveURL(new URL('/', remote).href);
+  });
 });

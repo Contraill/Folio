@@ -21,12 +21,15 @@ test.describe('every page', () => {
         await page.goto(route);
         await expect(page.locator('main h1').first()).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        // Lazy images still loading would be cut off by the next navigation, which Firefox reports as corrupt.
+        await page.waitForLoadState('networkidle');
       }
       expect(problems).toEqual([]);
     });
   }
 
   test('every page is complete without JavaScript', async ({ browser, baseURL }) => {
+    test.slow(); // one test for every page: close to the default timeout against a deployed Preview
     const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
     const page = await context.newPage();
     for (const route of ROUTES) {
