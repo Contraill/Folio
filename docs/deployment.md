@@ -32,6 +32,22 @@ The `preview_urls` value in `wrangler.jsonc` is applied only by `wrangler deploy
 
 A Preview's URL is `<branch>-folio.<subdomain>.workers.dev`. It is shown in the build log and in the GitHub check.
 
+### Observability
+
+Previews log every request and trace it (`previews.observability` in `wrangler.jsonc`); query strings are removed from both. Look under Workers & Pages → `folio` → Observability, choosing the Preview, for:
+
+- **Logs:** each request with its status, plus anything the code logs.
+- **Traces:** where time goes within a request.
+- **Issues:** errors grouped as they happen.
+- **Metrics:** requests, errors, CPU time and duration, always on and needing no setting.
+
+Production gets the same, with tracing added, only at the cutover, because that configuration is applied by `wrangler deploy`.
+
+Not enabled, each needing a decision or affecting production:
+
+- **Web Analytics (real visitors' Core Web Vitals):** a zone setting for `oztozlu.dev`, so it would also inject a script into the coming-soon page. Turn it on at the cutover; the CSP then has to allow `https://static.cloudflareinsights.com` for scripts and `https://cloudflareinsights.com` for connections.
+- **Notifications:** for example, an alert on a raised Worker error rate. These are account settings in Notifications.
+
 ### Access and security
 
 Preview URLs are **public by default**, and each Preview keeps up to 100 Unique Deployment URLs, so anything pushed to a branch stays reachable. Cloudflare adds `X-Robots-Tag: noindex` on `workers.dev` Preview hostnames. Never push secrets or private content to any branch.

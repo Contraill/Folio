@@ -13,7 +13,16 @@
   "preview_urls": true,
   // Previews do not inherit production settings. Storage added at the top level must be
   // repeated here pointing at Preview-only resources, so a Preview can never reach production data.
-  "previews": {},
+  "previews": {
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "redact_query_string": true,
+      "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
+      "traces": { "enabled": true, "head_sampling_rate": 1, "persist": true },
+      "issues": { "enabled": true }
+    }
+  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -25,7 +34,9 @@
       "persist": true
     },
     "traces": {
-      "enabled": false
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true
     },
     "issues": {
       "enabled": true
