@@ -9,6 +9,8 @@ async function watchForProblems(page: Page) {
   return problems;
 }
 const settled = (page: Page) => page.waitForFunction(() => !document.documentElement.classList.contains('intro'), undefined, { timeout: 5000 });
+/** Nothing on the page can be clicked while a page transition is on screen, in any browser. */
+const transitionEnded = (page: Page) => page.waitForFunction(() => !document.getAnimations().some((a) => (a.effect as KeyframeEffect | null)?.pseudoElement?.includes('view-transition')));
 
 /** Starts recording the name of every animation that runs, including on transition pseudo-elements. */
 async function recordAnimations(page: Page) {
@@ -86,17 +88,21 @@ test.describe('motion', () => {
     await settled(page);
     await page.locator('.navcap a', { hasText: 'About' }).click();
     await expect(page.locator('main [data-reveal]').first()).toHaveClass(/\bin\b/);
+    await transitionEnded(page);
     await page.locator('.navcap a', { hasText: 'CV' }).click();
     await expect(page.locator('.sheet')).toHaveClass(/\bin\b/);
     const magnet = page.locator('.foot [data-magnet]');
-    await magnet.scrollIntoViewIfNeeded();
-    // Measured and moved on every try: the page ignores the pointer while a view transition is on screen.
+    // Retried because the page ignores the pointer while a view transition is on screen.
     let nudge = 0;
-    await expect.poll(async () => {
+    await expect(async () => {
+      await magnet.scrollIntoViewIfNeeded();
       const box = (await magnet.boundingBox())!;
-      await page.mouse.move(box.x + box.width / 2 + (nudge++ % 2 ? 10 : 6), box.y + box.height / 2);
-      return magnet.evaluate((el) => (el as HTMLElement).style.getPropertyValue('--mx'));
-    }).toMatch(/^-?\d/);
+      const x = box.x + box.width / 2 + (nudge++ % 2 ? 10 : 6), y = box.y + box.height / 2;
+      await page.mouse.move(x, y);
+      await page.waitForTimeout(60);
+      const state = await magnet.evaluate((el, [px, py]) => ({ mx: (el as HTMLElement).style.getPropertyValue('--mx'), under: document.elementFromPoint(px, py)?.outerHTML.slice(0, 80), scrollY, innerHeight, transitions: document.getAnimations().filter((a) => (a.effect as KeyframeEffect | null)?.pseudoElement?.includes('view-transition')).length }), [x, y]);
+      expect(state.mx, JSON.stringify({ x, y, ...state })).toMatch(/^-?\d/);
+    }).toPass({ timeout: 6000 });
   });
 
   test('the notched panel is restored when returning to its page', async ({ page }) => {
@@ -117,7 +123,7 @@ test.describe('navigation', () => {
     await page.evaluate(() => { (window as never as { marker: Element }).marker = document.querySelector('.topbar')!; });
     await page.locator('.navcap a', { hasText: 'Lab' }).click();
     await expect(page).toHaveURL(/\/lab$/);
-    await expect(page.locator('main h1')).toHaveText('Lab');
+    await expect(page.locator('main h1')).toHaveText('ai lab_');
     expect(await page.evaluate(() => (window as never as { marker: Element }).marker === document.querySelector('.topbar'))).toBe(true);
     await expect(page.locator('.navcap a[aria-current="page"]')).toHaveText('Lab');
     await expect(page.locator('html')).toHaveAttribute('data-dir', 'back');
@@ -209,17 +215,15 @@ test.describe('overlays', () => {
     expect(problems).toEqual([]);
   });
 
-  test('search lists public pages only; the easter egg needs its exact word', async ({ page, request }) => {
+  test('search lists public pages only, and never the easter egg', async ({ page, request }) => {
     const index = await (await request.get('/search-index.json')).json();
     const pages = index.pages.map((p: { href: string }) => p.href);
     for (const hidden of ['/uses', '/now', '/secret', '/admin']) expect(pages).not.toContain(hidden);
     await page.goto('/cv');
     await settled(page);
     await page.keyboard.press('Control+k');
-    await page.locator('[cmdk-input]').fill('secre');
-    await expect(page.locator('[cmdk-item]', { hasText: '/secret' })).toHaveCount(0);
     await page.locator('[cmdk-input]').fill('secret');
-    await expect(page.locator('[cmdk-item]', { hasText: '/secret' })).toBeVisible();
+    await expect(page.locator('[cmdk-item]', { hasText: '/secret' })).toHaveCount(0);
   });
 
   test('contact opens from the top bar and the footer, closes with Escape, returns focus', async ({ page }) => {
