@@ -27,7 +27,7 @@ Stack: Astro 7, TypeScript, React 19 islands, `@astrojs/cloudflare`, Workers wit
 
 Every HTML page is rendered on demand by the Worker. Hashed assets and fonts are served directly from Static Assets and never run Worker code.
 
-Pre-rendering was rejected because one URL serves two languages through negotiation, published content changes without a deploy, and private pages need a server decision on each request. Edge caching (below) recovers the performance.
+Pre-rendering was rejected because one URL serves two languages through negotiation, published content changes without a deploy, and private pages need a server decision on each request. Rendering costs little: measured on the Preview, HTML pages answer as fast as static files. Edge caching (below) is still planned for the content store.
 
 `src/pages/*.astro` own routes and data. Static markup stays in Astro components; anything interactive is a React island. The footer, for example, is plain Astro with a small delegated script, while the top bar is an island.
 
@@ -56,7 +56,9 @@ How it fits together:
 - Project filters change the URL without a page transition. `ProjectsBrowser` handles their history entries ahead of the router, which would otherwise reload the page, and keeps the router's state on them so returning from another page works.
 - Without JavaScript the site is a normal multi-page site.
 
-Nothing on the page can be clicked during a transition, about 0.9 seconds, because the elements being animated are not hit-testable. The prototype behaves the same way.
+Nothing on the page can be hit while a transition is on screen, because the animated elements are not hit-testable. So a press during a transition ends it at once, and the click is re-sent to whatever is under the pointer. Transitions also run about 0.7 seconds instead of 0.9: the same choreography with a shorter tail.
+
+Links start loading on hover, focus or touch (Astro prefetch). For the browser to reuse what it prefetched, HTML is sent with `Cache-Control: private, max-age=60`: never kept by shared caches, and a published change reaches a visitor within a minute. Pages with private content must send `no-store` instead.
 
 ## Content Security Policy **(built)**
 

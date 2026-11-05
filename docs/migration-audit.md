@@ -51,10 +51,14 @@ Visual ones are listed in `src/styles/adaptations.css`. Behavioural ones:
 | Language picked only on the CV | Site-wide, with a switch in the footer and mobile menu; the CV keeps its own | Requirement |
 | "Pinned on GitHub", hard-coded | "Featured", an explicit choice | The old label claimed something nothing checked |
 | Hero: huepr, Helios, Nothing (a static image) | Helios, huepr, Mochi: every slide is live | "Things that react"; Nothing moves to Selected work |
-| Every project public | Explicit `LISTED` set, all 14 for now | Publishing must never be automatic |
+| Every project public | Explicit `PUBLISHED` set: the seven featured and selected projects; the rest stay candidates | Publishing must never be automatic |
 | "Each one has a write-up" on Selected work | Sentence removed | Not true of the projects shown |
 | Device-specific copy ("point at", "drag", "tap", "Keys and touch") | Neutral wording, same on every device | Requirement |
 | Filter history not part of the page transition | Same, and returning from a project restores the filter | Behaviour kept across real URLs |
+| Monogram alone as the home link | Monogram with the name; the monogram alone below 375 px | The monogram was not recognisable as the way home |
+| Transitions about 0.9 s, clicks lost meanwhile | About 0.7 s, a press ends the transition and still lands | Faster to use, same choreography |
+| Lab and Play drew every frame even when paused | Drawing stops when nothing changes and resumes on input | Battery and CPU |
+| Placeholder favicon | The monogram drawn for tab sizes, in the active skin's colours; `favicon.ico` and a touch icon as fallbacks | The tab carries the identity and follows the chosen skin |
 | Touching the toy box on a phone only worked sideways | Grabbing a piece works in any direction; empty space still scrolls | Touch usability |
 | Orrery labels only on hover, lost when a finger lifted | Walks through the planets by itself, keyboard support, label stays after a tap | Accessibility and touch |
 

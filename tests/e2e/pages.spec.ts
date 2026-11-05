@@ -9,7 +9,7 @@ async function watchForProblems(page: Page) {
   return problems;
 }
 
-const ROUTES = ['/', '/projects', '/projects/helios', '/projects/mochi', '/projects/huepr', '/projects/orbis', '/lab', '/play', '/about', '/cv', '/uses', '/now', '/secret'];
+const ROUTES = ['/', '/projects', '/projects/helios', '/projects/mochi', '/projects/huepr', '/projects/orbis', '/projects/bct', '/lab', '/play', '/about', '/cv', '/uses', '/now', '/secret'];
 
 test.describe('every page', () => {
   for (const route of ROUTES) {
@@ -92,8 +92,11 @@ test.describe('unlisted pages', () => {
     });
   }
 
-  test('only listed projects are reachable', async ({ request }) => {
+  test('only published projects are reachable; candidates stay out of every listing', async ({ request }) => {
     expect((await request.get('/projects/does-not-exist')).status()).toBe(404);
+    expect((await request.get('/projects/nodesk')).status()).toBe(404);
+    expect(await (await request.get('/search-index.json')).text()).not.toContain('Nodesk');
+    expect(await (await request.get('/projects')).text()).not.toContain('Nodesk');
     expect((await request.get('/admin')).status()).toBe(404);
   });
 });
@@ -169,15 +172,17 @@ test.describe('projects', () => {
     await page.goto('/projects');
     await settled(page);
     const total = await page.locator('.gcard').count();
-    expect(total).toBe(14);
+    expect(total).toBe(7);
     await page.evaluate(() => { (window as never as { marker: Element }).marker = document.querySelector('main')!; });
     await page.locator('.filters a', { hasText: 'Hardware' }).click();
     await expect(page).toHaveURL(/\?area=hardware$/);
     await expect(page.locator('.gcard')).toHaveCount(1);
     expect(await page.evaluate(() => (window as never as { marker: Element }).marker === document.querySelector('main'))).toBe(true);
     await page.goBack();
-    await expect(page.locator('.gcard')).toHaveCount(14);
+    await expect(page.locator('.gcard')).toHaveCount(7);
     await expect(page).toHaveURL(/\/projects$/);
+    // Long enough for a router page swap to have happened, if one was wrongly started.
+    await page.waitForTimeout(1200);
     expect(await page.evaluate(() => (window as never as { marker: Element }).marker === document.querySelector('main'))).toBe(true);
     expect(problems).toEqual([]);
   });
@@ -202,7 +207,7 @@ test.describe('projects', () => {
     await expect(page.locator('.crumbs')).toHaveCount(0);
     await page.goBack();
     await expect(page).toHaveURL(/\/projects$/);
-    await expect(page.locator('.gcard')).toHaveCount(14);
+    await expect(page.locator('.gcard')).toHaveCount(7);
     await page.goForward();
     await expect(page).toHaveURL(/\?area=hardware$/);
     await expect(page.locator('.gcard')).toHaveCount(1);
@@ -212,9 +217,9 @@ test.describe('projects', () => {
     await page.goto('/projects');
     await settled(page);
     await page.getByRole('button', { name: 'Index view' }).click();
-    await expect(page.locator('.ix tbody tr')).toHaveCount(14);
+    await expect(page.locator('.ix tbody tr')).toHaveCount(7);
     await page.reload();
-    await expect(page.locator('.ix tbody tr')).toHaveCount(14);
+    await expect(page.locator('.ix tbody tr')).toHaveCount(7);
   });
 });
 
@@ -304,7 +309,117 @@ test.describe('lab and play', () => {
   });
 });
 
+/** Counts canvas frames drawn from now on (every stage clears its canvas once per frame). */
+async function countFrames(page: Page) {
+  await page.evaluate(() => {
+    const w = window as never as { frames: number; patched?: boolean };
+    w.frames = 0;
+    if (w.patched) return;
+    w.patched = true;
+    const clear = CanvasRenderingContext2D.prototype.clearRect;
+    CanvasRenderingContext2D.prototype.clearRect = function (...args) { w.frames++; return clear.apply(this, args); };
+  });
+  return async (ms: number) => { const start = await page.evaluate(() => (window as never as { frames: number }).frames); await page.waitForTimeout(ms); return (await page.evaluate(() => (window as never as { frames: number }).frames)) - start; };
+}
+
+test.describe('drawing only when something changes', () => {
+  test('Lab stops drawing when paused and redraws for input', async ({ page }) => {
+    await page.goto('/lab');
+    await settled(page);
+    const frames = await countFrames(page);
+    expect(await frames(1000)).toBeGreaterThan(3);
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await page.waitForTimeout(400);
+    expect(await frames(1000)).toBeLessThan(2);
+    const canvas = page.locator('.field');
+    const before = await canvas.evaluate((c: HTMLCanvasElement) => c.toDataURL());
+    const box = (await canvas.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 20);
+    await expect.poll(() => canvas.evaluate((c: HTMLCanvasElement) => c.toDataURL())).not.toBe(before);
+    await page.mouse.move(0, 0);
+    await expect.poll(() => frames(500), { timeout: 5000 }).toBe(0);
+    await page.getByRole('button', { name: 'Resume' }).click();
+    expect(await frames(1000)).toBeGreaterThan(3);
+  });
+
+  test('Play stops drawing when paused and starts again', async ({ page }) => {
+    await page.goto('/play');
+    await settled(page);
+    const frames = await countFrames(page);
+    expect(await frames(1000)).toBeGreaterThan(3);
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await page.waitForTimeout(300);
+    expect(await frames(1000)).toBeLessThan(2);
+    await page.getByRole('button', { name: 'Resume' }).click();
+    expect(await frames(1000)).toBeGreaterThan(3);
+  });
+
+  test('with reduced motion Lab and Play draw once and rest', async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ baseURL, reducedMotion: 'reduce' });
+    const page = await context.newPage();
+    for (const route of ['/lab', '/play']) {
+      await page.goto(route);
+      await page.waitForTimeout(800);
+      const frames = await countFrames(page);
+      expect(await frames(1000), route).toBeLessThan(2);
+      expect(await page.locator('canvas').first().evaluate((c: HTMLCanvasElement) => c.toDataURL().length)).toBeGreaterThan(3000);
+    }
+    await context.close();
+  });
+});
+
+test.describe('navigation speed', () => {
+  test('a press during a page transition ends it and still reaches its target', async ({ page }) => {
+    await page.goto('/about');
+    await settled(page);
+    const target = (await page.locator('.navcap a', { hasText: 'CV' }).boundingBox())!;
+    await page.locator('.navcap a', { hasText: 'Lab' }).click();
+    await expect(page).toHaveURL(/\/lab$/);
+    await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
+    await expect(page).toHaveURL(/\/cv$/);
+    await expect(page.locator('.sheet')).toBeVisible();
+  });
+
+  test('pages start loading on hover', async ({ page }) => {
+    await page.goto('/about');
+    await settled(page);
+    await page.locator('.navcap a', { hasText: 'Lab' }).hover();
+    await expect.poll(() => page.evaluate(() => !!document.querySelector('link[rel="prefetch"][href$="/lab"]'))).toBe(true);
+  });
+});
+
 test.describe('shell details', () => {
+  test('the tab icon follows the skin, across navigation and reloads', async ({ page, request }) => {
+    for (const path of ['/favicon.ico', '/apple-touch-icon.png', '/icons/graphite.svg', '/icons/terminal.svg']) expect((await request.get(path)).status(), path).toBe(200);
+    await page.goto('/cv');
+    await settled(page);
+    const icon = page.locator('link[data-skin-icon]');
+    await expect(icon).toHaveAttribute('href', '/icons/graphite.svg');
+    await page.locator('[data-skin-trigger]').click();
+    await page.getByRole('radio', { name: /^Terminal/ }).click();
+    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
+    await page.keyboard.press('Escape');
+    await page.locator('.navcap a', { hasText: 'About' }).click();
+    await expect(page).toHaveURL(/\/about$/);
+    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
+    await page.reload();
+    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
+  });
+
+  test('the home link carries the name, and says when it is the current page', async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ baseURL });
+    const page = await context.newPage();
+    await page.goto('/');
+    await expect(page.locator('.cap.brand')).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator('.cap.brand .brand-name')).toBeVisible();
+    await page.goto('/about');
+    await expect(page.locator('.cap.brand')).not.toHaveAttribute('aria-current', 'page');
+    await page.setViewportSize({ width: 360, height: 800 });
+    await expect(page.locator('.cap.brand .brand-name')).toBeHidden();
+    await context.close();
+  });
+
   test('Back to Top sits clear of the footer corner', async ({ page }) => {
     await page.goto('/about');
     await settled(page);

@@ -314,7 +314,7 @@ test.describe('security headers', () => {
     expect(response.headers()['content-language']).toBe('tr');
     expect(response.headers().vary).toContain('Accept-Language');
     expect(response.headers().vary).toContain('Cookie');
-    expect(response.headers()['cache-control']).toBe('no-store');
+    expect(response.headers()['cache-control']).toBe('private, max-age=60');
   });
 });
 

@@ -17,7 +17,7 @@ Resolved here:
 - Hero: every stage is live, the orrery explains itself and works from the keyboard, the wallpaper picker is no longer cut off on phones, using a stage holds the slideshow
 - Skin corners in Terminal and Blueprint, and the clipped Back to Top pill and teaser arrows
 - Copy no longer describes a device or an input method (enforced by a test)
-- Listing is explicit: a project is public only if chosen
+- Publishing is explicit: the seed publishes the seven featured and selected projects, the other repositories stay candidates
 - `/secret` stays an easter egg, out of search, sitemap and navigation
 
 Decided against splitting the stylesheet per page: it is 18 KB compressed for the whole site, and its rules depend on their order.
