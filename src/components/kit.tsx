@@ -1,5 +1,5 @@
 import { ArrowUpRight } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import type { Img as ImgT } from '@/content/projects';
 import { applyCut } from '@/lib/cut';
 
@@ -81,27 +81,34 @@ export function Lines({ lines, className = '', delay = 0 }: { lines: ReactNode[]
   return <span className={'lines ' + className}>{lines.map((line, k) => <span key={k} className="ln" style={{ '--k': k, '--d': delay + 'ms' } as CSSProperties}><span>{line}</span></span>)}</span>;
 }
 
-/** rAF loop that sleeps off-screen and in hidden tabs. */
-export function useLoop(ref: RefObject<HTMLElement | null>, fn: (now: number) => void, fps = 60, dep: unknown = 0) {
+/** rAF loop that sleeps off-screen, in hidden tabs, and whenever the frame reports that nothing
+    will change (returns false). The returned wake() restarts it after an input. */
+export function useLoop(ref: RefObject<HTMLElement | null>, fn: (now: number) => boolean | void, fps = 60, dep: unknown = 0) {
   const fnRef = useRef(fn);
   fnRef.current = fn;
+  const wakeRef = useRef(() => {});
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     let raf = 0, visible = false, last = 0;
     const step = 1000 / fps;
     const loop = (now: number) => {
+      raf = 0;
+      if (!visible || document.hidden) return;
+      if (now - last >= step - 1) { last = now; if (fnRef.current(now) === false) return; }
       raf = requestAnimationFrame(loop);
-      if (!visible || document.hidden || now - last < step - 1) return;
-      last = now;
-      fnRef.current(now);
     };
-    const io = new IntersectionObserver((entries) => { visible = entries[0].isIntersecting; }, { rootMargin: '60px' });
+    const wake = () => { if (!raf) raf = requestAnimationFrame(loop); };
+    wakeRef.current = wake;
+    const io = new IntersectionObserver((entries) => { visible = entries[0].isIntersecting; wake(); }, { rootMargin: '60px' });
     io.observe(el);
-    raf = requestAnimationFrame(loop);
+    const ro = new ResizeObserver(wake);
+    ro.observe(el);
+    document.addEventListener('visibilitychange', wake);
     fnRef.current(performance.now());
-    return () => { cancelAnimationFrame(raf); io.disconnect(); };
+    return () => { cancelAnimationFrame(raf); io.disconnect(); ro.disconnect(); document.removeEventListener('visibilitychange', wake); };
   }, [ref, fps, dep]);
+  return useCallback(() => wakeRef.current(), []);
 }
 
 /** Fades in once loaded; the global motion layer adds the class, which React must leave alone. */

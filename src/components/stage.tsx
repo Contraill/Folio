@@ -27,10 +27,11 @@ export function Orrery({ active = true, focus = { x: 0.5, y: 0.5 }, c, locale }:
     const span = y < 1 ? c.days.replace('{n}', String(Math.round(y * 365.25))) : y === 1 ? c.oneYear : c.years.replace('{n}', y.toLocaleString(locale, { maximumFractionDigits: 1 }));
     return c.orbit.replace('{v}', span);
   };
-  useLoop(cv, (now) => {
+  const wake = useLoop(cv, (now) => {
     const canvas = cv.current!, S = st.current, w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w) return;
-    if (!act.current && S.drawn && !S.keyed) return;
+    // A paused or hidden slide keeps its last frame until someone explores it.
+    if (!act.current && S.drawn && !S.keyed && S.hover < 0) return false;
     S.drawn = true;
     const dpr = Math.min(devicePixelRatio || 1, innerWidth < 760 ? 1.5 : 2);
     if (canvas.width !== Math.round(w * dpr) || S.focusX !== focus.x) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); S.stars = null; S.focusX = focus.x; }
@@ -101,6 +102,7 @@ export function Orrery({ active = true, focus = { x: 0.5, y: 0.5 }, c, locale }:
     S.pos.forEach((q, i) => { const d = Math.hypot(q[0] - mx, q[1] - my); if (d < bd) { bd = d; best = i; } });
     // On touch a planet stays selected after the finger lifts, otherwise its label would be gone at once.
     if (e.pointerType === 'mouse' || e.type === 'pointerdown') S.hover = best;
+    wake();
   };
   const onKey = (e: KeyboardEvent) => {
     const S = st.current, n = PLANETS.length;
@@ -110,6 +112,7 @@ export function Orrery({ active = true, focus = { x: 0.5, y: 0.5 }, c, locale }:
     e.preventDefault();
     S.hover = S.hover < 0 ? (delta > 0 ? 0 : n - 1) : (S.hover + delta + n) % n;
     S.keyed = true;
+    wake();
     setAnnounce(`${c.planets[PLANETS[S.hover].n]}: ${orbitText(S.hover)}`);
   };
   return (

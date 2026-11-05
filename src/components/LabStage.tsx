@@ -22,11 +22,11 @@ function Field({ paused, api, label }: { paused: boolean; api: RefObject<Api | n
     if (S.current.ws.length > 70) S.current.ws.shift();
   };
   api.current = {
-    drop: (n) => { for (let i = 0; i < n; i++) spawn(); },
-    calm: () => { S.current.B = basins(Math.floor(Math.random() * 999) + 1); S.current.ws = []; for (let i = 0; i < 26; i++) spawn(); },
+    drop: (n) => { for (let i = 0; i < n; i++) spawn(); wake(); },
+    calm: () => { S.current.B = basins(Math.floor(Math.random() * 999) + 1); S.current.ws = []; for (let i = 0; i < 26; i++) spawn(); wake(); },
   };
 
-  useLoop(cv, (now) => {
+  const wake = useLoop(cv, (now) => {
     const c = cv.current!, s = S.current, w = c.clientWidth, h = c.clientHeight;
     if (!w) return;
     if (!s.ws.length) for (let i = 0; i < 26; i++) spawn();
@@ -38,7 +38,8 @@ function Field({ paused, api, label }: { paused: boolean; api: RefObject<Api | n
     const dt = s.last ? Math.min(0.05, (now - s.last) / 1000) : 0.016;
     s.last = now;
     if (!still) s.t += dt;
-    s.ptr.a += (s.ptr.ta - s.ptr.a) * 0.08;
+    // Eases toward the target by time, not by frame: the same 8% per frame at 30 fps, at any frame rate.
+    s.ptr.a += (s.ptr.ta - s.ptr.a) * (1 - Math.pow(0.92, dt * 30));
     const extra = { x: s.ptr.x, y: s.ptr.y, a: s.ptr.a, s: 0.09 };
     const [ink, sig] = INK[effective];
     x.clearRect(0, 0, w, h);
@@ -80,14 +81,17 @@ function Field({ paused, api, label }: { paused: boolean; api: RefObject<Api | n
     x.globalAlpha = 1;
     s.ws = s.ws.filter((p) => !p.done || now - p.done < 900);
     while (!still && s.ws.length < 26) spawn();
+    // Paused or reduced motion: draw only while the surface is still settling after an input.
+    return !still || Math.abs(s.ptr.ta - s.ptr.a) > 0.01 || s.flash.length > 0;
   }, 30, effective + String(mobile));
+  useEffect(wake, [paused, wake]);
 
   const relative = (e: PointerEvent) => { const b = cv.current!.getBoundingClientRect(); return [(e.clientX - b.left) / b.width, (e.clientY - b.top) / b.height]; };
   return (
     <canvas ref={cv} className="field" role="img" aria-label={label}
-      onPointerMove={(e) => { const [px, py] = relative(e); Object.assign(S.current.ptr, { x: px, y: py, ta: -0.9 }); }}
-      onPointerLeave={() => { S.current.ptr.ta = 0; }}
-      onPointerDown={(e) => { const [px, py] = relative(e); for (let i = 0; i < 6; i++) spawn(px + (Math.random() - 0.5) * 0.06, py + (Math.random() - 0.5) * 0.06); }} />
+      onPointerMove={(e) => { const [px, py] = relative(e); Object.assign(S.current.ptr, { x: px, y: py, ta: -0.9 }); wake(); }}
+      onPointerLeave={() => { S.current.ptr.ta = 0; wake(); }}
+      onPointerDown={(e) => { const [px, py] = relative(e); for (let i = 0; i < 6; i++) spawn(px + (Math.random() - 0.5) * 0.06, py + (Math.random() - 0.5) * 0.06); wake(); }} />
   );
 }
 

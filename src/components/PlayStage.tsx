@@ -96,7 +96,7 @@ function ToyBox({ paused, api, label }: { paused: boolean; api: RefObject<{ shak
   const mobile = useMedia('(max-width: 760px)');
   const cv = useRef<HTMLCanvasElement>(null);
   const S = useRef({ P: [] as Peg[], B: [] as Body[], w: 0, h: 0, grab: -1, gx: 0, gy: 0, hist: [] as [number, number, number][], last: 0, mobile: false });
-  api.current = { shake: () => S.current.B.forEach((b) => { b.pin = false; b.vx += (Math.random() - 0.5) * 900; b.vy -= 500 + Math.random() * 900; }) };
+  api.current = { shake: () => { S.current.B.forEach((b) => { b.pin = false; b.vx += (Math.random() - 0.5) * 900; b.vy -= 500 + Math.random() * 900; }); wake(); } };
 
   // Touching a piece takes the gesture away from page scrolling; touching empty space still scrolls.
   useEffect(() => {
@@ -109,7 +109,7 @@ function ToyBox({ paused, api, label }: { paused: boolean; api: RefObject<{ shak
     return () => canvas.removeEventListener('touchstart', onTouch);
   }, []);
 
-  useLoop(cv, (now) => {
+  const wake = useLoop(cv, (now) => {
     const c = cv.current!, s = S.current, w = c.clientWidth, h = c.clientHeight;
     if (!w) return;
     const dpr = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2);
@@ -121,9 +121,14 @@ function ToyBox({ paused, api, label }: { paused: boolean; api: RefObject<{ shak
     }
     const dt = s.last ? Math.min(1 / 30, (now - s.last) / 1000) : 1 / 60;
     s.last = now;
-    if (!paused && (!reducedMotion() || s.grab >= 0)) for (let k = 0; k < 3; k++) step(s, dt / 3);
+    const active = !paused && (!reducedMotion() || s.grab >= 0);
+    if (active) for (let k = 0; k < 3; k++) step(s, dt / 3);
     draw(c.getContext('2d')!, s, dpr);
+    // Paused or reduced motion: the frame just drawn stays until something changes.
+    if (!active) s.last = 0;
+    return active;
   }, 60, String(mobile));
+  useEffect(wake, [paused, wake]);
 
   const position = (e: React.PointerEvent) => { const b = cv.current!.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
   return (
@@ -136,6 +141,7 @@ function ToyBox({ paused, api, label }: { paused: boolean; api: RefObject<{ shak
         s.hist = [[x, y, performance.now()]];
         s.gx = x; s.gy = y;
         if (s.grab < 0) s.B.forEach((b) => { const d = Math.hypot(b.x - x, b.y - y); if (d < 180) { b.pin = false; const f = (1 - d / 180) * 900; b.vx += ((b.x - x) / (d || 1)) * f; b.vy += ((b.y - y) / (d || 1)) * f - 200; } });
+        wake();
       }}
       onPointerMove={(e) => { const s = S.current; if (s.grab < 0) return; const [x, y] = position(e); s.gx = x; s.gy = y; s.hist.push([x, y, performance.now()]); if (s.hist.length > 5) s.hist.shift(); }}
       onPointerUp={() => {
