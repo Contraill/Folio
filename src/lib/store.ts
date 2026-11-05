@@ -45,6 +45,8 @@ function paint(effective: EffectiveSkin) {
   const html = document.documentElement;
   html.dataset.skin = effective;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[effective]);
+  // The tab icon follows the skin as well.
+  document.querySelector('link[data-skin-icon]')?.setAttribute('href', `/icons/${effective}.svg`);
 }
 
 /** Changes the skin; the new one spreads out in a circle from `from`. */

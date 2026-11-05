@@ -52,6 +52,7 @@ document.addEventListener('astro:before-swap', (event) => {
   html.dataset.dir = direction;
   html.className = current.className;
   next.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[getState().effective]);
+  next.querySelector('link[data-skin-icon]')?.setAttribute('href', `/icons/${getState().effective}.svg`);
   activeTransition = viewTransition;
   viewTransition.finished.finally(() => { clearSharedMedia(); activeTransition = undefined; });
   uninstallMotion?.();

@@ -11,6 +11,7 @@ export const PREPAINT = `(() => {
   if (colors[skin]) {
     html.dataset.skin = skin;
     document.querySelector('meta[name="theme-color"]').setAttribute('content', colors[skin]);
+    document.querySelector('link[data-skin-icon]').setAttribute('href', '/icons/' + skin + '.svg');
   }
   html.classList.add('js');
   if (/Mac|iPhone|iPad/.test(navigator.platform)) html.classList.add('mac');
