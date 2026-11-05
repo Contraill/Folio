@@ -18,4 +18,6 @@ export default defineConfig({
     },
   },
   devToolbar: { enabled: false },
+  // Pages start loading on hover, focus or touch, so a click usually finds them ready.
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
 });

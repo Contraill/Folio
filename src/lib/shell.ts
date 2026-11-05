@@ -13,6 +13,8 @@ let uninstallMotion: (() => void) | undefined;
 let firstLoad = true;
 
 let returningFrom = '';
+let activeTransition: ViewTransition | undefined;
+let skipped: Promise<unknown> | null = null;
 
 /* Shared media: a card's cover morphs into the case-study panel, and back again when returning. */
 function prepareSharedMedia(from: URL, to: URL, source: Element | undefined) {
@@ -50,7 +52,8 @@ document.addEventListener('astro:before-swap', (event) => {
   html.dataset.dir = direction;
   html.className = current.className;
   next.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[getState().effective]);
-  viewTransition.finished.finally(clearSharedMedia);
+  activeTransition = viewTransition;
+  viewTransition.finished.finally(() => { clearSharedMedia(); activeTransition = undefined; });
   uninstallMotion?.();
 });
 
@@ -77,6 +80,20 @@ document.addEventListener('astro:page-load', () => {
   if (firstLoad) { firstLoad = false; return; }
   document.querySelector<HTMLElement>('main')?.focus({ preventScroll: true });
 });
+
+/* Nothing on the page can be hit while a transition is on screen. A press ends the transition at once,
+   and the click it belonged to still reaches whatever is now under the pointer. */
+document.addEventListener('pointerdown', () => {
+  if (!activeTransition) return;
+  activeTransition.skipTransition();
+  skipped = activeTransition.finished.catch(() => {});
+}, true);
+document.addEventListener('click', (event) => {
+  if (!skipped || event.target !== document.documentElement) return;
+  const { clientX: x, clientY: y } = event, done = skipped;
+  skipped = null;
+  done.then(() => document.elementFromPoint(x, y)?.closest<HTMLElement>('a[href], button, [role="button"], summary, label')?.click());
+}, true);
 
 document.addEventListener('click', (event) => {
   const el = (event.target as Element).closest?.<HTMLElement>('[data-open-contact], [data-copy], [data-to-top], [data-set-lang]');
