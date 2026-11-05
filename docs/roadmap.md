@@ -27,7 +27,7 @@ Also: code-split each engine, set bundle budgets, delete the unused lander and s
 
 ## M3 — Content store
 
-**Needs approval to create preview resources.** D1 schema, migrations, zod schemas, the read layer behind today's seed imports, seed tool, local and preview environments, edge caching with verified purge behaviour.
+**Needs approval to create preview resources, and Access on Previews first.** D1 schema, migrations, zod schemas, the read layer behind today's seed imports, seed tool, local and preview environments, edge caching with verified purge behaviour.
 
 **Exit:** the site renders identically from D1, and a test proves a deploy leaves content untouched.
 
@@ -67,16 +67,16 @@ Licence choice, audit of files and full Git history, contribution docs. The repo
 
 | Risk | Impact | Mitigation | Status |
 | --- | --- | --- | --- |
-| A merge to `main` replaces the live coming-soon page | High | Worker is named `folio-dev` on this branch, so Workers Builds fails on a mismatch; rename only at cutover | In place, behaviour taken from Cloudflare's docs, not yet exercised |
-| Workers Builds settings (no build command) don't suit Astro | Launch failure | Update the settings at cutover, set the Node version, test on preview first | Planned M9 |
-| Dashboard settings can't be confirmed from the repository | Unknown preview or branch behaviour | Confirm before any branch is pushed | **Open** |
+| A merge to `main` replaces the live coming-soon page | High | No technical guard exists. Merge only with explicit approval; add a branch rule on `main` if the plan allows | **Process only** |
+| The empty Build command doesn't suit Astro in production | Launch failure | Previews build through their own command; set the Build command right before the cutover merge | Planned M9 |
+| Previews are public by default | Unfinished work visible, later data exposure | No bindings or private data today; Access set to Previews only before M3 | **Decision** |
 | Same URL serves two languages | Mixed cache variants, Turkish unindexed | `Vary`, cache keyed on language, `?lang=tr` canonical with `hreflang` | Headers in place; cache M3 |
 | CSP and client router are officially unsupported together | Hydration breaks after an upgrade | Regression tests fail on any violation; documented fallback | In place |
 | Request data leaking through module scope in Workers | Cross-visitor data exposure | Store is browser-only; rule documented | In place; review in M4 |
 | Deploy overwrites content | Data loss | No content in builds; seed refuses non-empty databases | Design |
 | Migration incompatible with running code | Downtime | Expand and contract; preview first | Design |
 | Private content leaks | High | Server-only, no cache, same 404 as missing, tests on every public surface | Design |
-| Access bypassed through other hostnames | High | `workers_dev` and `preview_urls` off, JWT verified in application code | Partly in place |
+| Access bypassed through other hostnames | High | Production `workers.dev` route off, JWT verified in application code on every host | Partly in place |
 | A repository goes private and stays cached | Private metadata exposed | Treat absence as removal, purge pages and media | Design |
 | No repository has the discovery topic yet | Empty sync | Tag repositories or seed from the current list | Decision |
 | Notches appear only after hydration on a server-rendered page | Hero paint delay, slower LCP | Panels wait for their clip; measure on the hero in M2 and consider running the clip before hydration | Watch |

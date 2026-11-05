@@ -104,9 +104,9 @@ Public HTML goes through the Workers Cache API, keyed by URL and resolved langua
 
 **Admin.** `admin.oztozlu.dev` is one Astro application with the public site, gated by host in middleware. A separate Worker was considered: it isolates better, but the admin must render drafts through the same page components, and a monorepo costs more than it returns for one person.
 
-**Authorization is enforced in code, on every privileged route.** Cloudflare Access is the first layer; the application then verifies the `Cf-Access-Jwt-Assertion` token itself (signature against the team's JWKS, `aud`, `iss`, expiry) and checks the email against an allowlist. Hiding the interface is never the control. Local development uses a development-only identity that is compiled out of production builds.
+**Authorization is enforced in code, on every privileged route.** Cloudflare Access is the first layer; the application then verifies the `Cf-Access-Jwt-Assertion` token itself (signature against the team's JWKS, `aud`, `iss`, expiry) and checks the email against an allowlist. `ctx.access` is not an option here, because Cloudflare does not pass it to a Worker that uses Static Assets. Hiding the interface is never the control. Local development uses a development-only identity that is compiled out of production builds.
 
-**No bypass routes.** `workers_dev` and `preview_urls` are disabled (**built**), so the Worker is reachable only through custom domains.
+**No bypass routes.** Production's `workers.dev` route is off (**built**), so production is reachable only through its custom domain. Previews have public `workers.dev` hostnames by default, so they must sit behind Access before holding anything non-public, and the application's own token check applies on every host.
 
 **Private pages** render on the server after the same verification. An anonymous request gets the same 404 as a page that does not exist, so existence is not revealed. They are excluded from the cache, the sitemap, search and every public API, and their content never appears in the repository or in static assets. They live under `/private/*` so that an Access policy can cover the path.
 
@@ -126,12 +126,12 @@ Public HTML goes through the Workers Cache API, keyed by URL and resolved langua
 
 | | Local | Preview | Production |
 | --- | --- | --- | --- |
-| Worker | `astro dev`, `astro preview` | `folio-preview` | `folio` |
+| Worker | `astro dev`, `astro preview` | Preview of `folio`, one per branch | `folio` |
 | D1 | local file | `folio-preview` | `folio-production` |
 | R2 | local | `folio-preview-media` | `folio-media` |
 | Access | development identity | test policy | production policy |
 
-Environments never share data. Creating any of these requires explicit approval.
+Previews do not inherit production settings: bindings are declared separately in the `previews` block of `wrangler.jsonc`, which is empty today because nothing is bound. Environments never share data. Creating any of these requires explicit approval. See [deployment.md](deployment.md).
 
 ## GitHub integration **(planned)**
 

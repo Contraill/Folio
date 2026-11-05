@@ -12,8 +12,8 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "node --test \"src/**/*.test.ts\"",
-    "deploy:dry-run": "astro build && wrangler deploy --dry-run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "preview:cloudflare": "astro build && wrangler preview"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.4",
