@@ -3,7 +3,10 @@
   // pushes to any other branch only create a Preview. See docs/deployment.md.
   "name": "folio",
   "compatibility_date": "2026-10-31",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  // ctx.exports, which lets the gateway call the cached page renderer.
+  "compatibility_flags": ["enable_ctx_exports"],
+  // The site behind a thin gateway that decides whether a page may come from the shared cache.
+  "main": "src/worker.ts",
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS"
@@ -11,13 +14,23 @@
   // Production is reached through its custom domain only. Preview hostnames are a separate setting.
   "workers_dev": false,
   "preview_urls": true,
-  // Production has no content store yet: it is created at the cutover.
+  // Production: no content store yet (it is created at the cutover) and no shared page cache.
+  "vars": { "PAGE_CACHE": "off" },
+  "cache": { "enabled": false },
+  // Only the page renderer may ever be cached; the gateway in front of it never is.
+  "exports": {
+    "default": { "type": "worker", "cache": { "enabled": false } },
+    "Pages": { "type": "worker", "cache": { "enabled": true } }
+  },
   // Previews do not inherit production settings. Every binding here points at a Preview-only resource,
   // so a Preview can never reach production data.
   "previews": {
     "d1_databases": [
       { "binding": "DB", "database_name": "folio-preview", "database_id": "6b36ecbe-b860-4df3-92c5-188a49af172b" }
     ],
+    // The page cache may be used, and is switched on or off at runtime in the database (meta.page_cache).
+    "vars": { "PAGE_CACHE": "allowed" },
+    "cache": { "enabled": true },
     "observability": {
       "enabled": true,
       "head_sampling_rate": 1,
@@ -32,7 +45,8 @@
     "local": {
       "d1_databases": [
         { "binding": "DB", "database_name": "folio-local", "database_id": "local-only", "migrations_dir": "migrations" }
-      ]
+      ],
+      "vars": { "PAGE_CACHE": "allowed" }
     }
   },
   "observability": {
