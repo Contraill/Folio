@@ -1,0 +1,50 @@
+name: Preview
+
+# A push to develop: checks, a build with live GitHub data, the Preview deploy (develop-folio.<subdomain>.workers.dev,
+# behind Cloudflare Access) and a short browser run against it with the Access service token.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-develop
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PREVIEW_URL: https://develop-folio.i-canoztozlu.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm test
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_TRIGGER: preview
+        run: pnpm build
+      - name: Check the build output
+        run: node --test src/build.test.ts
+      - name: Deploy the Preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler preview --name develop
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Short browser run against the Preview
+        env:
+          BASE_URL: ${{ env.PREVIEW_URL }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: pnpm exec playwright test tests/e2e/access.spec.ts tests/e2e/shell.spec.ts --project=chromium
