@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties, type ReactNode, type RefObject } from 'react';
-import type { Img as ImgT } from '@/content/projects';
+import type { Img as ImgT } from '@/content/schema';
 import { applyCut } from '@/lib/cut';
 
 /** Media query as state. Always false during hydration, so markup matches the server. */

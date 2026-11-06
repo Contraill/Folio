@@ -1,9 +1,7 @@
-/* Seed case studies until the content store exists. Sections map onto the planned content blocks. */
-import type { Locale } from '../i18n/locale';
-import { A, type Img } from './projects.ts';
-
-export type CaseSection = { kind?: 'overview'; title: string; paras?: string[]; list?: [string, string][]; gal?: [Img, string][]; todo?: boolean };
-export type Case = { lede: string; stack: string; facts?: [string, string][]; sections: CaseSection[] };
+/* Case studies as first written, loaded with each project by `pnpm db:seed`. Sections map onto the planned content blocks. */
+import type { Case } from '../src/content/schema.ts';
+import type { Locale } from '../src/i18n/locale.ts';
+import { A } from './projects.ts';
 
 const EN: Record<string, Case> = {
   helios: {

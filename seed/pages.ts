@@ -1,4 +1,5 @@
-/* Seed page copy until the content store exists. Copy never describes a device or an input method. */
+/* Page copy as first written. `pnpm db:seed` loads it into an empty content store; the site itself reads the store.
+   Copy never describes a device or an input method. */
 export const pages = {
   en: {
     toWrite: 'to write',

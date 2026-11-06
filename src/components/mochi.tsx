@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
-import type { Pages } from '@/content/pages';
+import type { Pages } from '@/content/schema';
 import { reducedMotion } from '@/lib/motion';
 import { Pet, type Mood } from '@/lib/pet';
 import { useStore } from '@/lib/store';

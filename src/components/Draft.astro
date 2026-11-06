@@ -1,7 +1,8 @@
 ---
 import { PenLine } from 'lucide-react';
-import { pages } from '@/content/pages';
+import { getContent } from '@/content/request';
 
 const { block = false } = Astro.props as { block?: boolean };
+const { pages } = await getContent(Astro.locals);
 ---
-<span class:list={['draft', { block }]}><PenLine size={13} aria-hidden="true" /><span class="draft-k">{pages[Astro.locals.locale].toWrite}</span><span class="draft-t"><slot /></span></span>
+<span class:list={['draft', { block }]}><PenLine size={13} aria-hidden="true" /><span class="draft-k">{pages.toWrite}</span><span class="draft-t"><slot /></span></span>

@@ -1,7 +1,7 @@
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties, type FocusEvent } from 'react';
-import type { Pages } from '@/content/pages';
-import type { Project } from '@/content/projects';
+import type { Pages } from '@/content/schema';
+import type { Project } from '@/content/schema';
 import { reducedMotion } from '@/lib/motion';
 import { Cut, Go, Lines, useMedia } from './kit';
 import { Showcase } from './stage';

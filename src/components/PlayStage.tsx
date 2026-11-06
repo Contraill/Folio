@@ -1,6 +1,6 @@
 import { Pause, Play as PlayIcon, Shuffle } from 'lucide-react';
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import type { Pages } from '@/content/pages';
+import type { Pages } from '@/content/schema';
 import { reducedMotion } from '@/lib/motion';
 import { Cut, useLoop, useMedia } from './kit';
 

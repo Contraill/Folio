@@ -1,18 +1,9 @@
-/* Seed data until the content store exists. Every project here is a candidate; only those in PUBLISHED
-   appear on the site. Public repositories only: never add private work here. */
-import type { Locale } from '../i18n/locale';
-
-export type Kind = 'img' | 'browser' | 'pixel';
-export type Img = { src: string; w: number; h: number };
-export type Project = {
-  id: string; name: string; repo: string; d: number; lang: string; date: string; since: string; stars: number;
-  kind: Kind; tint?: [string, string]; img?: Img; hero?: Img; pos?: string; contain?: boolean; home?: string; desc: string; topics: string[];
-};
+/* Projects as first written, loaded into an empty content store by `pnpm db:seed`. Every project here becomes a
+   candidate; only those in PUBLISHED are listed on the site. Public repositories only: never add private work here. */
+import type { Img, Project } from '../src/content/schema.ts';
+import type { Locale } from '../src/i18n/locale.ts';
 
 export const A = (f: string, w: number, h: number): Img => ({ src: '/assets/' + f, w, h });
-
-export const DOMAINS = ['Web', 'Desktop & theming', 'Self-hosted', 'Hardware', 'Desktop apps'];
-export const DOMAIN_SLUG = ['web', 'theming', 'self-hosted', 'hardware', 'desktop-apps'];
 
 export const PROJECTS: Project[] = [
   { id: 'nodesk', name: 'Nodesk', repo: 'Nodesk', d: 2, lang: 'Python', date: '2026-10-28', since: 'Oct 2026', stars: 0, kind: 'img', img: A('card_nodesk.webp', 900, 562), pos: '50% 0%', home: 'https://contraill.github.io/Nodesk/', desc: 'Live network topology map for home networks that runs on a Raspberry Pi and does no port scanning.', topics: ['homelab', 'network-map', 'openwrt', 'tailscale'] },
@@ -30,16 +21,13 @@ export const PROJECTS: Project[] = [
   { id: 'bct', name: 'Breast Cancer Tracker', repo: 'Breast-Cancer-Tracker', d: 0, lang: 'Vue', date: '2025-07-27', since: 'Summer 2025', stars: 0, kind: 'img', img: A('card_bct.webp', 900, 633), pos: '50% 0%', home: 'https://breastcancertracking.web.app', desc: 'Vue + Firebase screening questionnaire with authentication and admin workflows. Started as an internship project.', topics: ['vue', 'firebase', 'firestore', 'internship-project'] },
   { id: 'adventure', name: 'Programming Adventure', repo: 'Programming-Adventure', d: 0, lang: 'HTML', date: '2023-10-15', since: 'Fall 2023', stars: 0, kind: 'img', img: A('card_adventure.webp', 900, 562), pos: '50% 0%', home: 'https://contraill.github.io/Programming-Adventure/', desc: 'Hand-written HTML/CSS/JS personal blog, built as a term project in fall 2023. Where it started.', topics: ['html', 'css', 'javascript', 'static-site'] },
 ];
-export const GH = 'https://github.com/Contraill';
-export const EMAIL = 'izzet@oztozlu.dev';
 
-/* Explicit choices, never derived from GitHub, until the admin panel takes them over.
-   PUBLISHED: what the site shows, in this order. Add an id from PROJECTS above to publish it. */
+/* Explicit choices, never derived from GitHub. PUBLISHED: what the site lists, in this order. */
 export const PUBLISHED = ['huepr', 'helios', 'nothing', 'orbis', 'campuseats', 'bct', 'mochi'];
 export const FEATURED = ['helios', 'huepr', 'mochi'];
 export const SELECTED = ['orbis', 'campuseats', 'bct', 'nothing'];
 
-const TR: Record<string, { desc: string; since: string }> = {
+export const TR: Record<string, { desc: string; since: string }> = {
   nodesk: { since: 'Eki 2026', desc: 'Ev ağları için canlı ağ topolojisi haritası. Raspberry Pi üzerinde çalışır, port taraması yapmaz.' },
   mochi: { since: 'Eki 2026', desc: 'ESP32-C3 üzerinde çalışan animasyonlu OLED masa arkadaşı. Dokunmaya, sevmeye ve sallanmaya tepki verir.' },
   orbis: { since: 'Eki 2026', desc: 'Profiller, uyarlanabilir oynatma, Watch Together ve TV arayüzleri olan self-hosted medya platformu.' },
@@ -55,13 +43,9 @@ const TR: Record<string, { desc: string; since: string }> = {
   bct: { since: 'Yaz 2025', desc: 'Kimlik doğrulama ve yönetici akışları olan Vue + Firebase tarama anketi. Staj projesi olarak başladı.' },
   adventure: { since: 'Güz 2023', desc: 'Güz 2023’te dönem projesi olarak elle yazılmış HTML/CSS/JS kişisel blog. Her şey burada başladı.' },
 };
-const AREAS: Record<Locale, string[]> = { en: DOMAINS, tr: ['Web', 'Masaüstü ve tema', 'Self-hosted', 'Donanım', 'Masaüstü uygulamaları'] };
-export const areasFor = (locale: Locale) => AREAS[locale];
-
-/** Keeps only the published projects, in their order. Everything public goes through this. */
+/** Keeps only the published projects, in their order. */
 export const pickPublished = (all: Project[], ids: string[]) => ids.map((id) => all.find((p) => p.id === id)).filter((p): p is Project => !!p);
 
 const localized = (p: Project, locale: Locale): Project => (locale === 'tr' && TR[p.id] ? { ...p, ...TR[p.id] } : p);
+/** What the site listed before the content store, kept to check the store against. */
 export const publishedProjects = (locale: Locale) => pickPublished(PROJECTS, PUBLISHED).map((p) => localized(p, locale));
-export const projectById = (id: string, locale: Locale) => publishedProjects(locale).find((p) => p.id === id);
-export const projectsIn = (ids: string[], locale: Locale) => pickPublished(publishedProjects(locale), ids);

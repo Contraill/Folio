@@ -1,7 +1,7 @@
 import { Copy, Printer } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
-import { CV_PROJECTS, CV_TEXT } from '@/content/cv';
-import { EMAIL } from '@/content/projects';
+import type { Cv as CvContent } from '@/content/schema';
+import { EMAIL } from '@/content/site';
 import type { Locale } from '@/i18n/locale';
 import type { Messages } from '@/i18n/messages';
 import { copyText } from '@/lib/copy';
@@ -9,7 +9,7 @@ import { Cut, Seg } from './kit';
 
 const STORAGE_KEY = 'fx-cv';
 
-export default function Cv({ locale, t }: { locale: Locale; t: Messages }) {
+export default function Cv({ locale, t, cvs }: { locale: Locale; t: Messages; cvs: Record<Locale, CvContent> }) {
   // Starts in the page language; a language picked here is remembered for this page only.
   const [lang, setLang] = useState<Locale>(locale);
   useEffect(() => {
@@ -19,8 +19,7 @@ export default function Cv({ locale, t }: { locale: Locale; t: Messages }) {
     return () => removeEventListener('cv-print', print);
   }, []);
   const pick = (next: Locale) => { setLang(next); try { localStorage.setItem(STORAGE_KEY, next); } catch { /* storage unavailable */ } };
-  const c = CV_TEXT[lang];
-  const projects = CV_PROJECTS[lang];
+  const { text: c, projects } = cvs[lang];
   const asText = () => [
     'İzzet Can Öztozlu — ' + c.role, `${EMAIL} · github.com/Contraill · oztozlu.dev`, '', c.profile.toUpperCase(), c.summary, '',
     c.experience.toUpperCase(), `${c.intern} · Up&Running`, '', c.projects.toUpperCase(), ...projects.map((p) => `${p[0]} (${p[1]}): ${p[2]}`), '',

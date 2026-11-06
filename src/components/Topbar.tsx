@@ -9,7 +9,7 @@ import { reducedMotion } from '@/lib/motion';
 import { overlays, useReturnFocus } from '@/lib/overlay';
 import { currentMenuItem, MENU } from '@/lib/route';
 import { setContactOpen, setSearchOpen, setSkin, SKIN_KEYS, useStore, type SkinKey } from '@/lib/store';
-import { EMAIL, GH } from '@/content/projects';
+import { EMAIL, GH } from '@/content/site';
 import { Arrow, Seg } from './kit';
 
 const SearchPalette = lazy(() => import('./SearchPalette'));

@@ -1,9 +1,9 @@
 ---
 import Draft from '@/components/Draft.astro';
-import { pages } from '@/content/pages';
+import { getContent } from '@/content/request';
 import Base from '@/layouts/Base.astro';
 
-const c = pages[Astro.locals.locale].uses;
+const c = (await getContent(Astro.locals)).pages.uses;
 ---
 <Base title={c.title} noindex>
   <section class="slab pad" aria-labelledby="u-h">

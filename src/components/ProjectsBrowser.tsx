@@ -1,7 +1,7 @@
 import { LayoutGrid, Rows3 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
-import type { Pages } from '@/content/pages';
-import type { Project } from '@/content/projects';
+import type { Pages } from '@/content/schema';
+import type { Project } from '@/content/schema';
 import { flip } from '@/lib/motion';
 import { Cover } from './Cover';
 import { Go, Seg } from './kit';

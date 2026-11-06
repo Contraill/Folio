@@ -1,9 +1,10 @@
 ---
 import PlayStage from '@/components/PlayStage';
-import { pages } from '@/content/pages';
+import { getContent } from '@/content/request';
 import Base from '@/layouts/Base.astro';
 
-const c = pages[Astro.locals.locale].play;
+const c = (await getContent(Astro.locals)).pages.play;
+Astro.locals.cacheable = true;
 const colors = ['#ff5a36', '#3ec7ff', '#ffd23f'];
 ---
 <Base title={c.title}>

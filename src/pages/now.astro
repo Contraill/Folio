@@ -1,15 +1,14 @@
 ---
 import Cover from '@/components/Cover';
 import Draft from '@/components/Draft.astro';
-import { pages } from '@/content/pages';
-import { publishedProjects } from '@/content/projects';
+import { getContent } from '@/content/request';
 import Base from '@/layouts/Base.astro';
 
 const locale = Astro.locals.locale;
-const content = pages[locale];
+const { pages: content, projects } = await getContent(Astro.locals);
 const c = content.now;
 const day = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-const recent = [...publishedProjects(locale)].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+const recent = [...projects].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
 ---
 <Base title={c.title} noindex>
   <section class="nowp" aria-labelledby="n-h">

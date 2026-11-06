@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
-import type { Pages } from '@/content/pages';
-import type { Project } from '@/content/projects';
+import type { Pages } from '@/content/schema';
+import type { Project } from '@/content/schema';
 import { reducedMotion } from '@/lib/motion';
 import { Img, useLoop } from './kit';
 import { MochiDevice } from './mochi';

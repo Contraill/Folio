@@ -19,7 +19,7 @@ export default function SearchPalette({ t }: { t: Messages }) {
   useEffect(() => { if (!open) setQ(''); }, [open]);
   useEffect(() => {
     if (!open || index) return;
-    fetch('/search-index.json').then((r) => r.json()).then(setIndex).catch(() => setIndex({ projects: [], pages: [] }));
+    fetch('/search-index.json').then((r) => r.json() as Promise<SearchIndex>).then(setIndex).catch(() => setIndex({ projects: [], pages: [] }));
   }, [open, index]);
   const returnFocus = useReturnFocus();
   const go = (href: string) => { setSearchOpen(false); navigate(href); };

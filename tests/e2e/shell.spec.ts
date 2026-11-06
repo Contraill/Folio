@@ -306,7 +306,7 @@ test.describe('security headers', () => {
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toMatch(/script-src 'self' 'sha256-/);
     expect(csp).not.toMatch(/script-src[^;]*unsafe-inline/);
-    await page.evaluate(() => { const s = document.createElement('script'); s.textContent = 'window.injected = true'; document.head.append(s); });
+    await page.evaluate(() => { const s = document.createElement('script'); s.textContent = 'window.injected = true'; document.head.appendChild(s); });
     expect(await page.evaluate(() => (window as never as { injected?: boolean }).injected)).toBeUndefined();
   });
 

@@ -4,23 +4,23 @@ import Cover from '@/components/Cover';
 import Hero from '@/components/Hero';
 import { Go } from '@/components/kit';
 import Mochi from '@/components/mochi';
-import { pages } from '@/content/pages';
-import { areasFor, FEATURED, projectsIn, SELECTED } from '@/content/projects';
+import { getContent } from '@/content/request';
+import { areasFor } from '@/content/site';
 import { messages } from '@/i18n/messages';
 import Base from '@/layouts/Base.astro';
 import { LAB_MINI_PATHS } from '@/lib/labmini';
 
 const locale = Astro.locals.locale;
 const t = messages[locale];
-const content = pages[locale];
+const { pages: content, featured, selected } = await getContent(Astro.locals);
+Astro.locals.cacheable = true;
 const c = content.home;
 const areas = areasFor(locale);
-const selected = projectsIn(SELECTED, locale);
 const depth = [0.04, 0.09, 0.02, 0.12];
 const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A', '#3ec7ff', 52, 64, 34], ['Y', '#7a5cff', 70, 72, 30], ['', '#20c997', 84, 80, 16], ['', '#ff7ac0', 8, 84, 14], ['', '#f3f3f1', 61, 86, 12]] as const;
 ---
 <Base>
-  <Hero client:load projects={projectsIn(FEATURED, locale)} c={c} stage={content.stage} mochi={content.mochi} locale={locale} />
+  <Hero client:load projects={featured} c={c} stage={content.stage} mochi={content.mochi} locale={locale} />
 
   <div class="slab">
     <section class="pad" aria-labelledby="sel-h" style="padding-top: 112px">

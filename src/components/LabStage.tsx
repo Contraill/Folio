@@ -1,6 +1,6 @@
 import { Pause, Play, RotateCcw, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react';
-import type { Pages } from '@/content/pages';
+import type { Pages } from '@/content/schema';
 import { basins, contours, grid, LEVELS, sample } from '@/lib/field';
 import { reducedMotion } from '@/lib/motion';
 import { useStore } from '@/lib/store';

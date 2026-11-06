@@ -1,11 +1,14 @@
 ---
 import Cv from '@/components/Cv';
+import { contentIn } from '@/content/request';
 import { messages } from '@/i18n/messages';
 import Base from '@/layouts/Base.astro';
 
 const locale = Astro.locals.locale;
 const t = messages[locale];
+const [en, tr] = await Promise.all([contentIn(Astro.locals, 'en'), contentIn(Astro.locals, 'tr')]);
+Astro.locals.cacheable = true;
 ---
 <Base title="CV">
-  <Cv client:load locale={locale} t={t} />
+  <Cv client:load locale={locale} t={t} cvs={{ en: en.cv, tr: tr.cv }} />
 </Base>

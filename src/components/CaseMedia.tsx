@@ -1,8 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { Maximize2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { Pages } from '@/content/pages';
-import type { Img as ImgT, Project } from '@/content/projects';
+import type { Pages } from '@/content/schema';
+import type { Img as ImgT, Project } from '@/content/schema';
 import { overlays, useReturnFocus } from '@/lib/overlay';
 import { Cover } from './Cover';
 import { Cut, Img } from './kit';

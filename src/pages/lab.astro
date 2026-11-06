@@ -1,9 +1,10 @@
 ---
 import LabStage from '@/components/LabStage';
-import { pages } from '@/content/pages';
+import { getContent } from '@/content/request';
 import Base from '@/layouts/Base.astro';
 
-const c = pages[Astro.locals.locale].lab;
+const c = (await getContent(Astro.locals)).pages.lab;
+Astro.locals.cacheable = true;
 ---
 <Base title={c.title}>
   <div class="lab">

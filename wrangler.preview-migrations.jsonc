@@ -1,0 +1,13 @@
+{
+  // Used only by `pnpm db:migrate:preview` and `pnpm db:seed:preview` to reach the Preview database.
+  // It names no Worker code, so it cannot be deployed. Production has no database until the cutover.
+  "name": "folio-preview-database",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "folio-preview",
+      "database_id": "6b36ecbe-b860-4df3-92c5-188a49af172b",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
