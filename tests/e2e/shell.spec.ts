@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { expect, test } from './access';
 
@@ -91,7 +93,7 @@ test.describe('motion', () => {
     await expect(page.locator('main [data-reveal]').first()).toHaveClass(/\bin\b/);
     await transitionEnded(page);
     await page.locator('.navcap a', { hasText: 'CV' }).click();
-    await expect(page.locator('.sheet')).toHaveClass(/\bin\b/);
+    await expect(page.locator('.cv-card, .cv-frame')).toHaveClass(/\bin\b/);
     const magnet = page.locator('.foot [data-magnet]');
     // Retried because the page ignores the pointer while a view transition is on screen.
     let nudge = 0;
@@ -289,21 +291,52 @@ test.describe('language', () => {
     await context.close();
   });
 
-  test('each language has its own canonical URL for crawlers and sharing', async ({ page }) => {
+  test('both languages share one clean address for crawlers and sharing', async ({ page }) => {
     await page.goto('/about?lang=tr');
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://oztozlu.dev/about?lang=tr');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://oztozlu.dev/about');
     await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute('content', 'tr_TR');
-    await page.goto('/cv');
-    await expect(page.locator('link[rel="alternate"][hreflang="tr"]')).toHaveAttribute('href', 'https://oztozlu.dev/cv?lang=tr');
-    await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute('href', 'https://oztozlu.dev/cv');
+    await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0);
+  });
+
+  test('the Turkish copy is served at the same address, and the internal one is never reachable', async ({ request, baseURL }) => {
+    for (const headers of [{ cookie: 'lang=tr' }, { 'accept-language': 'tr-TR,tr;q=0.9' }] as Record<string, string>[]) {
+      const r = await request.get('/about', { headers });
+      expect(r.headers()['content-language']).toBe('tr');
+      expect(await r.text()).toContain('<html lang="tr"');
+    }
+    // Full addresses: a path starting with // would otherwise be read as a host name.
+    for (const path of ['/__tr/about', '/__TR/about', '/%5F%5Ftr/about', '//__tr/about', '/__tr/about/index.html', '/__tr']) expect((await request.get(`${baseURL}${path}`)).status(), path).toBe(404);
+    const direct = await request.get('/about/index.html', { headers: { cookie: 'lang=tr' } });
+    expect(direct.status()).toBe(200);
+    expect(direct.headers()['content-language']).toBe('tr');
+    expect(direct.headers().vary).toBe('Cookie, Accept-Language');
+  });
+
+  test('unlisted pages say noindex in both languages and stay out of the sitemap and search', async ({ request }) => {
+    const unlisted = ['/uses', '/now', '/secret'];
+    for (const path of unlisted) for (const headers of [{}, { cookie: 'lang=tr' }] as Record<string, string>[]) {
+      const r = await request.get(path, { headers });
+      expect(r.headers()['x-robots-tag'], path).toBe('noindex');
+      expect(await r.text()).toContain('<meta name="robots" content="noindex">');
+    }
+    expect((await request.get('/about')).headers()['x-robots-tag']).toBeUndefined();
+    const sitemap = await (await request.get('/sitemap.xml')).text();
+    expect(sitemap).toContain('<loc>https://oztozlu.dev/about</loc>');
+    for (const path of unlisted) expect(sitemap).not.toContain(`${path}<`);
+    expect(sitemap).not.toContain('__tr');
+    for (const headers of [{}, { cookie: 'lang=tr' }] as Record<string, string>[]) {
+      const index = await (await request.get('/search-index.json', { headers })).text();
+      for (const path of unlisted) expect(index).not.toContain(`"${path}"`);
+    }
   });
 });
 
 test.describe('security headers', () => {
   test('the policy really blocks injected scripts and framing', async ({ page }) => {
     const response = await page.goto('/cv');
-    const csp = response?.headers()['content-security-policy'] ?? '';
-    expect(csp).toContain("frame-ancestors 'none'");
+    // Framing is refused by header; scripts are locked to hashes by the page's own policy tag.
+    expect(response?.headers()['content-security-policy']).toBe("frame-ancestors 'none'");
+    const csp = (await page.locator('meta[http-equiv="content-security-policy"]').getAttribute('content')) ?? '';
     expect(csp).toMatch(/script-src 'self' 'sha256-/);
     expect(csp).not.toMatch(/script-src[^;]*unsafe-inline/);
     await page.evaluate(() => { const s = document.createElement('script'); s.textContent = 'window.injected = true'; document.head.appendChild(s); });
@@ -325,7 +358,7 @@ test.describe('accessibility and robustness', () => {
     const page = await context.newPage();
     await page.goto('/cv');
     await expect(page.locator('html')).not.toHaveClass(/intro/);
-    await expect(page.locator('.sheet')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.cv-card, .cv-frame')).toHaveCSS('opacity', '1');
     await context.close();
   });
 
@@ -342,8 +375,8 @@ test.describe('accessibility and robustness', () => {
     const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto('/cv');
-    await expect(page.locator('.sheet')).toBeVisible();
-    await expect(page.locator('.sheet')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.cv-card, .cv-frame')).toBeVisible();
+    await expect(page.locator('.cv-card, .cv-frame')).toHaveCSS('opacity', '1');
     await expect(page.locator('.cv-head')).toHaveCSS('opacity', '1');
     await page.locator('.navcap a', { hasText: 'Lab' }).click();
     await expect(page).toHaveURL(/\/lab$/);
@@ -362,20 +395,51 @@ test.describe('accessibility and robustness', () => {
   }
 });
 
-test.describe('CV: the design-system proof page', () => {
-  test('the panel is notched, the toolbar works, printing is reachable from both buttons', async ({ page }) => {
+test.describe('CV: the owner\'s own PDFs', () => {
+  test('shows the chosen language, and opening or downloading gives the original file', async ({ page, request }) => {
     const problems = await watchForProblems(page);
-    await page.addInitScript(() => { (window as never as { printed: number }).printed = 0; window.print = () => { (window as never as { printed: number }).printed++; }; });
     await page.goto('/cv');
     await settled(page);
     await expect(page.locator('.cvwrap > .cut-fill')).toHaveCSS('clip-path', /^path/);
-    await expect(page.locator('.sheet h2').first()).toHaveText('İzzet Can Öztozlu');
+    const save = page.locator('.cvbar a[download]');
+    await expect(save).toHaveAttribute('href', '/cv/en.pdf');
+    await expect(save).toHaveAttribute('download', 'Izzet-Can-Oztozlu-CV-EN.pdf');
     await page.locator('.cvbar .seg button', { hasText: 'Türkçe' }).click();
-    await expect(page.locator('.sheet')).toHaveAttribute('lang', 'tr');
-    await expect(page.locator('.cv-h1')).toHaveText('Özgeçmiş');
-    await page.locator('.cv-pdf').click();
-    await page.locator('.tools .tool[aria-label*="CV"]').click();
-    expect(await page.evaluate(() => (window as never as { printed: number }).printed)).toBe(2);
+    await expect(save).toHaveAttribute('href', '/cv/tr.pdf');
+    await expect(page.locator('.cvbar a[target="_blank"]')).toHaveAttribute('href', '/cv/tr.pdf');
+    await expect(page.locator('.tools a.tool[download]')).toHaveAttribute('href', '/cv/en.pdf');
+    for (const lang of ['en', 'tr']) {
+      const r = await request.get(`/cv/${lang}.pdf`);
+      expect(r.status()).toBe(200);
+      expect(r.headers()['content-type']).toBe('application/pdf');
+      expect(r.headers()['cache-control'], 'a replaced PDF is never served stale').toBe('no-cache');
+      expect(r.headers().etag).toBeTruthy();
+      const sha = (b: Buffer) => createHash('sha256').update(b).digest('hex');
+      expect(sha(await r.body())).toBe(sha(readFileSync(`public/cv/${lang}.pdf`)));
+    }
     expect(problems).toEqual([]);
+  });
+
+  test('embeds the PDF where the browser can show it, and offers open and download where it cannot', async ({ browser, baseURL }) => {
+    for (const [viewer, width, expected] of [[true, 1280, '.cv-frame'], [false, 1280, '.cv-card'], [true, 390, '.cv-card']] as const) {
+      const context = await browser.newContext({ baseURL, viewport: { width, height: 900 } });
+      await context.addInitScript((enabled) => Object.defineProperty(Navigator.prototype, 'pdfViewerEnabled', { get: () => enabled }), viewer);
+      const page = await context.newPage();
+      await page.goto('/cv');
+      await expect(page.locator(expected), `viewer ${viewer}, ${width}px`).toBeVisible();
+      if (expected === '.cv-frame') {
+        await expect(page.locator('.cv-frame')).toHaveAttribute('src', '/cv/en.pdf#view=FitH');
+        await expect(page.locator('.cv-frame')).toHaveAttribute('title', 'CV in English, PDF');
+      } else {
+        await expect(page.locator('.cv-card a[download]')).toHaveAttribute('href', '/cv/en.pdf');
+      }
+      await context.close();
+    }
+  });
+
+  test('/_build.json names the live build and nothing more', async ({ request }) => {
+    const r = await request.get('/_build.json');
+    expect(r.headers()['cache-control']).toBe('no-store');
+    expect(Object.keys(await r.json())).toEqual(['sha', 'builtAt', 'trigger', 'github', 'counts']);
   });
 });

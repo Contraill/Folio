@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/* Runs against the built site in the Workers runtime: `pnpm build && pnpm preview`, then `pnpm test:e2e`. */
+/* Runs against the built site behind the language Worker: `pnpm build`, then `pnpm test:e2e`, which starts
+   `wrangler dev` unless one is already running or BASE_URL points elsewhere. */
 const remote = process.env.BASE_URL?.startsWith('https://');
 
 export default defineConfig({
@@ -12,6 +13,7 @@ export default defineConfig({
   workers: remote ? 3 : undefined,
   retries: remote ? 1 : 0,
   reporter: 'list',
+  webServer: process.env.BASE_URL ? undefined : { command: 'pnpm exec wrangler dev --port 4321', url: 'http://localhost:4321', reuseExistingServer: true, timeout: 60_000 },
   use: { baseURL: process.env.BASE_URL ?? 'http://localhost:4321' },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

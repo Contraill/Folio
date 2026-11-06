@@ -382,7 +382,7 @@ test.describe('navigation speed', () => {
     await expect(page).toHaveURL(/\/lab$/);
     await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
     await expect(page).toHaveURL(/\/cv$/);
-    await expect(page.locator('.sheet')).toBeVisible();
+    await expect(page.locator('.cv-card, .cv-frame')).toBeVisible();
   });
 
   test('pages start loading on hover', async ({ page }) => {
