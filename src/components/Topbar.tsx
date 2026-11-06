@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Popover from '@radix-ui/react-popover';
-import { ArrowRight, Check, Copy, FolderGit2, Mail, Menu, Printer, Search, X } from 'lucide-react';
+import { ArrowRight, Check, Copy, Download, FolderGit2, Mail, Menu, Search, X } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import type { Locale } from '@/i18n/locale';
 import type { Messages } from '@/i18n/messages';
@@ -189,7 +189,7 @@ export default function Topbar({ t, path: initialPath, repo: initialRepo = '', l
       <div className="cap tools">
         <button type="button" className="tool" onClick={() => setSearchOpen(true)} aria-label={t.search} aria-keyshortcuts="Control+K Meta+K"><Search size={18} aria-hidden="true" /><span className="kbd" aria-hidden="true" /></button>
         {current === 'projects' && <a className="tool" href={repo || GH} target="_blank" rel="noreferrer" aria-label={repo ? t.repository : t.github}><FolderGit2 size={18} aria-hidden="true" /></a>}
-        {current === 'cv' && <button type="button" className="tool" aria-label={t.printCv} onClick={() => dispatchEvent(new Event('cv-print'))}><Printer size={18} aria-hidden="true" /></button>}
+        {current === 'cv' && <a className="tool" href={`/cv/${locale}.pdf`} download={`Izzet-Can-Oztozlu-CV-${locale.toUpperCase()}.pdf`} type="application/pdf" aria-label={t.cv.download}><Download size={18} aria-hidden="true" /></a>}
         <SkinMenu t={t} />
         <button type="button" className="btn btn-1 contact-btn" onClick={() => setContactOpen(true)}>{t.contact}<span className="ic"><Mail size={15} aria-hidden="true" /></span></button>
         <button type="button" className="tool menu-btn" aria-label={t.openMenu} aria-expanded={menu} onClick={() => setMenu(true)}><Menu size={20} aria-hidden="true" /></button>
