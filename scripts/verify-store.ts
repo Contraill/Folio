@@ -1,16 +1,17 @@
 /* Checks against a real database that its content survives what could go wrong. usage:
      node scripts/verify-store.ts local|preview repeat-seed        the seed SQL, run again without the tool's check, writes nothing
      node scripts/verify-store.ts local|preview failed-migration   a migration that fails half-way leaves no trace
-     node scripts/verify-store.ts local|preview fingerprint        prints a summary of everything stored, to compare across a deploy
+     node scripts/verify-store.ts local|preview fingerprint        prints a summary of everything stored (scripts/fingerprint.ts), to compare across a deploy
      node scripts/verify-store.ts local|preview probe              leaves a marker to look for after a deploy
    There is no production target. */
 import { execFileSync } from 'node:child_process';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { seedStatements } from '../seed/index.ts';
 import { toSql } from '../src/content/store.ts';
+import { fingerprint as summarize } from './fingerprint.ts';
 
 const root = resolve(import.meta.dirname, '..');
 const DATABASES: Record<string, { name: string; id: string; where: string[] }> = {
@@ -32,13 +33,7 @@ const wrangler = (args: string[]) => execFileSync('pnpm', ['exec', 'wrangler', .
 const query = <T>(sql: string): T[] => JSON.parse(wrangler(['d1', 'execute', db.name, ...db.where, '--config', base, '--json', '--command', sql]))[0].results;
 const fails = (args: string[]) => { try { wrangler(args); return false; } catch { return true; } };
 
-function fingerprint() {
-  const [counts] = query<Record<string, number | string>>("SELECT (SELECT count(*) FROM entry) AS entries, (SELECT count(*) FROM revision) AS revisions, (SELECT count(*) FROM project) AS projects, (SELECT value FROM meta WHERE key = 'seeded_at') AS seeded_at, (SELECT value FROM meta WHERE key = 'deploy_probe') AS probe");
-  const rows = query<{ id: string; body: string }>('SELECT id, body FROM revision ORDER BY id');
-  const pointers = query<Record<string, string>>('SELECT entry_id, locale, draft_id, published_id FROM entry_locale ORDER BY entry_id, locale');
-  const hash = createHash('sha256').update(JSON.stringify([rows, pointers])).digest('hex').slice(0, 16);
-  return { ...counts, hash };
-}
+const fingerprint = () => summarize(query);
 
 try {
   if (check === 'fingerprint') console.log(JSON.stringify(fingerprint()));

@@ -93,6 +93,7 @@ Against real databases, each leaving the content as it found it:
 node scripts/verify-store.ts preview repeat-seed        # the seed SQL run again by hand writes nothing
 node scripts/verify-store.ts preview failed-migration   # a migration failing half-way leaves no trace
 node scripts/verify-store.ts preview probe              # before a deploy; compare with `fingerprint` after it
+                                                        # (every content table and column; not the cache switch, generation or probe)
 node scripts/verify-page-cache.ts https://develop-folio.<subdomain>.workers.dev   # needs the Access token; ends switched off
 ```
 

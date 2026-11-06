@@ -12,7 +12,7 @@
     "build:local": "CLOUDFLARE_ENV=local astro build",
     "preview": "astro preview",
     "check": "wrangler types >/dev/null && astro check",
-    "test": "node --test \"src/**/*.test.ts\" \"seed/**/*.test.ts\"",
+    "test": "node --test \"src/**/*.test.ts\" \"seed/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "test:e2e": "playwright test",
     "types": "wrangler types",
     "db:migrate:local": "wrangler d1 migrations apply folio-local --local --env local",
