@@ -1,15 +1,8 @@
-/* Shapes of everything the content store holds, one schema per entry. Every write is checked against these,
-   and published bodies are checked again when read, so a page never renders data it doesn't expect.
-   Relative imports only: the seed tool and the unit tests load this file in Node. */
+/* Shapes of the content in src/content/ and of `.github/folio.yaml` in project repositories. Folio's own files
+   are checked at build and an error stops it; a repository's folio.yaml that doesn't fit only drops that card.
+   Relative imports only: the GitHub step and the unit tests load this file in Node. */
 import { z } from 'astro/zod';
-
-/* Every revision is stored with the schema version it was written under. When a schema changes, SCHEMA_VERSION goes
-   up by one and UPGRADES gains the step from the previous version, so older revisions stay readable and can be
-   published again. Steps are plain functions over one body; nothing else is needed. */
-export const SCHEMA_VERSION = 1;
-export type EntryKey = { type: string; slug: string; locale: string };
-// UPGRADES[n] turns a body written under version n into one for version n + 1.
-export const UPGRADES: Record<number, (body: any, entry: EntryKey) => unknown> = {};
+import { DOMAIN_SLUG } from './site.ts';
 
 type Words<S extends string> = S extends `${infer Head} ${infer Tail}` ? Head | Words<Tail> : S;
 /** Plain text fields, named in one string: text('title note') */
@@ -17,8 +10,9 @@ const text = <S extends string>(keys: S) => Object.fromEntries(keys.split(' ').m
 const pair = z.tuple([z.string(), z.string()]);
 const color = z.string().regex(/^#[0-9a-f]{6}$/i);
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const visibility = { visibility: z.enum(['public', 'unlisted']).default('public') };
 
-export const Img = z.object({ src: z.string().startsWith('/assets/'), w: z.number().int().positive(), h: z.number().int().positive() }).strict();
+export const Img = z.object({ src: z.string().startsWith('/'), w: z.number().int().positive(), h: z.number().int().positive() }).strict();
 
 export const CaseSection = z.object({
   kind: z.literal('overview').optional(),
@@ -30,24 +24,52 @@ export const CaseSection = z.object({
 }).strict();
 export const Case = z.object({ lede: z.string(), stack: z.string(), facts: z.array(pair).optional(), sections: z.array(CaseSection) }).strict();
 
-/* A project's English body holds every field; the Turkish one only what is translated, laid over the English. */
+/* What a project card and page show. */
 const ProjectFields = z.object({
-  name: z.string(), repo: z.string(), d: z.number().int().min(0).max(4), lang: z.string(), date: day, since: z.string(),
+  name: z.string(), repo: z.string().optional(), lang: z.string(), date: day, since: z.string(),
   stars: z.number().int().min(0), kind: z.enum(['img', 'browser', 'pixel']), tint: z.tuple([color, color]).optional(),
   img: Img.optional(), hero: Img.optional(), pos: z.string().optional(), contain: z.boolean().optional(),
   home: z.url().optional(), desc: z.string(), topics: z.array(z.string()),
 }).strict();
-export const ProjectBody = ProjectFields.extend({ case: Case.optional() }).strict();
-export const ProjectTranslation = z.object({ desc: z.string().optional(), since: z.string().optional(), case: Case.optional() }).strict();
 
-/* Page copy, one entry per key. */
+/* A project written in Folio (src/content/projects/<id>/en.md). `repo` links it to its GitHub repository; without
+   one it is a project that isn't on GitHub. `listed` shows it even before its repository has the `folio` topic. */
+export const ProjectEntry = ProjectFields.extend({
+  area: z.enum(DOMAIN_SLUG as [string, ...string[]]),
+  listed: z.boolean().default(false),
+  order: z.number().int().optional(),
+  featured: z.number().int().optional(),
+  selected: z.number().int().optional(),
+  case: Case.optional(),
+}).strict();
+/* Turkish only holds what is translated, laid over the English. */
+export const ProjectTranslation = z.object({ name: z.string().optional(), desc: z.string().optional(), since: z.string().optional(), case: Case.optional() }).strict();
+
+/* `.github/folio.yaml` in a project, game or lab repository. English text comes from the repository itself. */
+const Localized = z.object({ en: z.string().optional(), tr: z.string().optional() }).strict();
+export const FolioYaml = z.object({
+  title: Localized.optional(),
+  summary: Localized.optional(),
+  order: z.number().int().optional(),
+  area: z.enum(DOMAIN_SLUG as [string, ...string[]]).optional(),
+  embed: z.boolean().optional(),
+  embedOptions: z.object({
+    aspect: z.string().regex(/^\d+:\d+$/).optional(),
+    orientation: z.enum(['landscape', 'portrait', 'any']).optional(),
+    input: z.array(z.enum(['keyboard', 'touch', 'mouse', 'gamepad'])).optional(),
+  }).strict().optional(),
+}).strict();
+
+/* Page copy, one entry per group (src/content/pages/<group>/{en,tr}.md). */
 export const PageBodies = {
-  toWrite: z.string(),
-  stage: z.object({
-    planets: z.object(text('Mercury Venus Earth Mars Jupiter Saturn Uranus Neptune')).strict(),
-    ...text('orbit days oneYear years orreryLabel site wallpaper injected chooseWall wallItem vars'),
+  shared: z.object({
+    toWrite: z.string(),
+    stage: z.object({
+      planets: z.object(text('Mercury Venus Earth Mars Jupiter Saturn Uranus Neptune')).strict(),
+      ...text('orbit days oneYear years orreryLabel site wallpaper injected chooseWall wallItem vars'),
+    }).strict(),
+    mochi: z.object({ ...text('label shortLabel poke pet'), moods: z.object(text('idle waking poked petted love happy dizzy sleep')).strict() }).strict(),
   }).strict(),
-  mochi: z.object({ ...text('label shortLabel poke pet'), moods: z.object(text('idle waking poked petted love happy dizzy sleep')).strict() }).strict(),
   home: z.object({
     ...text('heroLabel eyebrow line1 line2 lede allProjects about featured prev next pause play selectedNote allShort approach approachLabel lead tail moreLabel more morePages labStatus labTeaser playStatus playTeaser'),
     hints: z.record(z.string(), z.string()), selected: pair,
@@ -67,47 +89,21 @@ export const PageBodies = {
     patterns: z.array(z.tuple([z.string(), z.string(), z.string()])),
     timeline: z.array(z.tuple([z.string(), z.string(), z.string(), z.string()])),
   }).strict(),
-  uses: z.object({ ...text('title eyebrow note'), h1: pair, groups: z.array(z.tuple([z.string(), z.array(pair)])) }).strict(),
-  now: z.object({ ...text('title eyebrow h1 focus draft pushes'), updated: day }).strict(),
-  secret: z.object(text('title h1 note letter open')).strict(),
+  uses: z.object({ ...visibility, ...text('title eyebrow note'), h1: pair, groups: z.array(z.tuple([z.string(), z.array(pair)])) }).strict(),
+  now: z.object({ ...visibility, ...text('title eyebrow h1 focus draft pushes'), updated: day }).strict(),
+  secret: z.object({ ...visibility, ...text('title h1 note letter open') }).strict(),
 };
+export type PageGroup = keyof typeof PageBodies;
+export const PAGE_GROUPS = Object.keys(PageBodies) as PageGroup[];
 
-export const CvBody = z.object({
-  text: z.object(text('heading note dates copyText copied pdf sheetLabel role loc profile summary experience intern internPh projects education degree grad skills skillsLine languages langLine level')).strict(),
-  projects: z.array(z.tuple([z.string(), z.string(), z.string()])),
-}).strict();
-
+type Group<K extends PageGroup> = z.infer<(typeof PageBodies)[K]>;
 export type Img = z.infer<typeof Img>;
 export type CaseSection = z.infer<typeof CaseSection>;
 export type Case = z.infer<typeof Case>;
 export type Kind = z.infer<typeof ProjectFields>['kind'];
-export type Project = z.infer<typeof ProjectFields> & { id: string };
-export type Pages = { [K in keyof typeof PageBodies]: z.infer<(typeof PageBodies)[K]> };
-export type Cv = z.infer<typeof CvBody>;
-
-export type PageSlug = keyof typeof PageBodies;
-export const PAGE_SLUGS = Object.keys(PageBodies) as PageSlug[];
-/* Pages kept out of menus, search and sitemaps, reachable by their address only. */
-export const UNLISTED_PAGES: PageSlug[] = ['uses', 'now', 'secret'];
-
-/** A stored body brought up to the current schema and checked. A body from a newer version, read after the code
-    was rolled back, is accepted only if it still fits. */
-export function readBody(entry: EntryKey, version: number, body: unknown): unknown {
-  let value = body;
-  for (let v = version; v < SCHEMA_VERSION; v++) {
-    const step = UPGRADES[v];
-    if (!step) throw new Error(`${entry.type}/${entry.slug} (${entry.locale}): no upgrade from schema ${v}`);
-    value = step(value, entry);
-  }
-  const result = schemaFor(entry.type, entry.slug, entry.locale).safeParse(value);
-  if (!result.success) throw new Error(`${entry.type}/${entry.slug} (${entry.locale}), schema ${version}: ${result.error.message}`);
-  return value;
-}
-
-/** The schema a body must satisfy, by entry and language. */
-export function schemaFor(type: string, slug: string, locale: string) {
-  if (type === 'page' && slug in PageBodies) return PageBodies[slug as PageSlug];
-  if (type === 'project') return locale === 'en' ? ProjectBody : ProjectTranslation;
-  if (type === 'cv' && slug === 'cv') return CvBody;
-  throw new Error(`no schema for ${type}/${slug}`);
-}
+export type Project = Omit<z.infer<typeof ProjectFields>, never> & { id: string; d: number };
+export type ProjectEntry = z.infer<typeof ProjectEntry>;
+export type ProjectTranslation = z.infer<typeof ProjectTranslation>;
+export type FolioYaml = z.infer<typeof FolioYaml>;
+/* What pages receive: the shared group spread at the top, as the components expect. */
+export type Pages = Group<'shared'> & { [K in Exclude<PageGroup, 'shared'>]: Group<K> };
