@@ -22,13 +22,21 @@ Resolved here:
 
 Decided against splitting the stylesheet per page: it is 18 KB compressed for the whole site, and its rules depend on their order.
 
-## M3 — Content store
+## M3 — Content store ✅
 
-**Needs approval to create preview resources, and Access on Previews first.** D1 schema, migrations, zod schemas, the read layer behind today's seed imports, seed tool, local and preview environments. Workers Cache, off by default, under the conditions in [architecture.md](architecture.md#edge-caching-planned), each verified on the real Preview.
+Every page's copy, the CV and all projects come from D1, in English and Turkish, with immutable revisions, separate draft and published pointers, zod schemas checked on every write and on first read, and English as the Turkish fallback. Projects are manual content, independent of GitHub. The first content is in `seed/`, loaded only into an empty store; the build carries none of it.
 
-**Exit:** the site renders identically from D1, and a test proves a deploy leaves content untouched.
+Resources: one D1 database, `folio-preview` (EEUR), bound in the `previews` block only. Production has no binding.
 
-Not in M3: tables, runtimes or integrations for experiences (see M6). The content model only has to leave room for content types other than projects and pages.
+Verified:
+
+- The site renders the same from D1: 80 of 84 route and language combinations byte-identical to the static build; the four others are `/cv`, where the CV now arrives as island props instead of inside the JavaScript bundle
+- A second seed, even run by hand, writes nothing; a migration failing half-way leaves no trace; both on the real Preview database
+- A real Preview deploy left every entry, revision, pointer and a probe untouched
+- Workers Cache, switched off, with the agreed conditions: 24 checks on the Preview behind Access (Access first, no language mixing, no shared unlisted or error pages, publishes and removals at once, fallback, switch)
+- Full browser suite on the Preview, three workers: 174 passed
+
+Not in M3: tables, runtimes or integrations for experiences (see M6), editing (M4), GitHub data (M5).
 
 ## M4 — Admin foundation
 
@@ -71,15 +79,17 @@ Licence choice, audit of files and full Git history, contribution docs. The repo
 | A merge to `main` replaces the live coming-soon page | High | No technical guard exists. Merge only with explicit approval; add a branch rule on `main` if the plan allows | **Process only** |
 | The empty Build command doesn't suit Astro in production | Launch failure | Previews build through their own command; set the Build command right before the cutover merge | Planned M9 |
 | Previews are public by default | Unfinished work visible, later data exposure | Access on Previews only, with a service token for tests; a test checks that requests without valid credentials are stopped | In place |
-| Same URL serves two languages | Mixed cache variants, Turkish unindexed | `Vary`, cache keyed on language, `?lang=tr` canonical with `hreflang` | Headers in place; cache M3 |
+| Same URL serves two languages | Mixed cache variants, Turkish unindexed | `Vary` for browsers, the language in the Workers Cache key, `?lang=tr` canonical with `hreflang` | In place, verified on the Preview |
 | CSP and client router are officially unsupported together | Hydration breaks after an upgrade | Regression tests fail on any violation; documented fallback | In place |
 | Request data leaking through module scope in Workers | Cross-visitor data exposure | Store is browser-only; rule documented | In place; review in M4 |
-| Deploy overwrites content | Data loss | No content in builds; seed refuses non-empty databases | Design |
-| Migration incompatible with running code | Downtime | Expand and contract; preview first | Design |
-| Private content leaks | High | Server-only, no cache, same 404 as missing, tests on every public surface | Design |
+| Deploy overwrites content | Data loss | No content in builds (tested); seed refuses non-empty databases; migrations are a manual step | In place, verified with a real deploy |
+| Migration incompatible with running code | Downtime | Expand and contract; preview first; a failed migration rolls back whole (verified) | Process |
+| Private content leaks | High | Server-only, never in the shared cache (pages opt in, private and unlisted can't), same 404 as missing, tests on every public surface | Cache rules in place; private pages M7 |
 | Access bypassed through other hostnames | High | Production `workers.dev` route off, JWT verified in application code on every host | Partly in place |
 | A repository goes private and stays cached | Private metadata exposed | Treat absence as removal, purge pages and media | Design |
 | No repository has the discovery topic yet | Empty sync | Tag repositories or seed from the current list | Decision |
+| Every page now waits for D1 | About 60–70 ms more time to first byte on the Preview with the cache off (the switch and the content, two round trips); about 20 ms with the cache on | Production has no switch read; D1 read replication, or the cache once approved | Watch |
+| Workers Cache also counts static asset requests as Worker requests when enabled | Cost under heavy traffic | Measure before enabling in production | Open |
 | JavaScript on every page, about 125 KB compressed, mostly the framework and overlay library | Slower start on weak devices | Engines are split per page already; lazy-loading overlays is the next step if field data asks for it | Watch |
 | WebKit untested locally | Safari or iOS regressions | Real-device pass before launch | Planned M9 |
 | Prototype placeholders shown publicly | Unfinished content live | Launch checklist (see below) | Open |

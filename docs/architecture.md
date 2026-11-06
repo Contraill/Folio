@@ -80,7 +80,7 @@ Tailwind and the prototype's component scaffold are gone: Tailwind only served s
 
 Skins are applied before first paint by a small inline script (`lib/prepaint.ts`), allowed by its hash in the CSP.
 
-## Internationalization **(built: plumbing and shell; planned: content)**
+## Internationalization **(built)**
 
 No language prefixes. `src/i18n/locale.ts` resolves the language in this order:
 
@@ -97,11 +97,19 @@ No language prefixes. `src/i18n/locale.ts` resolves the language in this order:
 | Interface strings | `src/i18n/messages.ts`, shared by all components. No duplicated component trees |
 | Content | Per-language revisions in the content store. A missing Turkish translation falls back to English, and the fallback block is marked `lang="en"` for assistive technology |
 
-## Content **(planned)**
+## Content **(built: store and reads; planned: editing, media)**
 
-Editable content lives in D1 and R2, entirely separate from code. A build contains no content, so a deploy cannot overwrite it. See [content-model.md](content-model.md).
+Editable content lives in D1, entirely separate from code: every page's copy, the CV and the projects, each in English and Turkish, with immutable revisions and separate draft and published pointers. A build contains no content (a test scans it), so a deploy can neither carry nor overwrite it; this was checked with a real Preview deploy, which left every row untouched. See [content-model.md](content-model.md).
 
-## Edge caching **(planned)**
+| Environment | Database | Binding |
+| --- | --- | --- |
+| Local development and tests (`CLOUDFLARE_ENV=local`) | A SQLite file under `.wrangler/` | `env.local` in `wrangler.jsonc` |
+| Previews | `folio-preview` (EEUR) | `previews` block only |
+| Production | None until the cutover | None |
+
+The Worker's entry is `src/worker.ts`: a gateway in front of Astro's handler, see below.
+
+## Edge caching **(built, switched off)**
 
 Decided for milestone 3: **Workers Cache**, the cache in front of the Worker, not the Cache API. The Cache API stores per data centre, deletes only locally and is not available behind Access. Workers Cache is tiered, purges globally by tag or path from `ctx.cache.purge()`, and caches each Preview separately from production, so purging can be tested on a Preview before launch.
 
@@ -110,9 +118,16 @@ Conditions agreed with the owner:
 - **Off by default**, with its own setting for Previews and for production. Production turns it on only after the same tests pass there.
 - **Language is part of the key.** Workers Cache keys on path, query and Worker version, not on cookies or `Accept-Language`. A thin uncached entry resolves the language and calls the cached page renderer with the language in the key.
 - **Only published, public pages** enter the shared cache, for `GET` without credentials. Private and unlisted content, drafts, admin and anything carrying a cookie or authorization never do. Browsers keep receiving `private, max-age=60`.
-- **Invalidation.** Publishing purges by tag, and the purge result is checked and retried. A deploy changes the Worker version, which is part of the key.
+- **Invalidation.** Every publish, rollback and unpublish raises the cache generation in the same batch, so the next request renders afresh. A deploy changes the Worker version, which is part of the key.
 - **The TTL is never the only protection for removals.** When something must disappear (a page unpublished or made private, a repository gone), a cache generation number that is part of the key is bumped first. That makes every older entry unreachable at once, whatever happened to the purge. If the generation cannot be confirmed, the entry bypasses the cache (fails closed).
-- **Verified on the real Preview, behind Access:** an unauthenticated request never receives a cached page; English and Turkish never mix; a publish shows up after its purge; a removal is gone at once; turning the cache off falls back cleanly.
+- **Verified on the real Preview, behind Access:** an unauthenticated request never receives a cached page; English and Turkish never mix; a publish shows up on the next request; a removal is gone at once; turning the cache off falls back cleanly.
+
+How it is built (`src/worker.ts`, `src/lib/edge-cache.ts`):
+
+- The default export is the gateway, never cached (`exports.default.cache` is off). It removes the internal headers from every incoming request, then decides. When the environment allows it (`PAGE_CACHE`: `off` in production, `allowed` on Previews) and the runtime switch `meta.page_cache` is `on`, a `GET` or `HEAD` without credentials goes to the `Pages` entrypoint through `ctx.exports`, with the language and cache generation as `props`, which Workers Cache puts in the key. The forwarded request carries no cookies, `Accept-Language` or authorization. Otherwise the gateway calls Astro directly, exactly as without a cache. If the switch can't be read, the cache is skipped.
+- Pages mark themselves cacheable: home, projects, case studies, about, CV, Lab and Play. Unlisted pages, errors, 404s and the search data are not, and get `private` even behind the cache. Shared copies live five minutes; browsers always receive `private, max-age=60` and `Vary: Cookie, Accept-Language`.
+- In this milestone content changes are made with the store's statement builders, outside the Worker, so invalidation is the generation, raised in the same batch as every publish, rollback and unpublish. A purge by tag can be added when publishing moves into the admin.
+- `node scripts/verify-page-cache.ts <Preview URL>` runs the checks above against the Preview with the Access service token and leaves the switch off. It passed in full when this was written.
 
 ## Security model **(planned unless noted)**
 

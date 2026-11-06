@@ -16,6 +16,7 @@ Requires Node 22.23.4 or newer, and pnpm.
 
 ```sh
 pnpm install
+pnpm db:migrate:local && pnpm db:seed:local   # once: a local content store
 pnpm dev
 ```
 
@@ -28,10 +29,14 @@ src/
   pages/        Routes
   layouts/      Page shell
   components/   Astro components and React islands
-  lib/          Motion, notched panels, client state, routing helpers
+  lib/          Motion, notched panels, client state, routing helpers, page cache rules
   i18n/         Language negotiation and interface strings
-  content/      Seed content until the content store exists
+  content/      Content schemas and the store's reads and writes
   styles/       Design system
+  worker.ts     Worker entry: the gateway in front of the pages
+migrations/     Database schema, applied by hand
+seed/           The first content, loaded into an empty store by `pnpm db:seed:*`
+scripts/        Seeding and checks against real databases
 public/         Fonts and other static files
 tests/e2e/      Browser tests
 archive/        The coming-soon page, unchanged

@@ -1,6 +1,6 @@
 # Content model
 
-Proposal for the persistent content store, implemented from milestone 3. Nothing here exists yet; the site currently reads seed files in `src/content/`, in English and Turkish.
+The content store, in use since milestone 3 for all page copy, the CV and every project, in English and Turkish. The tables are in `migrations/`, the schemas in `src/content/schema.ts`, reads and writes in `src/content/store.ts`. Parts marked **(planned)** come with later milestones.
 
 ## Guarantees
 
@@ -16,41 +16,22 @@ A fully relational schema would need a table per block type and a migration for 
 
 ## Tables
 
+In use, from `migrations/0001_content.sql`:
+
+| Table | Holds |
+| --- | --- |
+| `entry` | Anything editable: id, type, slug, visibility (`public`, `unlisted`, `private`), deletion time |
+| `revision` | Immutable history, one row per save: entry, language, schema version, JSON body, note, author. Triggers refuse any update or delete |
+| `entry_locale` | Per entry and language, the draft being edited and the revision the public sees. Triggers refuse a pointer to another entry's or language's revision |
+| `project` | What only projects have, the same in both languages: listed, order, featured and selected rank, and an optional GitHub repository id for the sync |
+| `meta` | Store-wide state: the page cache switch, the cache generation, when the store was seeded |
+
+Nothing in these tables comes from GitHub, and a project needs no repository: the write-up, links and images are manual content in its body.
+
+**(planned)** Added with their milestones:
+
 ```sql
--- Anything editable: pages, home, about, cv, nav, footer, settings, themes, project write-ups.
-CREATE TABLE entry (
-  id          TEXT PRIMARY KEY,
-  type        TEXT NOT NULL,
-  slug        TEXT,
-  visibility  TEXT NOT NULL DEFAULT 'public' CHECK (visibility IN ('public', 'unlisted', 'private')),
-  created_at  TEXT NOT NULL,
-  deleted_at  TEXT,
-  UNIQUE (type, slug)
-);
-
--- Immutable history, one row per save.
-CREATE TABLE revision (
-  id             TEXT PRIMARY KEY,
-  entry_id       TEXT NOT NULL REFERENCES entry(id),
-  locale         TEXT NOT NULL CHECK (locale IN ('en', 'tr')),
-  schema_version INTEGER NOT NULL,
-  body           TEXT NOT NULL CHECK (json_valid(body)),
-  note           TEXT,
-  author         TEXT NOT NULL,
-  created_at     TEXT NOT NULL
-);
-
--- Where each language of an entry currently stands.
-CREATE TABLE entry_locale (
-  entry_id     TEXT NOT NULL REFERENCES entry(id),
-  locale       TEXT NOT NULL CHECK (locale IN ('en', 'tr')),
-  draft_id     TEXT REFERENCES revision(id),
-  published_id TEXT REFERENCES revision(id),
-  published_at TEXT,
-  PRIMARY KEY (entry_id, locale)
-);
-
--- Written only by the GitHub sync. Public repositories only.
+-- Milestone 5. Written only by the GitHub sync. Public repositories only.
 CREATE TABLE github_repo (
   repo_id      INTEGER PRIMARY KEY,   -- stable across renames
   name         TEXT NOT NULL,
@@ -66,19 +47,7 @@ CREATE TABLE github_repo (
   gone_at      TEXT                   -- no longer publicly visible
 );
 
--- Written only by the admin. Overlays github_repo at read time.
-CREATE TABLE project (
-  id            TEXT PRIMARY KEY,
-  entry_id      TEXT NOT NULL UNIQUE REFERENCES entry(id),  -- localized write-up and blocks
-  repo_id       INTEGER REFERENCES github_repo(repo_id),    -- null for projects without a repository
-  area          TEXT,
-  listed        INTEGER NOT NULL DEFAULT 0,   -- nothing is public until chosen; leaves GitHub untouched
-  featured_rank INTEGER,                      -- null means not featured
-  sort_rank     INTEGER NOT NULL DEFAULT 0,
-  live_url      TEXT,
-  source_url    TEXT
-);
-
+-- Milestone 6.
 CREATE TABLE media (
   id             TEXT PRIMARY KEY,
   r2_key         TEXT NOT NULL UNIQUE,   -- content-addressed
@@ -93,6 +62,7 @@ CREATE TABLE media (
   deleted_at     TEXT
 );
 
+-- Milestone 4.
 CREATE TABLE audit_log (
   id INTEGER PRIMARY KEY, at TEXT NOT NULL, actor TEXT NOT NULL,
   action TEXT NOT NULL, target TEXT, detail TEXT
@@ -103,20 +73,18 @@ CREATE TABLE audit_log (
 
 | Type | Instances | Body holds |
 | --- | --- | --- |
-| `settings` | one | Default skin, default language, contact email, GitHub topic, social links |
-| `navigation` | one | Menu items and order, footer text and link columns |
-| `home` | one | Hero text, hero source and picks, ordered configurable sections |
-| `about` | one | Intro, photo, skills, patterns, timeline, call to action |
-| `cv` | one | Structured CV, and the media id of an uploaded PDF per language |
-| `page` | many | Title, description, blocks, and for pages like `/now` a "last updated" date (below) |
-| `project` | many | Lede, stack, facts, blocks; any field may override GitHub's value |
-| `theme` | many | Name, token values |
+| `page` | One per group of page copy: `home`, `projects`, `case`, `lab`, `play`, `about`, `uses`, `now`, `secret`, and the copy shared by stages (`stage`, `mochi`, `toWrite`) | The copy, in a schema per group. `uses`, `now` and `secret` are `unlisted` |
+| `cv` | one | The CV's text and project lines |
+| `project` | many | English: every field the site shows, and the case study when there is one. Turkish: only the translated fields (`desc`, `since`, case study), laid over the English when read |
+| `settings`, `navigation` **(planned)** | one | Milestone 4. Until then the contact address, GitHub link and project areas are in `src/content/site.ts`, and interface strings in `src/i18n/messages.ts` |
+| `theme` **(planned)** | many | Milestone 8 |
+| `experience` **(planned)** | many | Milestone 6: games, simulations and experiments from their own repositories, placed on Lab, Play, a case study or their own page, never required to be a project. The tables above take a new type without change |
 
-Project ordering and featuring are columns on `project`, deliberately outside the per-language body: the order is the same in both languages.
+Project ordering, publishing and featuring are columns on `project`, deliberately outside the per-language body: they are the same in both languages.
 
 ### Dates that describe content
 
-Some pages show when their content was last reviewed, such as `/now`. That date is content, not a deploy or save timestamp: the body holds an optional `updated_on` the admin sets, and pages fall back to the revision's `published_at` when it is empty. Fixing a typo then doesn't make the page look freshly updated. Until the store exists, the date lives in `src/content/pages.ts`.
+Some pages show when their content was last reviewed, such as `/now`. That date is content, not a deploy or save timestamp: the body holds an optional `updated_on` the admin sets, and pages fall back to the revision's `published_at` when it is empty. Fixing a typo then doesn't make the page look freshly updated. Today the date is `updated` in the `now` page entry; the admin will edit it in milestone 4.
 
 ## Blocks
 
@@ -142,27 +110,30 @@ Every prototype case-study section maps to one of these, so existing write-ups m
 
 ```text
 save draft ──► new revision, entry_locale.draft_id moves
-preview    ──► render draft_id on the admin host, never cached
-publish    ──► published_id = draft_id, purge cached pages
-rollback   ──► published_id = any earlier revision
+preview    ──► render draft_id on the admin host, never cached (planned, milestone 4)
+publish    ──► published_id = draft_id, cache generation + 1
+rollback   ──► published_id = any earlier revision of the same entry and language, cache generation + 1
+unpublish  ──► cache generation + 1 first, then published_id = NULL
 ```
+
+A write is a batch, which D1 applies all or nothing. The body is checked against its schema before the batch is built, so nothing invalid is ever written. Raising the cache generation makes every cached page unreachable at once (see "Edge caching" in [architecture.md](architecture.md)); a purge by tag can be added when publishing moves into the admin.
 
 Each language publishes independently. On public reads, Turkish falls back to English when it has no published revision.
 
 ## Reading
 
-Public reads use `published_id` only, and every query filters on visibility:
+Every public page loads its content through `loadContent`, the one function public routes have. It reads published revisions only, of entries that are neither private nor deleted, in the asked language with English as the fallback:
 
 ```text
 project is listed when: listed = 1
-                    and entry.visibility = 'public'
-                    and entry has a published revision
-                    and (repo_id is null or github_repo.gone_at is null)
+                    and entry.visibility = 'public' and not deleted
+                    and the English version is published
+                    and (repo_id is null or github_repo.gone_at is null)   ← milestone 5
 ```
 
-The filter lives in one function, and public routes have no other way to reach project data.
+A request makes one small query for the list of published revisions. Bodies are fetched only for revisions the Worker hasn't seen yet, checked against their schema, and kept, which is safe because a revision never changes; which revisions a request may see is always decided by the query, never by what is kept.
 
-A repository found by the sync becomes a candidate and stays unpublished until it is listed, so publishing is never automatic. Until the store exists, `PUBLISHED`, `FEATURED` and `SELECTED` in `src/content/projects.ts` hold these choices, and every public route goes through the same filter. The seed publishes the seven featured and selected projects; the other public repositories stay candidates.
+A repository found by the sync becomes a candidate and stays unlisted until chosen, so publishing is never automatic. The seed lists the seven featured and selected projects; the other public repositories are stored as candidates, with no page.
 
 Merged fields resolve as `override ?? github`. Clearing an override makes GitHub's value live again.
 
@@ -187,10 +158,15 @@ Replacing a CV PDF creates a new asset and moves the reference in the `cv` entry
 
 ## Migrations
 
-- Forward-only numbered SQL files in `migrations/`, applied by `wrangler d1 migrations apply` as a separate, explicit step before a deploy.
+- Forward-only numbered SQL files in `migrations/`, applied as a separate, explicit step before a deploy, naming their database: `pnpm db:migrate:local` (a file under `.wrangler/`) or `pnpm db:migrate:preview` (`folio-preview`). No build or deploy runs them, and there is no production command until the cutover.
+- A migration is all or nothing: one that fails half-way leaves no table, row or record behind. `node scripts/verify-store.ts <local|preview> failed-migration` checks this against the real database.
 - **Expand, then contract:** each migration stays compatible with the previous code version, so a failed deploy can roll back without touching data. Columns are removed one release after nothing reads them.
 - Body changes do not need SQL: `schema_version` selects an upgrade function at read time.
 - Always applied to preview first, against a recent copy of production data.
+
+## Seeding
+
+`pnpm db:seed:local` or `pnpm db:seed:preview` loads `seed/` into an empty store: every page, the CV and all fourteen projects, each published in English and Turkish. The tool refuses a store that has any content, and the SQL it runs starts by recording the seed, so even run by hand a second time it fails before writing anything (`node scripts/verify-store.ts <target> repeat-seed`). The site never reads `seed/`; a test checks that the build contains none of its text.
 
 ## Export and backup
 
@@ -204,13 +180,11 @@ Restore is tested against preview. Private content is included in exports, so ex
 
 ## Migrating the prototype's data
 
-| Prototype | Target |
+| Prototype | In the store |
 | --- | --- |
-| `PROJECTS` | `project` plus `github_repo`, joined by repository name |
-| `CASES` | `project` entries with blocks |
-| `FEATURED`, `SELECTED` | `featured_rank` and the `home` entry |
-| `PATH`, patterns | `about` entry |
+| `PROJECTS`, `CASES` | `project` entries, the case study in the body; `project` rows. `github_repo` joins in milestone 5 |
+| `PUBLISHED`, `FEATURED`, `SELECTED` | `listed`, `sort_rank`, `featured_rank`, `selected_rank` on `project` |
+| Page copy, `PATH`, patterns, `USES`, Now | `page` entries; `uses`, `now` and `secret` unlisted |
 | CV `T` and `P` | `cv` entry (EN and TR) |
-| `USES`, Now text | `page` entries, `unlisted` |
 | `SKINS` | Built-in skins in code |
-| `MENU` | `navigation` entry |
+| `MENU`, contact address, areas | Code until the `navigation` and `settings` entries (milestone 4) |
