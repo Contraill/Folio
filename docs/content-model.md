@@ -86,6 +86,8 @@ Project ordering, publishing and featuring are columns on `project`, deliberatel
 
 Some pages show when their content was last reviewed, such as `/now`. That date is content, not a deploy or save timestamp: the body holds an optional `updated_on` the admin sets, and pages fall back to the revision's `published_at` when it is empty. Fixing a typo then doesn't make the page look freshly updated. Today the date is `updated` in the `now` page entry; the admin will edit it in milestone 4.
 
+**For the milestone 4 editor:** this section treats the date as optional, with `published_at` as the fallback, but the schema in `src/content/schema.ts` still requires `updated` (a `YYYY-MM-DD` day). The editor should make it optional in schema version 2, render the fallback, and register an upgrade from version 1 that leaves bodies as they are, since every existing body has the date.
+
 ## Blocks
 
 A body's `blocks` is an ordered list of a discriminated union, validated by zod:
@@ -133,6 +135,8 @@ project is listed when: listed = 1
 
 A request makes one small query for the list of published revisions. Bodies are fetched only for revisions the Worker hasn't seen yet, checked against their schema, and kept, which is safe because a revision never changes; which revisions a request may see is always decided by the query, never by what is kept.
 
+An `unlisted` project is in no list, featured or selected spot, search index or page, even with `listed` on; whether projects should also have address-only pages, as unlisted pages do, is for milestone 4 to decide. Unlisted pages (`uses`, `now`, `secret`) keep loading by address.
+
 A repository found by the sync becomes a candidate and stays unlisted until chosen, so publishing is never automatic. The seed lists the seven featured and selected projects; the other public repositories are stored as candidates, with no page.
 
 Merged fields resolve as `override ?? github`. Clearing an override makes GitHub's value live again.
@@ -161,7 +165,7 @@ Replacing a CV PDF creates a new asset and moves the reference in the `cv` entry
 - Forward-only numbered SQL files in `migrations/`, applied as a separate, explicit step before a deploy, naming their database: `pnpm db:migrate:local` (a file under `.wrangler/`) or `pnpm db:migrate:preview` (`folio-preview`). No build or deploy runs them, and there is no production command until the cutover.
 - A migration is all or nothing: one that fails half-way leaves no table, row or record behind. `node scripts/verify-store.ts <local|preview> failed-migration` checks this against the real database.
 - **Expand, then contract:** each migration stays compatible with the previous code version, so a failed deploy can roll back without touching data. Columns are removed one release after nothing reads them.
-- Body changes do not need SQL: `schema_version` selects an upgrade function at read time.
+- Body changes do not need SQL. Every revision keeps the schema version it was written under, and `readBody` in `src/content/schema.ts` brings it up to the current version through `UPGRADES[n]`, one plain function per version step, then checks it. Older revisions therefore stay readable, and can be published again or rolled back to. A body from a newer version, read after the code was rolled back, is accepted only if it still fits; otherwise the error names the entry and the version. Changing a schema means raising `SCHEMA_VERSION` and adding its step in the same commit. Publishing an earlier revision in the admin should run `readBody` on it first.
 - Always applied to preview first, against a recent copy of production data.
 
 ## Seeding

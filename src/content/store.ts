@@ -2,7 +2,7 @@
    through loadContent. Writes go through the statement builders below, which check bodies first.
    Relative imports only: the seed tool and the unit tests load this file in Node. */
 import type { Locale } from '../i18n/locale.ts';
-import { type Case, type Cv, type Pages, PAGE_SLUGS, type Project, SCHEMA_VERSION, schemaFor } from './schema.ts';
+import { type Case, type Cv, type Pages, PAGE_SLUGS, type Project, readBody, SCHEMA_VERSION, schemaFor } from './schema.ts';
 
 /* The part of a D1 binding used here; the unit tests stand in Node's SQLite. */
 export interface Stmt { all<T = Record<string, unknown>>(): Promise<{ results: T[] }>; first<T = Record<string, unknown>>(): Promise<T | null>; run(): Promise<unknown> }
@@ -17,8 +17,8 @@ const MANIFEST = `SELECT e.type, e.slug, e.visibility, l.locale, l.published_id 
   FROM entry e JOIN entry_locale l ON l.entry_id = e.id LEFT JOIN project p ON p.entry_id = e.id
   WHERE e.deleted_at IS NULL AND e.visibility IN ('public', 'unlisted') AND l.published_id IS NOT NULL AND l.locale IN ('en', ?1)`;
 
-/* Revisions never change, so a body that passed its schema once is kept for the life of the isolate. Which
-   revisions a request may see is decided by the manifest query, never by this map. */
+/* Revisions never change, so a body brought up to the current schema and checked once is kept for the life of
+   the isolate. Which revisions a request may see is decided by the manifest query, never by this map. */
 const checked = new Map<string, unknown>();
 
 export async function loadContent(db: Db, locale: Locale): Promise<Content> {
@@ -26,15 +26,11 @@ export async function loadContent(db: Db, locale: Locale): Promise<Content> {
   const missing = [...new Set(rows.map((r) => r.rev))].filter((id) => !checked.has(id));
   if (missing.length) {
     const { results } = await db
-      .prepare('SELECT r.id, r.locale, r.body, e.type, e.slug FROM revision r JOIN entry e ON e.id = r.entry_id WHERE r.id IN (SELECT value FROM json_each(?1))')
+      .prepare('SELECT r.id, r.locale, r.schema_version, r.body, e.type, e.slug FROM revision r JOIN entry e ON e.id = r.entry_id WHERE r.id IN (SELECT value FROM json_each(?1))')
       .bind(JSON.stringify(missing))
-      .all<{ id: string; locale: string; body: string; type: string; slug: string }>();
+      .all<{ id: string; locale: string; schema_version: number; body: string; type: string; slug: string }>();
     if (checked.size > 2000) checked.clear();
-    for (const r of results) {
-      const body = JSON.parse(r.body);
-      schemaFor(r.type, r.slug, r.locale).parse(body);
-      checked.set(r.id, body);
-    }
+    for (const r of results) checked.set(r.id, readBody(r, r.schema_version, JSON.parse(r.body)));
   }
   const body = (type: string, slug: string, lang: Locale) => {
     const row = rows.find((r) => r.type === type && r.slug === slug && r.locale === lang);

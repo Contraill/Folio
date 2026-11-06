@@ -7,6 +7,7 @@ import { casesFor } from '../../seed/cases.ts';
 import { CV_PROJECTS, CV_TEXT } from '../../seed/cv.ts';
 import { pages } from '../../seed/pages.ts';
 import { FEATURED, pickPublished, PUBLISHED, publishedProjects, SELECTED } from '../../seed/projects.ts';
+import { UPGRADES } from './schema.ts';
 import { type Db, loadContent, publishDraft, publishRevision, run, saveDraft, type Stmt, toSql, unpublish } from './store.ts';
 
 /* An in-memory SQLite with the real migrations, behind the same calls as a D1 binding. */
@@ -149,4 +150,37 @@ test('an unlisted project stays out of every list, even when listed is on', asyn
     assert.ok(!('helios' in c.cases) && !('orbis' in c.cases), 'case studies');
     assert.deepEqual(c.pages.uses, pages[locale].uses, 'unlisted pages still load by address');
   }
+});
+
+test('a revision written under an older schema is upgraded when read, and can be published and rolled back', async () => {
+  const { sqlite, db } = await seeded();
+  const current = (await db.prepare("SELECT published_id AS id FROM entry_locale WHERE entry_id = 'page:now' AND locale = 'en'").first<{ id: string }>())!.id;
+  // Version 0 called the date `date`; version 1 calls it `updated`.
+  const { updated, ...rest } = pages.en.now;
+  sqlite.prepare("INSERT INTO revision (id, entry_id, locale, schema_version, body, author, created_at) VALUES ('old-now', 'page:now', 'en', 0, ?, 'test', '2026-01-01')")
+    .run(JSON.stringify({ ...rest, date: '2026-01-02' }));
+  await run(db, publishRevision('page:now', 'en', 'old-now'));
+  await assert.rejects(loadContent(db, 'en'), /no upgrade from schema 0/);
+
+  UPGRADES[0] = ({ date, ...body }) => ({ ...body, updated: date });
+  try {
+    assert.equal((await loadContent(db, 'en')).pages.now.updated, '2026-01-02');
+    assert.equal((await loadContent(db, 'tr')).pages.now.updated, updated, 'Turkish keeps its own revision');
+  } finally {
+    delete UPGRADES[0];
+  }
+  await run(db, publishRevision('page:now', 'en', current));
+  assert.equal((await loadContent(db, 'en')).pages.now.updated, updated);
+});
+
+test('a revision from a newer schema is read only if it still fits', async () => {
+  const { sqlite, db } = await seeded();
+  const insert = (id: string, body: unknown) =>
+    sqlite.prepare("INSERT INTO revision (id, entry_id, locale, schema_version, body, author, created_at) VALUES (?, 'page:secret', 'en', 99, ?, 'test', '2026-01-01')").run(id, JSON.stringify(body));
+  insert('newer-fits', { ...pages.en.secret, title: 'Secret, from newer code' });
+  await run(db, publishRevision('page:secret', 'en', 'newer-fits'));
+  assert.equal((await loadContent(db, 'en')).pages.secret.title, 'Secret, from newer code');
+  insert('newer-differs', { renamed: true });
+  await run(db, publishRevision('page:secret', 'en', 'newer-differs'));
+  await assert.rejects(loadContent(db, 'en'), /page\/secret \(en\), schema 99/);
 });

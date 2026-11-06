@@ -3,7 +3,13 @@
    Relative imports only: the seed tool and the unit tests load this file in Node. */
 import { z } from 'astro/zod';
 
+/* Every revision is stored with the schema version it was written under. When a schema changes, SCHEMA_VERSION goes
+   up by one and UPGRADES gains the step from the previous version, so older revisions stay readable and can be
+   published again. Steps are plain functions over one body; nothing else is needed. */
 export const SCHEMA_VERSION = 1;
+export type EntryKey = { type: string; slug: string; locale: string };
+// UPGRADES[n] turns a body written under version n into one for version n + 1.
+export const UPGRADES: Record<number, (body: any, entry: EntryKey) => unknown> = {};
 
 type Words<S extends string> = S extends `${infer Head} ${infer Tail}` ? Head | Words<Tail> : S;
 /** Plain text fields, named in one string: text('title note') */
@@ -83,6 +89,20 @@ export type PageSlug = keyof typeof PageBodies;
 export const PAGE_SLUGS = Object.keys(PageBodies) as PageSlug[];
 /* Pages kept out of menus, search and sitemaps, reachable by their address only. */
 export const UNLISTED_PAGES: PageSlug[] = ['uses', 'now', 'secret'];
+
+/** A stored body brought up to the current schema and checked. A body from a newer version, read after the code
+    was rolled back, is accepted only if it still fits. */
+export function readBody(entry: EntryKey, version: number, body: unknown): unknown {
+  let value = body;
+  for (let v = version; v < SCHEMA_VERSION; v++) {
+    const step = UPGRADES[v];
+    if (!step) throw new Error(`${entry.type}/${entry.slug} (${entry.locale}): no upgrade from schema ${v}`);
+    value = step(value, entry);
+  }
+  const result = schemaFor(entry.type, entry.slug, entry.locale).safeParse(value);
+  if (!result.success) throw new Error(`${entry.type}/${entry.slug} (${entry.locale}), schema ${version}: ${result.error.message}`);
+  return value;
+}
 
 /** The schema a body must satisfy, by entry and language. */
 export function schemaFor(type: string, slug: string, locale: string) {
