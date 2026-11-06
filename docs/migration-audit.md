@@ -56,6 +56,7 @@ Visual ones are listed in `src/styles/adaptations.css`. Behavioural ones:
 | Device-specific copy ("point at", "drag", "tap", "Keys and touch") | Neutral wording, same on every device | Requirement |
 | Filter history not part of the page transition | Same, and returning from a project restores the filter | Behaviour kept across real URLs |
 | Monogram alone as the home link | Monogram with the name; the monogram alone below 375 px | The monogram was not recognisable as the way home |
+| Monogram: a notched square with a dot, rotating on hover | The initials İC in Archivo, cut out of a notched panel, the İ's dot in the notch; on hover the C turns once. The dot takes the skin's accent, corners follow the skin | Chosen by the owner from several drafts: readable as a name, in the site's panel language |
 | Transitions about 0.9 s, clicks lost meanwhile | About 0.7 s, a press ends the transition and still lands | Faster to use, same choreography |
 | Lab and Play drew every frame even when paused | Drawing stops when nothing changes and resumes on input | Battery and CPU |
 | Placeholder favicon | The monogram drawn for tab sizes, in the active skin's colours; `favicon.ico` and a touch icon as fallbacks | The tab carries the identity and follows the chosen skin |

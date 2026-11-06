@@ -42,6 +42,20 @@
 @media (max-width: 760px) { .cap.brand { padding: 0 16px 0 13px; gap: 9px; } }
 @media (max-width: 374px) { .cap.brand { width: 52px; padding: 0; } .brand-name { display: none; } }
 
+/* Monogram (Mark in Topbar.tsx): the C makes one turn on hover while the dot settles into its notch; that turn
+   is started from Topbar.tsx. The dot takes the skin's accent, and the corners follow the skin. */
+.brand:hover svg { transform: none; }
+.mark .i-dot { fill: var(--accent); transform-box: fill-box; transform-origin: center; }
+.mark .panel { transform-box: fill-box; transform-origin: center; }
+.mark .c { transform-box: view-box; transform-origin: 16.22px 14.57px; }
+html.intro .mark .panel { animation: mark-in 700ms var(--e-out) 150ms both; }
+html.intro .mark .c { animation: mark-roll-in 1000ms var(--e-io) 250ms both; }
+html.intro .mark .i-dot { animation: dot-in 700ms var(--e-spring) 850ms both; }
+@keyframes mark-in { from { transform: scale(.7); opacity: 0; } }
+@keyframes mark-roll-in { from { transform: rotate(-200deg); } }
+[data-skin='blueprint'] .mark .panel { rx: 2px; }
+[data-skin='terminal'] .mark :is(.panel, .notch, .i-dot) { rx: 0; }
+
 /* Keyboard users can reach the orrery; its focus ring stays inside the clipped panel. */
 .orrery:focus-visible { outline-offset: -4px; }
 

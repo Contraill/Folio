@@ -5,6 +5,7 @@ import { lazy, Suspense, useEffect, useState, type CSSProperties, type MouseEven
 import type { Locale } from '@/i18n/locale';
 import type { Messages } from '@/i18n/messages';
 import { copyText } from '@/lib/copy';
+import { reducedMotion } from '@/lib/motion';
 import { overlays, useReturnFocus } from '@/lib/overlay';
 import { currentMenuItem, MENU } from '@/lib/route';
 import { setContactOpen, setSearchOpen, setSkin, SKIN_KEYS, useStore, type SkinKey } from '@/lib/store';
@@ -15,13 +16,30 @@ const SearchPalette = lazy(() => import('./SearchPalette'));
 
 export const hrefOf = (route: string) => (route === 'home' ? '/' : `/${route}`);
 
-/* Monogram: a notched square (the site's panel language) with the dot of the i sitting in the notch. */
+/* Monogram: İC cut out of a notched panel, the site's panel language, with the dot of the İ in the notch.
+   The letters are Archivo's outlines, as in the wordmark. Motion and skin corners are in adaptations.css. */
 export const Mark = ({ s = 26 }: { s?: number }) => (
   <svg className="mark" width={s} height={s} viewBox="0 0 26 26" aria-hidden="true">
-    <path className="sq" d="M15 3H8a5 5 0 0 0-5 5v10a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5v-7" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-    <circle className="dt" cx="22.7" cy="4.9" r="2.8" fill="currentColor" />
+    <mask id="mark-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="26" height="26">
+      <rect width="26" height="26" fill="#fff" />
+      <rect className="notch" x="2.11" y="-1.2" width="8.8" height="8.8" rx="4.4" />
+      <path d="M5 20V9.14H8.02V20Z" />
+      <path className="c" d="M16.47 20.19Q14.21 20.19 12.7 19.55Q11.19 18.91 10.44 17.66Q9.68 16.4 9.68 14.56Q9.68 11.87 11.42 10.41Q13.16 8.95 16.48 8.95Q18.33 8.95 19.75 9.5Q21.16 10.05 21.96 11.06Q22.75 12.07 22.75 13.45H19.81Q19.81 12.75 19.38 12.26Q18.96 11.77 18.2 11.51Q17.44 11.24 16.42 11.24Q15.26 11.24 14.45 11.63Q13.64 12.02 13.21 12.72Q12.79 13.42 12.79 14.36V14.75Q12.79 15.69 13.21 16.4Q13.64 17.11 14.44 17.5Q15.25 17.9 16.4 17.9Q17.48 17.9 18.26 17.64Q19.04 17.39 19.47 16.91Q19.89 16.42 19.89 15.73H22.76Q22.76 17.08 21.99 18.08Q21.22 19.09 19.81 19.64Q18.4 20.19 16.47 20.19Z" />
+    </mask>
+    <rect className="panel" x="2" y="2" width="22" height="22" rx="5.5" fill="currentColor" mask="url(#mark-cut)" />
+    <rect className="i-dot" x="3.91" y="0.6" width="5.2" height="5.2" rx="2.6" />
   </svg>
 );
+
+// One turn of the C, the same motion as before. Started from script so that leaving early lets it finish
+// instead of snapping back, which a CSS :hover animation would do.
+const IO = 'cubic-bezier(.65, 0, .35, 1)';
+function turnMark(link: HTMLElement) {
+  const c = link.querySelector('.mark .c'), dot = link.querySelector('.mark .i-dot');
+  if (!c || !dot || reducedMotion() || c.getAnimations().some((a) => a.playState === 'running')) return;
+  c.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-360deg)' }], { duration: 1000, easing: IO });
+  dot.animate([{ transform: 'none', easing: IO }, { transform: 'translateY(.9px) scale(.86)', easing: IO }, { transform: 'none' }], { duration: 1000 });
+}
 
 const SWATCH: Record<Exclude<SkinKey, 'auto'>, string> = {
   graphite: 'linear-gradient(135deg,#2e2e32 50%,#f3f3f1 50%)',
@@ -161,7 +179,8 @@ export default function Topbar({ t, path: initialPath, repo: initialRepo = '', l
   const current = currentMenuItem(path);
   return (
     <header className="topbar">
-      <a className="cap brand" href="/" aria-label={t.home} aria-current={current === 'home' ? 'page' : undefined}><Mark /><span className="brand-name" aria-hidden="true">İzzet Can</span></a>
+      <a className="cap brand" href="/" aria-label={t.home} aria-current={current === 'home' ? 'page' : undefined}
+        onPointerEnter={(e) => turnMark(e.currentTarget)} onFocus={(e) => e.currentTarget.matches(':focus-visible') && turnMark(e.currentTarget)}><Mark /><span className="brand-name" aria-hidden="true">İzzet Can</span></a>
       <nav className="cap navcap" aria-label={t.navLabel}>
         <Seg label={t.pagesLabel}>
           {MENU.map((route) => <a key={route} href={hrefOf(route)} aria-current={current === route ? 'page' : undefined}>{t.nav[route]}</a>)}

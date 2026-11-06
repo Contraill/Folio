@@ -394,21 +394,37 @@ test.describe('navigation speed', () => {
 });
 
 test.describe('shell details', () => {
-  test('the tab icon follows the skin, across navigation and reloads', async ({ page, request }) => {
+  test('the tab icon and the monogram follow the skin, across navigation and reloads', async ({ page, request }) => {
     for (const path of ['/favicon.ico', '/apple-touch-icon.png', '/icons/graphite.svg', '/icons/terminal.svg']) expect((await request.get(path)).status(), path).toBe(200);
     await page.goto('/cv');
     await settled(page);
     const icon = page.locator('link[data-skin-icon]');
     await expect(icon).toHaveAttribute('href', '/icons/graphite.svg');
+    // The monogram's dot takes the skin's accent: no green on graphite or paper.
+    const dot = page.locator('.cap.brand .i-dot');
+    await expect(dot).toHaveCSS('fill', 'rgb(243, 243, 241)');
     await page.locator('[data-skin-trigger]').click();
     await page.getByRole('radio', { name: /^Terminal/ }).click();
     await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
+    await expect(dot).toHaveCSS('fill', 'rgb(125, 255, 168)');
     await page.keyboard.press('Escape');
     await page.locator('.navcap a', { hasText: 'About' }).click();
     await expect(page).toHaveURL(/\/about$/);
     await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
     await page.reload();
     await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
+  });
+
+  test('leaving the monogram mid-turn lets the C finish its turn instead of snapping back', async ({ page }) => {
+    await page.goto('/about');
+    await settled(page);
+    const turning = () => page.locator('.cap.brand .mark .c').evaluate((c) => c.getAnimations().some((a) => a.playState === 'running'));
+    await page.locator('.cap.brand').hover();
+    await page.waitForTimeout(300);
+    await page.mouse.move(640, 600);
+    await page.waitForTimeout(100);
+    expect(await turning()).toBe(true);
+    await expect.poll(turning).toBe(false);
   });
 
   test('the home link carries the name, and says when it is the current page', async ({ browser, baseURL }) => {
