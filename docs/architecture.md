@@ -1,41 +1,37 @@
 # Architecture
 
-Folio is the personal site at `oztozlu.dev`: a highly interactive portfolio on top of a real application with persistent, admin-managed content. Design and behaviour come from an approved prototype. This document records how the application underneath is built and why.
+Folio is the personal site at `oztozlu.dev`: an interactive portfolio built as static pages, with projects read from GitHub at build time. Design and behaviour come from an approved prototype. This document records how it is built and why.
 
-Status markers: **built** exists on the development branch, **planned** is a design that later milestones implement (see [roadmap.md](roadmap.md)).
+Status markers: **built** exists on the development branch, **planned** comes in a later stage (see [roadmap.md](roadmap.md)).
 
 ## Overview
 
 ```text
-                        ┌──────────────────────────────────────────────┐
- oztozlu.dev  ─────────►│ Cloudflare Worker                            │
-                        │  ├─ static assets  /_astro, /fonts  (no JS)  │
- admin.oztozlu.dev ────►│  ├─ middleware: locale, headers, host gate   │
-   (behind Access)      │  ├─ public pages (Astro SSR + React islands) │
-                        │  ├─ admin pages and privileged API           │
-                        │  └─ scheduled: GitHub sync, backups          │
-                        └───────┬─────────────┬───────────────┬────────┘
-                                │             │               │
-                              D1 content    R2 media      GitHub API
-                              (structured)  (uploads,     (public repos
-                                            backups)       only)
+ GitHub ── Folio repo (code, content, CV PDFs) ───────────┐
+       └── public repos: topics, pins, folio.yaml ─────────┤ read at build, job token only
+                                                           ▼
+                                        GitHub Actions: checks → build → deploy
+                                                           │
+                                                           ▼
+ oztozlu.dev ──► Cloudflare Worker `folio`
+                  ├─ static files (/_astro, fonts, images, CV PDFs)  served directly
+                  └─ language Worker (src/worker.ts): picks the English or Turkish
+                     copy of a prebuilt page and sets the response headers
 ```
 
-Stack: Astro 7, TypeScript, React 19 islands, `@astrojs/cloudflare`, Workers with Static Assets, D1, R2, Cloudflare Access.
+Stack: Astro 7 (static output), TypeScript, React 19 islands, Workers with Static Assets, GitHub Actions. No database, no server-side rendering, no admin: content is edited in Git.
 
 ## Rendering **(built)**
 
-Every HTML page is rendered on demand by the Worker. Hashed assets and fonts are served directly from Static Assets and never run Worker code.
+Every page is built ahead of time, twice: English at its address (`dist/about/index.html`) and Turkish under an internal prefix (`dist/__tr/about/index.html`). The language Worker is the only code that runs per request. Static files never reach it: `assets.run_worker_first` sends everything through the Worker except a short list of static prefixes, so `/about/index.html` and any spelling of `/__tr/...` still meet it.
 
-Pre-rendering was rejected because one URL serves two languages through negotiation, published content changes without a deploy, and private pages need a server decision on each request. Rendering costs little: measured on the Preview, HTML pages answer as fast as static files. Edge caching (below) is still planned for the content store.
+`src/pages/[...locale]/*.astro` own routes and data; `getStaticPaths` builds each page for both languages, and `src/middleware.ts` reads the language from the prefix at build. Static markup stays in Astro components; anything interactive is a React island.
 
-`src/pages/*.astro` own routes and data. Static markup stays in Astro components; anything interactive is a React island. The footer, for example, is plain Astro with a small delegated script, while the top bar is an island.
+### Rules
 
-### Rules for server code
-
-- **Module scope is shared between requests** in a Worker isolate. Request data never goes into module-level variables; `src/lib/store.ts` only mutates state in the browser and everything per-request travels through props or `Astro.locals`.
-- **Island props are public.** They are serialized into the HTML, so nothing private or admin-only may be passed to a public island.
-- **Browser APIs stay behind a guard** in anything an island imports, since islands also render on the server.
+- **Island props are public.** They are serialized into the HTML, so nothing private may be passed to an island.
+- **Browser APIs stay behind a guard** in anything an island imports, since islands also render at build.
+- **The route list is not public.** `scripts/postbuild.ts` writes it to `.folio/routes.json`, which the Worker bundles; no file in `dist` lists the routes (a test checks).
 
 ## Page transitions **(built)**
 
@@ -62,9 +58,9 @@ Links start loading on hover, focus or touch (Astro prefetch). For the browser t
 
 ## Content Security Policy **(built)**
 
-Astro sends the policy as a response header: scripts are limited to `'self'` plus SHA-256 hashes, `frame-ancestors 'none'` blocks framing, and styles allow `'unsafe-inline'` because components set CSS variables through style attributes.
+Astro writes the policy into each page as a meta tag: scripts are limited to `'self'` plus SHA-256 hashes, and styles allow `'unsafe-inline'` because components set CSS variables through style attributes. `frame-ancestors` can't be set from a meta tag, so the language Worker sends `frame-ancestors 'none'` as a header.
 
-Astro's documentation lists `ClientRouter` as unsupported with `security.csp`. In testing the combination works in Chromium and Firefox, including across navigations, because the hash list covers every page. The end-to-end suite fails on any policy violation and asserts that an injected script is blocked, so a future regression is caught. If it does regress, the fallback is a hand-maintained header with the same hashes.
+Astro's documentation lists `ClientRouter` as unsupported with `security.csp`. In testing the combination works in Chromium and Firefox, including across navigations. The end-to-end suite fails on any policy violation and asserts that an injected script is blocked.
 
 ## Design system **(built)**
 
@@ -82,94 +78,64 @@ Skins are applied before first paint by a small inline script (`lib/prepaint.ts`
 
 ## Internationalization **(built)**
 
-No language prefixes. `src/i18n/locale.ts` resolves the language in this order:
+No language prefixes in addresses. The language Worker resolves the language with `src/i18n/locale.ts`:
 
-1. `?lang=tr` — explicit, used for sharing and crawling
-2. `lang` cookie — the visitor's saved choice
+1. `?lang=tr` — explicit
+2. `lang` cookie — the visitor's saved choice, written by the language buttons
 3. `Accept-Language`
 4. English
 
 | Concern | Decision |
 | --- | --- |
-| Canonical URLs | `/about` is English, `/about?lang=tr` is Turkish. Each page declares itself canonical and lists `hreflang` alternates plus `x-default`. Crawlers send no language preference and would otherwise never see Turkish |
-| Sharing | The `?lang=tr` URL renders Turkish metadata, including `og:locale`, for link previews |
-| Caching | Responses carry `Vary: Cookie, Accept-Language` and `Content-Language`. The planned Workers Cache puts the resolved language in its key |
-| Interface strings | `src/i18n/messages.ts`, shared by all components. No duplicated component trees |
-| Content | Per-language revisions in the content store. A missing Turkish translation falls back to English, and the fallback block is marked `lang="en"` for assistive technology |
+| Canonical URLs | One clean address per page, the same in both languages. Search engines index the English version; there are no `hreflang` alternates. A Turkish visitor following a search result still gets Turkish |
+| Headers | Set by the Worker: `Content-Language`, `Vary: Cookie, Accept-Language`, `Cache-Control: private, max-age=60`, security headers, and `X-Robots-Tag: noindex` on unlisted pages |
+| Internal prefix | Any direct request for `/__tr/...`, after decoding, collapsing slashes and ignoring case, gets the not-found page |
+| Interface strings | `src/i18n/messages.ts`, shared by all components |
+| Content | A Turkish file per page group in `src/content/pages`; when one is missing the English is used and the page says so |
 
-## Content **(built: store and reads; planned: editing, media)**
+## Content **(built)**
 
-Editable content lives in D1, entirely separate from code: every page's copy, the CV and the projects, each in English and Turkish, with immutable revisions and separate draft and published pointers. A build contains no content (a test scans it), so a deploy can neither carry nor overwrite it; this was checked with a real Preview deploy, which left every row untouched. See [content-model.md](content-model.md).
+Content lives in the repository and is checked at build; an error in Folio's own files stops the build. See [content-model.md](content-model.md).
 
-| Environment | Database | Binding |
-| --- | --- | --- |
-| Local development and tests (`CLOUDFLARE_ENV=local`) | A SQLite file under `.wrangler/` | `env.local` in `wrangler.jsonc` |
-| Previews | `folio-preview` (EEUR) | `previews` block only |
-| Production | None until the cutover | None |
+- Page copy: `src/content/pages/<group>/{en,tr}.md`
+- Projects: GitHub repositories with the `folio` topic, merged with `src/content/projects/<id>/{en,tr}.md`
+- CV: the owner's PDFs in `public/cv/{en,tr}.pdf`, served as they are
 
-The Worker's entry is `src/worker.ts`: a gateway in front of Astro's handler, see below.
+## Security model **(built unless noted)**
 
-## Edge caching **(built, switched off)**
+**Nothing to write to.** The site has no database, admin or write endpoint: changing it means a commit that passes the checks and a deploy.
 
-Decided for milestone 3: **Workers Cache**, the cache in front of the Worker, not the Cache API. The Cache API stores per data centre, deletes only locally and is not available behind Access. Workers Cache is tiered, purges globally by tag or path from `ctx.cache.purge()`, and caches each Preview separately from production, so purging can be tested on a Preview before launch.
-
-Conditions agreed with the owner:
-
-- **Off by default**, with its own setting for Previews and for production. Production turns it on only after the same tests pass there.
-- **Language is part of the key.** Workers Cache keys on path, query and Worker version, not on cookies or `Accept-Language`. A thin uncached entry resolves the language and calls the cached page renderer with the language in the key.
-- **Only published, public pages** enter the shared cache, for `GET` without credentials. Private and unlisted content, drafts, admin and anything carrying a cookie or authorization never do. Browsers keep receiving `private, max-age=60`.
-- **Invalidation.** Every publish, rollback and unpublish raises the cache generation in the same batch, so the next request renders afresh. A deploy changes the Worker version, which is part of the key.
-- **The TTL is never the only protection for removals.** When something must disappear (a page unpublished or made private, a repository gone), a cache generation number that is part of the key is bumped first. That makes every older entry unreachable at once, whatever happened to the purge. If the generation cannot be confirmed, the entry bypasses the cache (fails closed).
-- **Verified on the real Preview, behind Access:** an unauthenticated request never receives a cached page; English and Turkish never mix; a publish shows up on the next request; a removal is gone at once; turning the cache off falls back cleanly.
-
-How it is built (`src/worker.ts`, `src/lib/edge-cache.ts`):
-
-- The default export is the gateway, never cached (`exports.default.cache` is off). It removes the internal headers from every incoming request, then decides. When the environment allows it (`PAGE_CACHE`: `off` in production, `allowed` on Previews) and the runtime switch `meta.page_cache` is `on`, a `GET` or `HEAD` without credentials goes to the `Pages` entrypoint through `ctx.exports`, with the language and cache generation as `props`, which Workers Cache puts in the key. The forwarded request carries no cookies, `Accept-Language` or authorization. Otherwise the gateway calls Astro directly, exactly as without a cache. If the switch can't be read, the cache is skipped.
-- Pages mark themselves cacheable: home, projects, case studies, about, CV, Lab and Play. Unlisted pages, errors, 404s and the search data are not, and get `private` even behind the cache. Shared copies live five minutes; browsers always receive `private, max-age=60` and `Vary: Cookie, Accept-Language`.
-- In this milestone content changes are made with the store's statement builders, outside the Worker, so invalidation is the generation, raised in the same batch as every publish, rollback and unpublish. A purge by tag can be added when publishing moves into the admin.
-- `node scripts/verify-page-cache.ts <Preview URL>` runs the checks above against the Preview with the Access service token and leaves the switch off. It passed in full when this was written.
-
-## Security model **(planned unless noted)**
-
-**Admin.** `admin.oztozlu.dev` is one Astro application with the public site, gated by host in middleware. A separate Worker was considered: it isolates better, but the admin must render drafts through the same page components, and a monorepo costs more than it returns for one person.
-
-**Authorization is enforced in code, on every privileged route.** Cloudflare Access is the first layer; the application then verifies the `Cf-Access-Jwt-Assertion` token itself (signature against the team's JWKS, `aud`, `iss`, expiry) and checks the email against an allowlist. `ctx.access` is not an option here, because Cloudflare does not pass it to a Worker that uses Static Assets. Hiding the interface is never the control. Local development uses a development-only identity that is compiled out of production builds.
-
-**No bypass routes.** Production's `workers.dev` route is off (**built**), so production is reachable only through its custom domain. Previews have public `workers.dev` hostnames by default, so they must sit behind Access before holding anything non-public, and the application's own token check applies on every host.
-
-**Private pages** render on the server after the same verification. An anonymous request gets the same 404 as a page that does not exist, so existence is not revealed. They are excluded from the cache, the sitemap, search and every public API, and their content never appears in the repository or in static assets. They live under `/private/*` so that an Access policy can cover the path.
+**Private content is not in this site.** Public and unlisted pages are part of the public build; private pages will live in a separate repository and deployment behind Cloudflare Access (**planned**, stage 5), so they are physically absent from this build.
 
 **Visibility levels:**
 
-| Level | URL works | Navigation, search, sitemap | Indexing | Auth |
-| --- | --- | --- | --- | --- |
-| `public` | yes | yes | yes | none |
-| `unlisted` | yes | no | `noindex` | none |
-| `private` | after sign-in | no | `noindex` | server-side |
+| Level | URL works | Navigation, search, sitemap | Indexing |
+| --- | --- | --- | --- |
+| `public` | yes | yes | yes |
+| `unlisted` (`uses`, `now`, `secret`) | yes | no | `noindex` meta tag and `X-Robots-Tag` header |
+| `private` | separate site, after sign-in | no | no |
 
-**Secrets** live in Wrangler secrets and local `.dev.vars` (ignored by Git). The only GitHub credential is a token limited to public, read-only access, so private repository data cannot be fetched even by mistake.
+**GitHub data** is read with the job's own `GITHUB_TOKEN`, which expires with the job and cannot see the owner's other private repositories. Private repositories are dropped before anything is written or logged, and again when projects are chosen; Folio's own repository is never a project.
 
-**Theme customization** stores typed design tokens validated against an allowlist, and the server generates the CSS from them. Admins cannot supply raw CSS or JavaScript.
+**Previews** sit behind Cloudflare Access; production's `workers.dev` route is off, so production is reachable only through its domain.
 
-## Resources and environments **(planned; nothing is created yet)**
+**Secrets** are only in GitHub Actions: a Cloudflare API token limited to deploying this Worker, and the Access service token for testing Previews. None is in the repository or in a log.
+
+## Resources and environments **(built)**
 
 | | Local | Preview | Production |
 | --- | --- | --- | --- |
-| Worker | `astro dev`, `astro preview` | Preview of `folio`, one per branch | `folio` |
-| D1 | local file | `folio-preview` | `folio-production` |
-| R2 | local | `folio-preview-media` | `folio-media` |
-| Access | development identity | test policy | production policy |
+| Worker | `pnpm preview` (`wrangler dev`) | Preview `develop` of `folio`, behind Access | `folio` on `oztozlu.dev` |
+| Deployed by | — | GitHub Actions, on push to `develop` | GitHub Actions, on merge to `main`, every six hours and on Refresh |
+| GitHub data | recorded snapshot in `tests/fixtures` | live | live |
 
-Previews do not inherit production settings: bindings are declared separately in the `previews` block of `wrangler.jsonc`, which is empty today because nothing is bound. Environments never share data. Creating any of these requires explicit approval. See [deployment.md](deployment.md).
+The Preview still binds the old `folio-preview` D1 database, which nothing reads; it is removed in the cleanup stage. See [deployment.md](deployment.md).
 
-## GitHub integration **(planned)**
+## GitHub projects **(built)**
 
-A scheduled job fills a `github_repo` cache table. Repositories are discovered by a configurable topic, and manual additions are allowed. Synchronization writes only to that table; admin edits live elsewhere and overlay it at read time, so a sync cannot overwrite them by construction.
+Projects are managed from GitHub; see [content-model.md](content-model.md#projects). Data is read at build, never while a visitor waits. A repository that goes private, or loses the `folio` topic, leaves the site at the next build; social previews are downloaded and optimised at build, so nothing points back at GitHub.
 
-Listing uses the public API, which by definition returns only public repositories. A repository that is no longer returned is treated as gone: it leaves public pages immediately, its detail page returns 404, media copied from it is removed, and cached pages are purged. Hiding a project in Folio is a separate flag and leaves GitHub untouched.
+## Play and Lab **(planned, stage 4)**
 
-## Project experiences **(planned)**
+Games and lab apps live in their own repositories and deployments, found by the `folio-play` and `folio-lab` topics. The build already sorts them out of the projects and counts them in `/_build.json`; their catalogues and pages come in stage 4.
 
-Project pages are ordered lists of typed blocks: rich text, gallery, video, diagram, facts, embed and interactive experience. Live Site and Source Code are independent fields, so a project may have any combination or none of these.
-
-An experience block names an engine from a registry in code (`orrery`, `theme-demo`, `mochi`, …) plus configuration validated by that engine's schema. The admin selects, configures and orders existing blocks; a new engine is a code change. Admin-authored code never runs. Embeds use a sandboxed iframe limited to an allowlist of origins, which the CSP `frame-src` mirrors.

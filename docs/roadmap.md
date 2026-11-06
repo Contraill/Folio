@@ -1,97 +1,66 @@
 # Roadmap
 
-Each milestone is small enough to review on its own and ends with tests, a comparison against the prototype in real browsers, and a report of what is done and what is not. No milestone deploys to production; only the cutover does, and only with explicit approval.
+Folio was first built on a D1 content store (milestones 1 to 3, kept under the `archive/m3-d1` tag). It is now being moved to a static site with projects from GitHub, in eight stages. Each stage passes its own tests before the next starts; production (`main`, the coming-soon page) does not change until stage 6, and Cloudflare resources stay until stage 7.
 
-## M1 — Foundation and shared design system ✅
+## Done before the move
 
-Astro on the Workers runtime, TypeScript, React islands. Design tokens, skins, fonts, motion system and notched panels. Shell: top bar, footer, search, skin menu, contact sheet, mobile menu. Client router with persistent shell and directional transitions. Language negotiation with EN and TR interface strings. CSP and security headers. CV page as the first real consumer. Unit and end-to-end tests.
+- **M1** Foundation and design system: Astro, React islands, the four skins, motion, notched panels, the shell, CSP.
+- **M2** Every public page in English and Turkish, as approved in the prototype.
+- **M3** A D1 content store with revisions. Replaced by Git content in stage 2; its tables and data stay in `folio-preview` until stage 7.
 
+## Stage 0 — Preparation ✅
 
-## M2 — Public pages ✅
+The develop head of M3 is tagged `archive/m3-d1`. A workflow in a separate private repository showed that the job's own `GITHUB_TOKEN` reads repositories, topics, homepages, social previews and pins through GraphQL, and that a private repository never appears in topic results, pins or logs. GitHub drops a repository from the pins when it goes private.
 
-All public pages migrated, in English and Turkish, from seed content: Home with its live stages, Projects, case studies, Lab, Play, About, CV, Uses, Now, Secret and the 404. Lab and Play stay Work in Progress.
+## Stage 1 — Static site and pipeline ✅ (on `develop`, waiting for the first Actions run)
 
-Resolved here:
+Static Astro build with a small language Worker; the D1 reads, server rendering and Workers Cache code removed. GitHub Actions for CI, Preview, production, the six-hour schedule and Refresh, with the production safeguards in [deployment.md](deployment.md).
 
-- Mobile compositions, About first, plus the CV toolbar, Lab and Play controls
-- Hero: every stage is live, the orrery explains itself and works from the keyboard, the wallpaper picker is no longer cut off on phones, using a stage holds the slideshow
-- Skin corners in Terminal and Blueprint, and the clipped Back to Top pill and teaser arrows
-- Copy no longer describes a device or an input method (enforced by a test)
-- Publishing is explicit: the seed publishes the seven featured and selected projects, the other repositories stay candidates
-- `/secret` stays an easter egg, out of search, sitemap and navigation
+Still to do with the owner: disconnect Workers Builds, add the Actions secrets, protect `main`, and watch the pipeline tests run (concurrency, a deliberately broken build, CI minutes).
 
-Decided against splitting the stylesheet per page: it is 18 KB compressed for the whole site, and its rules depend on their order.
+## Stage 2 — Content, themes, language, CV ✅
 
-## M3 — Content store ✅
+Page copy and projects in content collections, the four skins unchanged, the language Worker with unlisted rules, sitemap and search index, and `/cv` showing the owner's PDFs. Every route in both languages renders the same HTML as M3 apart from the decided changes (clean canonical without `hreflang`, the CV page, GitHub data).
 
-Every page's copy, the CV and all projects come from D1, in English and Turkish, with immutable revisions, separate draft and published pointers, zod schemas checked on every write and on first read, and English as the Turkish fallback. Projects are manual content, independent of GitHub. The first content is in `seed/`, loaded only into an empty store; the build carries none of it.
+## Stage 3 — GitHub projects ✅
 
-Resources: one D1 database, `folio-preview` (EEUR), bound in the `previews` block only. Production has no binding.
+Projects from the `folio` topic, featured from pins, Turkish and extras from `.github/folio.yaml`, social previews downloaded at build, projects not on GitHub, and the seven current projects kept until their repositories are tagged. See [content-model.md](content-model.md#projects).
 
-Verified:
+## Stage 4 — Play, Lab and the app template
 
-- The site renders the same from D1: 80 of 84 route and language combinations byte-identical to the static build; the four others are `/cv`, where the CV now arrives as island props instead of inside the JavaScript bundle
-- A second seed, even run by hand, writes nothing; a migration failing half-way leaves no trace; both on the real Preview database
-- A real Preview deploy left every entry, revision, pointer and a probe untouched
-- Workers Cache, switched off, with the agreed conditions: 24 checks on the Preview behind Access (Access first, no language mixing, no shared unlisted or error pages, publishes and removals at once, fallback, switch)
-- Full browser suite on the Preview, three workers: 174 passed
+`folio-app-template` (with approval), `/play` and `/lab` catalogues with one page template, a pilot app connected end to end.
 
-Not in M3: tables, runtimes or integrations for experiences (see M6), editing (M4), GitHub data (M5).
+## Stage 5 — Private site
 
-## M4 — Admin foundation
+`folio-private` and a private Worker at `vault.oztozlu.dev` (with approval), with two templates: Cloudflare Access with Google sign-in and one-time PIN, per-person groups; and password pages encrypted at build and decrypted in the browser, with an Access bypass on their path only. Private assets reachable only by the allowed group.
 
-**Needs approval for Access configuration.** `admin.oztozlu.dev` host gate, JWT verification with tests for missing, expired, wrong-audience and wrong-email tokens. Editors for settings, navigation, footer, home and about. Drafts, preview, publish, history, rollback, export.
+## Stage 6 — Going live
 
-**Exit:** routine text changes need no code and survive a deploy.
+Final checks on the Preview, the merge into `main` (with approval), checks in production.
 
-## M5 — Projects and GitHub
+## Stage 7 — Cleanup
 
-Sync job, repository cache, discovery topic, manual additions, overrides, hide/show, featured selection and ordering. Privacy sweep when a repository disappears, covering pages, caches and media.
+At least a week after going live: export and delete `folio-preview`, remove unused Cloudflare settings (each with approval), record the monthly CI minutes.
 
-**Exit:** a test repository going private disappears from every public surface.
+## Before the repository goes public
 
-## M6 — Project experiences and media
-
-R2 uploads, media library, block editor, gallery/video/diagram/embed blocks, experience registry with per-engine configuration, uploadable CV PDFs.
-
-Experiences are a content type of their own: games, physics simulations, AI experiments and teaching visualisations, each built in its own repository. An experience does not have to be published as a project; it can live on Lab or Play, inside a case study, or on its own. Lab and Play stay Work in Progress until then.
-
-## M7 — Pages and privacy
-
-Admin-created pages with the three visibility levels. Private page route and Access policy. Sitemap, robots, search index. Tests that private content never appears in anonymous HTML, JavaScript, assets or API responses.
-
-## M8 — Turkish content and themes
-
-Translation status in the admin, final review of Turkish copy. Theme preset editor with typed tokens and contrast checks.
-
-## M9 — Hardening and cutover
-
-Security review and threat model, dependency audit, performance and accessibility audit, real-device tests on iOS and Android, WebKit coverage. Fill all content placeholders. Then the cutover in [deployment.md](deployment.md), with approval.
-
-## M10 — Open-source readiness
-
-Licence choice, audit of files and full Git history, contribution docs. The repository owner changes the visibility; no automated step does.
+The current Git history, the M3 code and seed content, tags and Actions logs are reviewed for anything secret; if needed, a clean public history is made. The current private history is never published. `folio-private` stays private.
 
 ## Risks
 
 | Risk | Impact | Mitigation | Status |
 | --- | --- | --- | --- |
-| A merge to `main` replaces the live coming-soon page | High | No technical guard exists. Merge only with explicit approval; add a branch rule on `main` if the plan allows | **Process only** |
-| The empty Build command doesn't suit Astro in production | Launch failure | Previews build through their own command; set the Build command right before the cutover merge | Planned M9 |
-| Previews are public by default | Unfinished work visible, later data exposure | Access on Previews only, with a service token for tests; a test checks that requests without valid credentials are stopped | In place |
-| Same URL serves two languages | Mixed cache variants, Turkish unindexed | `Vary` for browsers, the language in the Workers Cache key, `?lang=tr` canonical with `hreflang` | In place, verified on the Preview |
-| CSP and client router are officially unsupported together | Hydration breaks after an upgrade | Regression tests fail on any violation; documented fallback | In place |
-| Request data leaking through module scope in Workers | Cross-visitor data exposure | Store is browser-only; rule documented | In place; review in M4 |
-| Deploy overwrites content | Data loss | No content in builds (tested); seed refuses non-empty databases; migrations are a manual step | In place, verified with a real deploy |
-| Migration incompatible with running code | Downtime | Expand and contract; preview first; a failed migration rolls back whole (verified) | Process |
-| Private content leaks | High | Server-only, never in the shared cache (pages opt in, private and unlisted can't), same 404 as missing, tests on every public surface | Cache rules in place; private pages M7 |
-| Access bypassed through other hostnames | High | Production `workers.dev` route off, JWT verified in application code on every host | Partly in place |
-| A repository goes private and stays cached | Private metadata exposed | Treat absence as removal, purge pages and media | Design |
-| No repository has the discovery topic yet | Empty sync | Tag repositories or seed from the current list | Decision |
-| Every page now waits for D1 | About 60–70 ms more time to first byte on the Preview with the cache off (the switch and the content, two round trips); about 20 ms with the cache on | Production has no switch read; D1 read replication, or the cache once approved | Watch |
-| Workers Cache also counts static asset requests as Worker requests when enabled | Cost under heavy traffic | Measure before enabling in production | Open |
-| JavaScript on every page, about 125 KB compressed, mostly the framework and overlay library | Slower start on weak devices | Engines are split per page already; lazy-loading overlays is the next step if field data asks for it | Watch |
-| WebKit untested locally | Safari or iOS regressions | Real-device pass before launch | Planned M9 |
+| A merge to `main` replaces the coming-soon page | High | Branch protection with required checks; merging needs the owner's approval | Protection to be added in stage 1 |
+| Workers Builds and Actions both deploy | Double or out-of-order deploys | Disconnect Workers Builds before the first Actions run | Waiting for the owner |
+| GitHub delays or skips scheduled runs | Stale project data | `/_build.json` shows the data time; Refresh runs at once | In place |
+| GitHub unreachable during a build | Failed run | The build fails and production keeps its last good version | In place |
+| A repository goes private | Its data stays online until the next build | Removed at the next build (at most six hours, or Refresh); pins drop it immediately | In place |
+| Previews are public by default | Unfinished work visible | Access on Previews, service token for tests, a test that requests without credentials are stopped | In place |
+| CSP and client router are officially unsupported together | Hydration breaks after an upgrade | Regression tests fail on any violation | In place |
+| No repository has the `folio` topic yet | Empty project list | The seven current projects are `listed` in Folio until the topics are added | In place |
+| Search engines index only the English version | Turkish not found by name | Accepted: no prefix in addresses | Decision |
+| JavaScript on every page, about 125 KB compressed | Slower start on weak devices | Engines are split per page already | Watch |
+| WebKit untested locally | Safari or iOS regressions | Real-device pass before going live | Stage 6 |
 | Prototype placeholders shown publicly | Unfinished content live | Launch checklist (see below) | Open |
 
 ## Launch content checklist
@@ -99,9 +68,9 @@ Licence choice, audit of files and full Git history, contribution docs. The repo
 Provided by the site owner:
 
 - [ ] About: personal sentence, portrait photo
-- [ ] CV: internship dates and description, English level
 - [ ] Case studies: "What I learned" for Helios, Mochi and huepr
 - [ ] Now: this month's focus
 - [ ] Uses: keyboard, monitor and other daily gear
 - [ ] Confirm the `izzet@oztozlu.dev` mailbox works
 - [ ] Review the Turkish interface strings in `src/i18n/messages.ts`
+- [ ] Add the `folio` topic and social previews to the repositories to show

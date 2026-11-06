@@ -49,6 +49,8 @@ Visual ones are listed in `src/styles/adaptations.css`. Behavioural ones:
 | Scroll always reset, even going back | Back and forward restore position | Router default, closer to expected behaviour |
 | Nothing rendered without JavaScript | Complete server-rendered pages | Production requirement |
 | Language picked only on the CV | Site-wide, with a switch in the footer and mobile menu; the CV keeps its own | Requirement |
+| CV written as HTML from site text, printed by the browser | The owner's own PDFs, embedded where the browser can show them, with open and download buttons | The download is always the original file; updating it means replacing a PDF |
+| `/about?lang=tr` canonical, `hreflang` alternates | One clean canonical address for both languages, no `hreflang` | The static rebuild: the same address serves both languages |
 | "Pinned on GitHub", hard-coded | "Featured", an explicit choice | The old label claimed something nothing checked |
 | Hero: huepr, Helios, Nothing (a static image) | Helios, huepr, Mochi: every slide is live | "Things that react"; Nothing moves to Selected work |
 | Every project public | Explicit `PUBLISHED` set: the seven featured and selected projects; the rest stay candidates | Publishing must never be automatic |

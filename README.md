@@ -2,13 +2,15 @@
 
 Personal website of İzzet Can Öztozlu, for [oztozlu.dev](https://oztozlu.dev).
 
-This branch holds the production application: a highly interactive portfolio on Astro and Cloudflare Workers, with persistent admin-managed content on the way. The live site still serves the coming-soon page from `main`.
+This branch holds the new site: an interactive portfolio built as static pages on Astro, with projects read from GitHub at build time and a small Worker that picks English or Turkish per visitor. The live site still serves the coming-soon page from `main`.
 
-**Status:** all public pages are migrated in English and Turkish, from seed content. The content store and admin panel come next. See the [roadmap](docs/roadmap.md).
+**Status:** static site, content, CV and GitHub projects are in place; games, lab apps and the private site come next. See the [roadmap](docs/roadmap.md).
+
+[![Production](https://github.com/Contraill/Folio/actions/workflows/production.yml/badge.svg)](https://github.com/Contraill/Folio/actions/workflows/production.yml)
 
 ## Stack
 
-Astro · TypeScript · React islands · Cloudflare Workers with Static Assets. Planned: D1, R2, Cloudflare Access.
+Astro (static) · TypeScript · React islands · Cloudflare Workers with Static Assets · GitHub Actions.
 
 ## Getting started
 
@@ -16,7 +18,6 @@ Requires Node 22.23.4 or newer, and pnpm.
 
 ```sh
 pnpm install
-pnpm db:migrate:local && pnpm db:seed:local   # once: a local content store
 pnpm dev
 ```
 
@@ -26,19 +27,18 @@ More commands, including tests and the production preview, are in [docs/deployme
 
 ```text
 src/
-  pages/        Routes
+  pages/        Routes, each built in English and Turkish ([...locale])
   layouts/      Page shell
   components/   Astro components and React islands
-  lib/          Motion, notched panels, client state, routing helpers, page cache rules
+  content/      Page copy and projects (content collections), schemas, GitHub discovery
+  lib/          Motion, notched panels, client state, routing, the language Worker's logic
   i18n/         Language negotiation and interface strings
-  content/      Content schemas and the store's reads and writes
   styles/       Design system
-  worker.ts     Worker entry: the gateway in front of the pages
-migrations/     Database schema, applied by hand
-seed/           The first content, loaded into an empty store by `pnpm db:seed:*`
-scripts/        Seeding and checks against real databases
-public/         Fonts and other static files
-tests/e2e/      Browser tests
+  worker.ts     The language Worker
+scripts/        GitHub data before the build, route list and /_build.json after it, the post-deploy check
+public/         Fonts, images, the CV PDFs
+tests/          Browser tests and the recorded GitHub snapshot
+.github/        CI, Preview and Production workflows
 archive/        The coming-soon page, unchanged
 docs/           Technical documentation
 ```

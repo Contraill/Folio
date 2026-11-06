@@ -1,121 +1,74 @@
 # Deployment
 
-## Branches
+All builds and deploys run in GitHub Actions (`.github/workflows/`). Code reaches `main` only through a pull request whose checks passed; scheduled builds rebuild the approved code on `main` with fresh GitHub data.
 
-| Branch | Workers Builds runs | Result |
+| Trigger | Workflow | What happens |
 | --- | --- | --- |
-| `main` | Build command (empty), then `npx wrangler deploy` | **Production**: `oztozlu.dev`, currently the coming-soon page |
-| Any other, such as `develop` | Build command (empty), then the Preview command | A **Preview** on the same `folio` Worker, with its own URL |
+| Push to `develop` | Preview | Checks, unit tests, build, Preview deploy (`wrangler preview --name develop`), short browser run against the Preview with the Access service token |
+| Pull request into `main` | CI | Checks, unit tests, build, build-output checks, the full browser suite. Required for merging |
+| Merge into `main` | Production | Build and `wrangler deploy` |
+| Every six hours (`17 */6 * * *`) | Production | The same, on `main` as it is. GitHub may delay or skip scheduled runs: six hours is a target, not a promise |
+| Refresh (Run workflow on Production) | Production | The same, queued at once; can be started from the GitHub mobile app |
 
-The coming-soon page is also kept unchanged in `archive/coming-soon/` on the development branch.
+Scheduled workflows run only on the default branch, so nothing scheduled runs while the work is on `develop`.
 
-**Merging to `main` is the release.** No technical safeguard stops it. An earlier version of this project named the Worker `folio-dev` on the assumption that a mismatch would fail the build. That was wrong: Workers Builds sets `WRANGLER_CI_OVERRIDE_NAME` to the connected Worker, and Wrangler overrides the configured name with a warning. Releases are controlled by process: nothing merges to `main` without explicit approval.
+## Production safeguards
 
-## Preview setup
+- **One deploy at a time.** Merge, schedule and Refresh share the `production` concurrency group without cancelling a running job; a waiting older run is dropped when a newer one arrives.
+- **No stale build.** A run builds `main` as it is when the run starts, not the commit that queued it, and compares that commit with `main` again just before deploying. If `main` moved, it stops without deploying; the newer run deploys.
+- **A failed build changes nothing.** If the checks, the build or GitHub fail, the job fails before deploying and the live version stays. GitHub e-mails the person who last changed the schedule when a scheduled run fails.
+- **`/_build.json`** names the live build: commit, build time, trigger (`push`, `cron`, `manual`), when its GitHub data was read, and how many projects, games and lab apps it shows. After each deploy the job reads it from `oztozlu.dev` and fails unless it names this build. It holds no route list.
 
-The Preview command builds the site first, because the Build command is shared with production and has to stay empty while `main` holds the coming-soon page, which has no `package.json`.
+## Secrets
 
-`wrangler.jsonc` holds the Preview settings in its `previews` block, which is the only place with a database: `DB` bound to `folio-preview` (D1, EEUR), plus `PAGE_CACHE: allowed` and Workers Cache enabled. Previews do not inherit production settings, and production has no storage binding at all until the cutover. `src/content/config.test.ts` checks this on every test run.
+Set in the repository's Actions secrets; none is in the code or in a log.
 
-The Preview database is prepared by hand, never by a build: `pnpm db:migrate:preview` applies migrations to `folio-preview` by name, and `pnpm db:seed:preview` fills it once, refusing if it has any content. Both use `wrangler.preview-migrations.jsonc`, which names no Worker code and so cannot be deployed.
-
-Dashboard settings, under Workers & Pages → `folio`:
-
-| Setting | Value | Affects |
+| Name | What | Used by |
 | --- | --- | --- |
-| Settings → Build → Preview command | `pnpm run preview:cloudflare` | Previews only |
-| Settings → Build → Branch control → Enable Preview Builds | On | Previews only |
-| Settings → Build → Branch control → Production branch | `main`, unchanged | Do not change |
-| Settings → Build → Build command | Empty, unchanged | Shared with production; do not change |
-| Settings → Build → Deploy command | `npx wrangler deploy`, unchanged | Production; do not change |
-| Settings → Domains & Routes → Version URLs (formerly Preview URLs) | Enabled | Worker-level; does not change `oztozlu.dev` |
+| `CLOUDFLARE_API_TOKEN` | Token allowed only to deploy Workers (Workers Scripts: Edit) on this account | Preview, Production |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account | Preview, Production |
+| `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Access service token of the `develop` Service Auth policy | Preview browser run |
 
-The `preview_urls` value in `wrangler.jsonc` is applied only by `wrangler deploy`, not by `wrangler preview`, so until the cutover this setting is managed in the dashboard.
+GitHub data needs no stored token: each job's own `GITHUB_TOKEN` reads it and expires with the job.
 
-A Preview's URL is `<branch>-folio.<subdomain>.workers.dev`. It is shown in the build log and in the GitHub check.
+## Preview
 
-### Observability
+A push to `develop` updates the Preview at `https://develop-folio.<subdomain>.workers.dev`, behind Cloudflare Access (Previews only). Version URLs stay behind Access too. Workers Builds must be disconnected from the `folio` Worker before the first Actions deploy, so that a push doesn't deploy twice.
 
-Previews log every request and trace it (`previews.observability` in `wrangler.jsonc`); query strings are removed from both. Look under Workers & Pages → `folio` → Observability, choosing the Preview, for:
+## Emergency removal
 
-- **Logs:** each request with its status, plus anything the code logs.
-- **Traces:** where time goes within a request.
-- **Issues:** errors grouped as they happen.
-- **Metrics:** requests, errors, CPU time and duration, always on and needing no setting.
-
-Production gets the same, with tracing added, only at the cutover, because that configuration is applied by `wrangler deploy`.
-
-Not enabled, each needing a decision or affecting production:
-
-- **Web Analytics (real visitors' Core Web Vitals):** a zone setting for `oztozlu.dev`, so it would also inject a script into the coming-soon page. Turn it on at the cutover; the CSP then has to allow `https://static.cloudflareinsights.com` for scripts and `https://cloudflareinsights.com` for connections.
-- **Notifications:** for example, an alert on a raised Worker error rate. These are account settings in Notifications.
-
-### Access and security
-
-Preview URLs are **public by default**, and each Preview keeps up to 100 Unique Deployment URLs, so anything pushed to a branch stays reachable. Cloudflare adds `X-Robots-Tag: noindex` on `workers.dev` Preview hostnames. Never push secrets or private content to any branch.
-
-They are restricted: Workers & Pages → `folio` → Access → Protect this Worker behind Access → **Previews only**, with a policy for the owner and a Service Auth policy for automated tests. Production stays unprotected, as it is today.
-
-With Static Assets, Cloudflare does not pass `ctx.access` to the Worker, so application code must verify the `Cf-Access-Jwt-Assertion` header itself.
-
-### Checking a build
-
-- Dashboard: Workers & Pages → `folio` → Deployment → View Build History. Logs are kept for 90 days.
-- GitHub: `gh api repos/Contraill/Folio/commits/<sha>/check-runs --jq '.check_runs[] | "\(.name) \(.conclusion)"'`
+Make the repository private, or remove its `folio` topic, then run Refresh. The project is gone once the run finishes (usually a few minutes, depending on the Actions queue); check `/_build.json`. Rolling back to an earlier Worker version is not a removal: the project is still in it. For Google's index, use Search Console → Removals.
 
 ## Local development
 
-Requires Node 22.23.4 or newer, and pnpm. Local runs use the `local` environment of `wrangler.jsonc` (`CLOUDFLARE_ENV=local`), whose database is a SQLite file under `.wrangler/`.
+Requires Node 22.23.4 or newer, and pnpm.
 
 ```sh
 pnpm install
-pnpm db:migrate:local && pnpm db:seed:local   # once: the local content store
-pnpm dev                                      # development server, in the Workers runtime
-pnpm build:local && pnpm preview              # production build, in the Workers runtime
-pnpm exec astro preview stop                  # preview runs in the background
+pnpm dev          # development server; pages under their address, Turkish ones under /__tr
+pnpm build        # GitHub snapshot, static build, route list and /_build.json
+pnpm preview      # the build behind the language Worker, at http://localhost:4321
 ```
 
-`pnpm build` without `:local` is the one Previews use; its output has no local database.
-
-`pnpm dev` also runs in the background; stop it with `pnpm exec astro dev stop`.
+Without `GITHUB_TOKEN` the build uses the recorded snapshot in `tests/fixtures/github.json`; in CI a missing token stops the build. `FOLIO_GITHUB=fixture` forces the snapshot.
 
 ## Checks
 
 ```sh
-pnpm check       # types (generated by wrangler types) and Astro diagnostics
-pnpm test        # unit tests, including the store against Node's SQLite and the configuration
-pnpm test:e2e    # end-to-end against a running preview, Chromium and Firefox
+pnpm check        # types (generated by wrangler types) and Astro diagnostics
+pnpm test         # unit tests; after a build they also check its output
+pnpm test:e2e     # browser suite against `wrangler dev` (started if needed), Chromium and Firefox
 ```
 
-Against real databases, each leaving the content as it found it:
+Against the Preview, which sits behind Access: export `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`, then run `BASE_URL=https://develop-folio.<subdomain>.workers.dev pnpm test:e2e`. The token's headers are added only to that host, and three workers keep the run steady. `tests/e2e/access.spec.ts` checks that requests without valid credentials are stopped.
 
-```sh
-node scripts/verify-store.ts preview repeat-seed        # the seed SQL run again by hand writes nothing
-node scripts/verify-store.ts preview failed-migration   # a migration failing half-way leaves no trace
-node scripts/verify-store.ts preview probe              # before a deploy; compare with `fingerprint` after it
-                                                        # (every content table and column; not the cache switch, generation or probe)
-node scripts/verify-page-cache.ts https://develop-folio.<subdomain>.workers.dev   # needs the Access token; ends switched off
-```
+## Going live
 
-First run of the end-to-end tests needs `pnpm exec playwright install chromium firefox`.
+Every step needs explicit approval at the time.
 
-CSP is only active in `build` + `preview`, not in `dev`, so end-to-end tests run against the preview.
+1. All stages approved on the Preview.
+2. Branch protection on `main`: the CI check required, force-push and deletion off.
+3. Merge `develop` into `main`; the Production workflow deploys and the schedule starts.
+4. Check production: `/_build.json`, both languages, unlisted pages, the CV.
 
-Against a deployed Preview, which sits behind Access, export the Access service token as `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`, then run `BASE_URL=https://develop-folio.<subdomain>.workers.dev pnpm test:e2e`. The token's headers are added only to requests for that host, and API requests don't follow redirects, so the token cannot reach another host. `tests/e2e/access.spec.ts` checks that requests with no credentials or a made-up token are stopped by Access on pages, data, fonts and icons alike. Never put the token in the repository, in logs or in reports.
-
-Avoid running `wrangler deploy` from this repository: the configured Worker is the production one.
-
-## Cutover
-
-Every step needs explicit approval at the time. Nothing here is automated.
-
-1. All milestones approved on a tested Preview.
-2. Production D1 created and bound at the top level of `wrangler.jsonc`, a migrations config for it added, migrations applied, content seeded and reviewed. R2 when milestone 6 needs it.
-3. Access policies for the admin host and private pages created and tested with a denied identity.
-4. Secrets set on the production Worker.
-5. Build command set to `pnpm build` and the Node version pinned. From this point a build of the old `main` would fail, so this step comes right before the merge.
-6. Merge to `main`; the build deploys.
-7. Verify production: public pages, admin denied when signed out, private page 404 when signed out, headers, and a fingerprint of the database before and after the deploy.
-8. Only then, and only with approval, allow the page cache in production (`PAGE_CACHE`, `cache.enabled`) and run `scripts/verify-page-cache.ts` against it before switching it on.
-
-**Rollback:** restore the previous version from Workers → `folio` → Deployments. Content in D1 and R2 is not affected by a code rollback.
+**Rollback:** Workers → `folio` → Deployments → an earlier version. The coming-soon page is the version live today.
