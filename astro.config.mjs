@@ -1,18 +1,19 @@
-import cloudflare from '@astrojs/cloudflare';
 import react from '@astrojs/react';
 import { defineConfig } from 'astro/config';
 
+/* Static: every page is built in English and Turkish, and a small Worker (src/worker.ts) picks one per visitor. */
 export default defineConfig({
   site: 'https://oztozlu.dev',
-  output: 'server',
-  adapter: cloudflare({ imageService: 'passthrough' }),
+  output: 'static',
+  trailingSlash: 'never',
   integrations: [react()],
-  // Without this the adapter provisions a KV namespace on first deploy.
-  session: false,
   build: { inlineStylesheets: 'never' },
+  // Social previews of GitHub projects are downloaded and optimised at build, then served from this site.
+  image: { remotePatterns: [{ protocol: 'https', hostname: 'opengraph.githubassets.com' }, { protocol: 'https', hostname: 'repository-images.githubusercontent.com' }] },
   security: {
     csp: {
-      directives: ["default-src 'self'", "img-src 'self' data:", "base-uri 'self'", "form-action 'self'", "object-src 'none'", "frame-ancestors 'none'"],
+      // frame-ancestors can't be set from a meta tag: the language Worker sends it as a header.
+      directives: ["default-src 'self'", "img-src 'self' data:", "base-uri 'self'", "form-action 'self'", "object-src 'none'"],
       // Components set CSS variables through style attributes; scripts stay locked to hashes.
       styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
     },

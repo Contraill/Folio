@@ -1,11 +1,14 @@
 ---
 import Draft from '@/components/Draft.astro';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
 import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
 
 const c = (await getContent(Astro.locals)).pages.uses;
 ---
-<Base title={c.title} noindex>
+<Base title={c.title} noindex={c.visibility === 'unlisted'}>
   <section class="slab pad" aria-labelledby="u-h">
     <div class="phead">
       <div><p class="eyebrow">{c.eyebrow}</p><h1 id="u-h" class="display stair" style="margin-top: 18px; --indent: 1em"><span>{c.h1[0]}</span><span>{c.h1[1]}</span></h1></div>

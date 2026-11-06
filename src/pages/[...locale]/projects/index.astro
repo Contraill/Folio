@@ -1,15 +1,16 @@
 ---
 import { Lines } from '@/components/kit';
 import ProjectsBrowser from '@/components/ProjectsBrowser';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
 import { areasFor, DOMAIN_SLUG } from '@/content/site';
 import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
 
 const locale = Astro.locals.locale;
 const { pages: content, projects } = await getContent(Astro.locals);
-Astro.locals.cacheable = true;
 const c = content.projects;
-const slug = DOMAIN_SLUG.indexOf(Astro.url.searchParams.get('area') ?? '');
 const stars = projects.reduce((sum, p) => sum + p.stars, 0);
 const languages = new Set(projects.map((p) => p.lang)).size;
 ---
@@ -26,5 +27,5 @@ const languages = new Set(projects.map((p) => p.lang)).size;
       </ul>
     </div>
   </section>
-  <ProjectsBrowser client:load projects={projects} areas={areasFor(locale)} slugs={DOMAIN_SLUG} initialArea={slug < 0 ? null : slug} c={c} stage={content.stage} locale={locale} />
+  <ProjectsBrowser client:load projects={projects} areas={areasFor(locale)} slugs={DOMAIN_SLUG} initialArea={null} c={c} stage={content.stage} locale={locale} />
 </Base>

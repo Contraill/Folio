@@ -1,36 +1,31 @@
 {
-  // The Worker connected to Workers Builds. Pushes to main deploy it to production,
-  // pushes to any other branch only create a Preview. See docs/deployment.md.
+  // The Worker that serves oztozlu.dev: the static build in ./dist plus a small language Worker (src/worker.ts).
+  // Deploys come from GitHub Actions: Previews from develop, production from main. See docs/deployment.md.
   "name": "folio",
   "compatibility_date": "2026-10-31",
-  // ctx.exports, which lets the gateway call the cached page renderer.
-  "compatibility_flags": ["enable_ctx_exports"],
-  // The site behind a thin gateway that decides whether a page may come from the shared cache.
   "main": "src/worker.ts",
   "assets": {
     "directory": "./dist",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "none",
+    // Pages and anything unknown go through the Worker, which picks the language and sets the headers; static
+    // files are served directly with public/_headers. Listing the exceptions keeps /about/index.html and /__tr/*
+    // from slipping past the Worker.
+    "run_worker_first": ["/*", "!/_astro/*", "!/fonts/*", "!/assets/*", "!/icons/*", "!/cv/*.pdf", "!/favicon.ico", "!/apple-touch-icon.png", "!/_build.json", "!/sitemap.xml"]
   },
   // Production is reached through its custom domain only. Preview hostnames are a separate setting.
   "workers_dev": false,
   "preview_urls": true,
-  // Production: no content store yet (it is created at the cutover) and no shared page cache.
-  "vars": { "PAGE_CACHE": "off" },
-  "cache": { "enabled": false },
-  // Only the page renderer may ever be cached; the gateway in front of it never is.
-  "exports": {
-    "default": { "type": "worker", "cache": { "enabled": false } },
-    "Pages": { "type": "worker", "cache": { "enabled": true } }
-  },
-  // Previews do not inherit production settings. Every binding here points at a Preview-only resource,
-  // so a Preview can never reach production data.
+  // Previews do not inherit production settings.
   "previews": {
+    // Left from the D1 content store, which the site no longer reads; removed with the database in the cleanup stage.
     "d1_databases": [
       { "binding": "DB", "database_name": "folio-preview", "database_id": "6b36ecbe-b860-4df3-92c5-188a49af172b" }
     ],
-    // The page cache may be used, and is switched on or off at runtime in the database (meta.page_cache).
     "vars": { "PAGE_CACHE": "allowed" },
-    "cache": { "enabled": true },
+    // Off: a cache keyed on the address alone would mix the two languages.
+    "cache": { "enabled": false },
     "observability": {
       "enabled": true,
       "head_sampling_rate": 1,
@@ -40,32 +35,12 @@
       "issues": { "enabled": true }
     }
   },
-  // Local development and tests only (CLOUDFLARE_ENV=local): a SQLite file under .wrangler/, no Cloudflare resource.
-  "env": {
-    "local": {
-      "d1_databases": [
-        { "binding": "DB", "database_name": "folio-local", "database_id": "local-only", "migrations_dir": "migrations" }
-      ],
-      "vars": { "PAGE_CACHE": "allowed" }
-    }
-  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
     "redact_query_string": true,
-    "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "invocation_logs": true,
-      "persist": true
-    },
-    "traces": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "persist": true
-    },
-    "issues": {
-      "enabled": true
-    }
+    "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
+    "traces": { "enabled": true, "head_sampling_rate": 1, "persist": true },
+    "issues": { "enabled": true }
   }
 }

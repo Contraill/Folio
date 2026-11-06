@@ -21,6 +21,8 @@ export default function ProjectsBrowser({ projects, areas, slugs, initialArea, c
   const areaFromUrl = () => { const i = slugs.indexOf(new URLSearchParams(location.search).get('area') ?? ''); return i < 0 ? null : i; };
   useEffect(() => {
     try { if (localStorage.getItem(VIEW_KEY) === '"index"') setViewState('index'); } catch { /* storage unavailable */ }
+    // The page is built once for every filter, so a shared ?area= address applies its filter here.
+    setArea(areaFromUrl());
     // Claims the history step before the client router, which would reload the page for a filter change.
     const onHistory = (e: Event) => {
       if (location.pathname !== '/projects') return;

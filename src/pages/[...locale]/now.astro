@@ -1,8 +1,11 @@
 ---
 import Cover from '@/components/Cover';
 import Draft from '@/components/Draft.astro';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
 import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
 
 const locale = Astro.locals.locale;
 const { pages: content, projects } = await getContent(Astro.locals);
@@ -10,7 +13,7 @@ const c = content.now;
 const day = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 const recent = [...projects].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
 ---
-<Base title={c.title} noindex>
+<Base title={c.title} noindex={c.visibility === 'unlisted'}>
   <section class="nowp" aria-labelledby="n-h">
     <div class="slab img" style="overflow: hidden">{recent[0] && <Cover p={recent[0]} variant="hero" eager c={content.stage} altSuffix={content.case.screenshot} />}</div>
     <div class="slab pad dark">

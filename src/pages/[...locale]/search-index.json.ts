@@ -1,9 +1,12 @@
 import type { APIRoute } from 'astro';
 import type { SearchIndex } from '@/components/SearchPalette';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
+import { localePaths } from '@/lib/locales';
 import { areasFor } from '@/content/site';
 import { messages } from '@/i18n/messages';
 import { MENU } from '@/lib/route';
+
+export const getStaticPaths = localePaths;
 
 /** Public entries only: unlisted and private pages must never appear here. */
 export const GET: APIRoute = async ({ locals }) => {

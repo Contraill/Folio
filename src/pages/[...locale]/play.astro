@@ -1,10 +1,12 @@
 ---
 import PlayStage from '@/components/PlayStage';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
 import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
 
 const c = (await getContent(Astro.locals)).pages.play;
-Astro.locals.cacheable = true;
 const colors = ['#ff5a36', '#3ec7ff', '#ffd23f'];
 ---
 <Base title={c.title}>

@@ -3,7 +3,7 @@ import { ClientRouter } from 'astro:transitions';
 import Footer from '@/components/Footer.astro';
 import Toasts from '@/components/Toasts';
 import Topbar from '@/components/Topbar';
-import { DEFAULT_LOCALE, LOCALES } from '@/i18n/locale';
+import { getContent } from '@/content/load';
 import { messages } from '@/i18n/messages';
 import { PREPAINT } from '@/lib/prepaint';
 import '@/styles/reset.css';
@@ -29,8 +29,9 @@ const t = messages[locale];
 const { title, description = t.description, noindex = false, repo } = Astro.props;
 const fullTitle = title ? `${title} · İzzet Can` : t.title;
 
-// One language per URL for crawlers and sharing: /about is English, /about?lang=tr is Turkish.
-const urlFor = (l: string) => new URL(Astro.url.pathname + (l === DEFAULT_LOCALE ? '' : `?lang=${l}`), Astro.site);
+// One clean address per page, the same in both languages: the language Worker picks the version per visitor.
+const canonical = new URL(Astro.locals.path, Astro.site);
+const fallback = locale === 'tr' && (Astro.locals.fallback || (await getContent(Astro.locals)).fallbackGroups.size > 0);
 
 const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PREPAINT));
 Astro.csp?.insertScriptHash(`sha256-${btoa(String.fromCharCode(...new Uint8Array(digest)))}`);
@@ -45,9 +46,7 @@ Astro.csp?.insertScriptHash(`sha256-${btoa(String.fromCharCode(...new Uint8Array
     <meta name="description" content={description} />
     <meta name="author" content="İzzet Can Öztozlu" />
     {noindex && <meta name="robots" content="noindex" />}
-    <link rel="canonical" href={urlFor(locale)} />
-    {!noindex && LOCALES.map((l) => <link rel="alternate" hreflang={l} href={urlFor(l)} />)}
-    {!noindex && <link rel="alternate" hreflang="x-default" href={urlFor(DEFAULT_LOCALE)} />}
+    <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/icons/graphite.svg" type="image/svg+xml" data-skin-icon />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -57,7 +56,7 @@ Astro.csp?.insertScriptHash(`sha256-${btoa(String.fromCharCode(...new Uint8Array
     <meta property="og:site_name" content="İzzet Can Öztozlu" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={urlFor(locale)} />
+    <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={locale === 'tr' ? 'tr_TR' : 'en_US'} />
     <meta name="twitter:card" content="summary" />
     <script is:inline set:html={PREPAINT}></script>
@@ -66,8 +65,8 @@ Astro.csp?.insertScriptHash(`sha256-${btoa(String.fromCharCode(...new Uint8Array
   <body>
     <a class="skip" href="#main">{t.skip}</a>
     <div class="frame" id="top">
-      <Topbar client:load transition:persist="topbar" transition:persist-props t={t} path={Astro.url.pathname} repo={repo} locale={locale} />
-      <main id="main" tabindex="-1" data-repo={repo}><slot /></main>
+      <Topbar client:load transition:persist="topbar" transition:persist-props t={t} path={Astro.locals.path} repo={repo} locale={locale} />
+      <main id="main" tabindex="-1" data-repo={repo}>{fallback && <p class="fallback-note">{t.fallbackNote}</p>}<slot /></main>
       <Footer />
     </div>
     <div id="overlays" transition:persist="overlays"><Toasts client:idle /></div>

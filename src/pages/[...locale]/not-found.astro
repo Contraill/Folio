@@ -1,9 +1,12 @@
 ---
 import { ArrowRight } from 'lucide-react';
 import { DizzyMochi } from '@/components/mochi';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
 import { messages } from '@/i18n/messages';
 import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
 
 const t = messages[Astro.locals.locale];
 const { pages } = await getContent(Astro.locals);

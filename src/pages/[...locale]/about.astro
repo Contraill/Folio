@@ -2,12 +2,14 @@
 import { ArrowRight } from 'lucide-react';
 import Draft from '@/components/Draft.astro';
 import Mochi from '@/components/mochi';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
 import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
 
 const locale = Astro.locals.locale;
 const { pages: content, projects } = await getContent(Astro.locals);
-Astro.locals.cacheable = true;
 const c = content.about;
 const languages = new Set(projects.map((p) => p.lang)).size;
 const stars = projects.reduce((sum, p) => sum + p.stars, 0);

@@ -4,16 +4,18 @@ import Cover from '@/components/Cover';
 import Hero from '@/components/Hero';
 import { Go } from '@/components/kit';
 import Mochi from '@/components/mochi';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
 import { areasFor } from '@/content/site';
 import { messages } from '@/i18n/messages';
 import Base from '@/layouts/Base.astro';
 import { LAB_MINI_PATHS } from '@/lib/labmini';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
 
 const locale = Astro.locals.locale;
 const t = messages[locale];
 const { pages: content, featured, selected } = await getContent(Astro.locals);
-Astro.locals.cacheable = true;
 const c = content.home;
 const areas = areasFor(locale);
 const depth = [0.04, 0.09, 0.02, 0.12];

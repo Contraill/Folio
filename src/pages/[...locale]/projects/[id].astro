@@ -5,23 +5,29 @@ import Cover from '@/components/Cover';
 import Draft from '@/components/Draft.astro';
 import { Arrow } from '@/components/kit';
 import MasterDetail from '@/components/MasterDetail';
-import { getContent } from '@/content/request';
+import { getContent, getDiscovery } from '@/content/load';
+import { localePaths } from '@/lib/locales';
 import type { Img } from '@/content/schema';
 import { areasFor, GH } from '@/content/site';
 import { messages } from '@/i18n/messages';
 import Base from '@/layouts/Base.astro';
 
+export async function getStaticPaths() {
+  const { projects } = await getDiscovery();
+  return localePaths().flatMap(({ params }) => projects.map((p) => ({ params: { ...params, id: p.id } })));
+}
+
 const locale = Astro.locals.locale;
-const { pages: content, projects, cases } = await getContent(Astro.locals);
+const { pages: content, projects, cases, untranslated } = await getContent(Astro.locals);
 const c = content.case;
 const index = projects.findIndex((p) => p.id === Astro.params.id);
-if (index < 0) return new Response(null, { status: 404 });
-Astro.locals.cacheable = true;
 const p = projects[index];
+if (untranslated.has(p.id)) Astro.locals.fallback = true;
 const study = cases[p.id];
 const previous = projects[(index - 1 + projects.length) % projects.length];
 const next = projects[(index + 1) % projects.length];
-const repoUrl = `${GH}/${p.repo}`;
+// A project that isn't on GitHub has no repository link.
+const repoUrl = p.repo ? `${GH}/${p.repo}` : undefined;
 const gallery: [Img, string][] = study?.sections.find((s) => s.gal)?.gal ?? (p.img ? [[p.img, c.screenshot.replace('{n}', p.name)]] : []);
 const two = (n: number) => String(n).padStart(2, '0');
 const split = (text: string): [string, string] => { const i = text.search(/[.:]\s/); return i < 0 ? [text, ''] : [text.slice(0, i + 1), text.slice(i + 1)]; };
@@ -47,7 +53,7 @@ const coverProps = { c: content.stage, altSuffix: c.screenshot };
         <p class="two-tone" style="font-size: clamp(20px, 1.7vw, 24px)">{ledeHead}<span class="tail">{ledeTail}</span></p>
         <div style="display: flex; gap: 8px; flex-wrap: wrap">
           {p.home && <a class="btn btn-1" href={p.home} target="_blank" rel="noreferrer">{c.live}<span class="ic"><Arrow size={16} /></span></a>}
-          <a class:list={['btn', p.home ? 'btn-2' : 'btn-1']} href={repoUrl} target="_blank" rel="noreferrer">{c.repo}{p.home ? <Arrow size={16} /> : <span class="ic"><Arrow size={16} /></span>}</a>
+          {repoUrl && <a class:list={['btn', p.home ? 'btn-2' : 'btn-1']} href={repoUrl} target="_blank" rel="noreferrer">{c.repo}{p.home ? <Arrow size={16} /> : <span class="ic"><Arrow size={16} /></span>}</a>}
         </div>
         {study && <p class="small mono" style="font-size: 12.5px">{study.stack}</p>}
       </div>

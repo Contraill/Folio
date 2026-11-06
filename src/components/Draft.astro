@@ -1,6 +1,6 @@
 ---
 import { PenLine } from 'lucide-react';
-import { getContent } from '@/content/request';
+import { getContent } from '@/content/load';
 
 const { block = false } = Astro.props as { block?: boolean };
 const { pages } = await getContent(Astro.locals);
