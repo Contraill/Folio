@@ -24,7 +24,7 @@ Decided against splitting the stylesheet per page: it is 18 KB compressed for th
 
 ## M3 — Content store
 
-**Needs approval to create preview resources, and Access on Previews first.** D1 schema, migrations, zod schemas, the read layer behind today's seed imports, seed tool, local and preview environments, edge caching with verified purge behaviour.
+**Needs approval to create preview resources, and Access on Previews first.** D1 schema, migrations, zod schemas, the read layer behind today's seed imports, seed tool, local and preview environments. Workers Cache, off by default, under the conditions in [architecture.md](architecture.md#edge-caching-planned), each verified on the real Preview.
 
 **Exit:** the site renders identically from D1, and a test proves a deploy leaves content untouched.
 

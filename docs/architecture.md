@@ -93,7 +93,7 @@ No language prefixes. `src/i18n/locale.ts` resolves the language in this order:
 | --- | --- |
 | Canonical URLs | `/about` is English, `/about?lang=tr` is Turkish. Each page declares itself canonical and lists `hreflang` alternates plus `x-default`. Crawlers send no language preference and would otherwise never see Turkish |
 | Sharing | The `?lang=tr` URL renders Turkish metadata, including `og:locale`, for link previews |
-| Caching | Responses carry `Vary: Cookie, Accept-Language` and `Content-Language`. The planned edge cache keys on the resolved language |
+| Caching | Responses carry `Vary: Cookie, Accept-Language` and `Content-Language`. The planned Workers Cache puts the resolved language in its key |
 | Interface strings | `src/i18n/messages.ts`, shared by all components. No duplicated component trees |
 | Content | Per-language revisions in the content store. A missing Turkish translation falls back to English, and the fallback block is marked `lang="en"` for assistive technology |
 
@@ -103,7 +103,16 @@ Editable content lives in D1 and R2, entirely separate from code. A build contai
 
 ## Edge caching **(planned)**
 
-Public HTML goes through the Workers Cache API, keyed by URL and resolved language, with a short lifetime and stale-while-revalidate. Publishing is therefore visible within about a minute without extra infrastructure. Private pages and admin routes are never cached, and removals (a repository going private, a page being unpublished) also purge explicitly. Purge semantics across data centres must be verified in milestone 3 before relying on them.
+Decided for milestone 3: **Workers Cache**, the cache in front of the Worker, not the Cache API. The Cache API stores per data centre, deletes only locally and is not available behind Access. Workers Cache is tiered, purges globally by tag or path from `ctx.cache.purge()`, and caches each Preview separately from production, so purging can be tested on a Preview before launch.
+
+Conditions agreed with the owner:
+
+- **Off by default**, with its own setting for Previews and for production. Production turns it on only after the same tests pass there.
+- **Language is part of the key.** Workers Cache keys on path, query and Worker version, not on cookies or `Accept-Language`. A thin uncached entry resolves the language and calls the cached page renderer with the language in the key.
+- **Only published, public pages** enter the shared cache, for `GET` without credentials. Private and unlisted content, drafts, admin and anything carrying a cookie or authorization never do. Browsers keep receiving `private, max-age=60`.
+- **Invalidation.** Publishing purges by tag, and the purge result is checked and retried. A deploy changes the Worker version, which is part of the key.
+- **The TTL is never the only protection for removals.** When something must disappear (a page unpublished or made private, a repository gone), a cache generation number that is part of the key is bumped first. That makes every older entry unreachable at once, whatever happened to the purge. If the generation cannot be confirmed, the entry bypasses the cache (fails closed).
+- **Verified on the real Preview, behind Access:** an unauthenticated request never receives a cached page; English and Turkish never mix; a publish shows up after its purge; a removal is gone at once; turning the cache off falls back cleanly.
 
 ## Security model **(planned unless noted)**
 
