@@ -10,10 +10,10 @@ export interface Db { prepare(sql: string): { bind(...values: unknown[]): Stmt }
 
 export type Content = { pages: Pages; projects: Project[]; featured: Project[]; selected: Project[]; cases: Record<string, Case>; cv: Cv };
 
-type Row = { type: string; slug: string; locale: Locale; rev: string; listed: number | null; sort_rank: number | null; featured_rank: number | null; selected_rank: number | null };
+type Row = { type: string; slug: string; visibility: 'public' | 'unlisted'; locale: Locale; rev: string; listed: number | null; sort_rank: number | null; featured_rank: number | null; selected_rank: number | null };
 
 /* Published revisions of everything not private or deleted, in the asked language and in English, the fallback. */
-const MANIFEST = `SELECT e.type, e.slug, l.locale, l.published_id AS rev, p.listed, p.sort_rank, p.featured_rank, p.selected_rank
+const MANIFEST = `SELECT e.type, e.slug, e.visibility, l.locale, l.published_id AS rev, p.listed, p.sort_rank, p.featured_rank, p.selected_rank
   FROM entry e JOIN entry_locale l ON l.entry_id = e.id LEFT JOIN project p ON p.entry_id = e.id
   WHERE e.deleted_at IS NULL AND e.visibility IN ('public', 'unlisted') AND l.published_id IS NOT NULL AND l.locale IN ('en', ?1)`;
 
@@ -48,9 +48,10 @@ export async function loadContent(db: Db, locale: Locale): Promise<Content> {
 
   const pages = Object.fromEntries(PAGE_SLUGS.map((slug) => [slug, localized('page', slug)])) as Pages;
 
-  // A project is listed only when chosen and published in English; Turkish lays its translated fields over it.
+  // A project is listed only when chosen, public and published in English; Turkish lays its translated fields over
+  // it. An unlisted project is in no list, featured or selected spot, search index or page.
   const cases: Record<string, Case> = {};
-  const listed = rows.filter((r) => r.type === 'project' && r.locale === 'en' && r.listed === 1).sort((a, b) => a.sort_rank! - b.sort_rank!);
+  const listed = rows.filter((r) => r.type === 'project' && r.locale === 'en' && r.listed === 1 && r.visibility === 'public').sort((a, b) => a.sort_rank! - b.sort_rank!);
   const projects = listed.map((r) => {
     const en = checked.get(r.rev) as Omit<Project, 'id'> & { case?: Case };
     const tr = locale === 'tr' ? (body('project', r.slug, 'tr') as Partial<typeof en> | undefined) : undefined;

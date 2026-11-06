@@ -135,3 +135,18 @@ test('candidates, private and deleted entries never reach the site', async () =>
   const c = await loadContent(db, 'en');
   assert.ok(!c.featured.some((p) => p.id === 'helios') && !('helios' in c.cases));
 });
+
+test('an unlisted project stays out of every list, even when listed is on', async () => {
+  const { sqlite, db } = await seeded();
+  sqlite.exec("UPDATE entry SET visibility = 'unlisted' WHERE id IN ('project:helios', 'project:orbis')");
+  assert.equal((sqlite.prepare("SELECT listed FROM project WHERE id = 'helios'").get() as { listed: number }).listed, 1);
+  for (const locale of ['en', 'tr'] as const) {
+    const c = await loadContent(db, locale);
+    const ids = (list: { id: string }[]) => list.map((p) => p.id);
+    assert.deepEqual(ids(c.projects), PUBLISHED.filter((id) => id !== 'helios' && id !== 'orbis'), 'projects and the search index');
+    assert.ok(!ids(c.featured).includes('helios'), 'featured');
+    assert.ok(!ids(c.selected).includes('orbis'), 'selected');
+    assert.ok(!('helios' in c.cases) && !('orbis' in c.cases), 'case studies');
+    assert.deepEqual(c.pages.uses, pages[locale].uses, 'unlisted pages still load by address');
+  }
+});
