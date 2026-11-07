@@ -18,6 +18,8 @@ export default defineConfig({
       styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
     },
   },
+  // Content is frontmatter only: no Markdown code blocks to highlight, and Shiki's inline styles don't suit the CSP.
+  markdown: { syntaxHighlight: false },
   devToolbar: { enabled: false },
   // Pages start loading on hover, focus or touch, so a click usually finds them ready.
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
