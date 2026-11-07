@@ -1,66 +1,35 @@
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import type { Page } from '@playwright/test';
 import { expect, test } from './access';
+import { frames, recordAnimations, recorded, settled, transitionEnded, watchForProblems } from './helpers';
 
-/** Fails the test on any page error, console error or CSP violation. */
-async function watchForProblems(page: Page) {
-  await page.addInitScript(() => document.addEventListener('securitypolicyviolation', (e) => console.error(`CSP ${e.violatedDirective} ${e.blockedURI}`)));
-  const problems: string[] = [];
-  page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
-  page.on('console', (m) => { if (m.type() === 'error') problems.push(`console: ${m.text()}`); });
-  return problems;
-}
-const settled = (page: Page) => page.waitForFunction(() => !document.documentElement.classList.contains('intro'), undefined, { timeout: 5000 });
-/** Nothing on the page can be clicked while a page transition is on screen, in any browser. */
-const transitionEnded = (page: Page) => page.waitForFunction(() => !document.getAnimations().some((a) => (a.effect as KeyframeEffect | null)?.pseudoElement?.includes('view-transition')));
-
-/** Starts recording the name of every animation that runs, including on transition pseudo-elements. */
-async function recordAnimations(page: Page) {
-  await page.evaluate(() => {
-    const seen = new Set<string>();
-    (window as never as { seen: Set<string> }).seen = seen;
-    const sample = () => {
-      document.getAnimations().forEach((a) => {
-        const name = (a as CSSAnimation).animationName;
-        const pseudo = (a.effect as KeyframeEffect | null)?.pseudoElement ?? '';
-        if (name) seen.add(`${pseudo} ${name}`.trim());
-      });
-      requestAnimationFrame(sample);
-    };
-    sample();
-  });
-}
-const recorded = (page: Page) => page.evaluate(() => [...(window as never as { seen: Set<string> }).seen]);
+/* The shell around every page, in a browser: navigation, motion, skins, overlays, language, CSP enforcement, the CV.
+   HTTP-level behaviour (headers, status codes, indexing) is in http.spec.ts. */
 
 test.describe('motion', () => {
-  test('first load plays the intro once, navigation does not replay it', async ({ page }) => {
+  test('first load plays the intro once; navigating does not replay it', async ({ page }) => {
     await page.goto('/cv');
-    await expect(page.locator('html')).toHaveClass(/intro/);
-    expect(await page.evaluate(() => document.getAnimations().map((a) => (a as CSSAnimation).animationName))).toContain('drop');
+    await expect.poll(() => page.evaluate(() => document.getAnimations().map((a) => (a as CSSAnimation).animationName))).toContain('drop');
     await settled(page);
+    await recordAnimations(page);
     await page.locator('.navcap a', { hasText: 'Lab' }).click();
     await expect(page).toHaveURL(/\/lab$/);
-    await expect(page.locator('html')).not.toHaveClass(/intro/);
+    await transitionEnded(page);
+    expect(await recorded(page)).not.toContain('drop');
   });
 
   test('pages slide along the menu order, and rise to and from Home', async ({ page }) => {
     await page.goto('/about');
     await settled(page);
-    await recordAnimations(page);
-    await page.locator('.navcap a', { hasText: 'CV' }).click();
-    await expect(page).toHaveURL(/\/cv$/);
-    await expect.poll(() => recorded(page)).toEqual(expect.arrayContaining(['::view-transition-old(page) out-left', '::view-transition-new(page) in-right']));
-    await page.waitForTimeout(1100);
-    await recordAnimations(page);
-    await page.locator('.navcap a', { hasText: 'Lab' }).click();
-    await expect(page).toHaveURL(/\/lab$/);
-    await expect.poll(() => recorded(page)).toEqual(expect.arrayContaining(['::view-transition-new(page) in-left']));
-    await page.waitForTimeout(1100);
-    await recordAnimations(page);
-    await page.locator('.cap.brand').click();
-    await expect(page).toHaveURL(/\/$/);
-    await expect.poll(() => recorded(page)).toEqual(expect.arrayContaining(['::view-transition-new(page) page-in']));
+    for (const [link, url, animations] of [
+      [page.locator('.navcap a', { hasText: 'CV' }), /\/cv$/, ['::view-transition-old(page) out-left', '::view-transition-new(page) in-right']],
+      [page.locator('.navcap a', { hasText: 'Lab' }), /\/lab$/, ['::view-transition-new(page) in-left']],
+      [page.locator('.cap.brand'), /\/$/, ['::view-transition-new(page) page-in']],
+    ] as const) {
+      await recordAnimations(page);
+      await link.click();
+      await expect(page).toHaveURL(url);
+      await expect.poll(() => recorded(page)).toEqual(expect.arrayContaining([...animations]));
+      await transitionEnded(page);
+    }
   });
 
   test('a new skin spreads in a circle from its button', async ({ page }) => {
@@ -72,17 +41,20 @@ test.describe('motion', () => {
     await expect.poll(() => recorded(page)).toEqual(expect.arrayContaining(['::view-transition-new(root) skin-in']));
   });
 
-  test('reduced motion plays no page or skin animation', async ({ browser, baseURL }) => {
+  test('reduced motion: no intro, no page or skin animation, content shown at once', async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, reducedMotion: 'reduce' });
     const page = await context.newPage();
     await page.goto('/about');
+    await expect(page.locator('html')).not.toHaveClass(/intro/);
     await recordAnimations(page);
     await page.locator('.navcap a', { hasText: 'CV' }).click();
     await expect(page).toHaveURL(/\/cv$/);
+    await expect(page.locator('.cv-card, .cv-frame')).toHaveCSS('opacity', '1');
     await page.locator('[data-skin-trigger]').click();
     await page.getByRole('radio', { name: /^Paper/ }).click();
-    await page.waitForTimeout(400);
-    expect((await recorded(page)).filter((name) => /in-right|out-left|skin-in|page-in/.test(name))).toEqual([]);
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'paper');
+    await frames(page);
+    expect((await recorded(page)).filter((name) => /in-right|out-left|skin-in|page-in|drop/.test(name))).toEqual([]);
     await context.close();
   });
 
@@ -94,17 +66,14 @@ test.describe('motion', () => {
     await transitionEnded(page);
     await page.locator('.navcap a', { hasText: 'CV' }).click();
     await expect(page.locator('.cv-card, .cv-frame')).toHaveClass(/\bin\b/);
+    await transitionEnded(page);
     const magnet = page.locator('.foot [data-magnet]');
-    // Retried because the page ignores the pointer while a view transition is on screen.
-    let nudge = 0;
+    await magnet.scrollIntoViewIfNeeded();
+    const box = (await magnet.boundingBox())!;
+    // Two positions, so that each move is a real change whichever frame the layer samples.
     await expect(async () => {
-      await magnet.scrollIntoViewIfNeeded();
-      const box = (await magnet.boundingBox())!;
-      const x = box.x + box.width / 2 + (nudge++ % 2 ? 10 : 6), y = box.y + box.height / 2;
-      await page.mouse.move(x, y);
-      await page.waitForTimeout(60);
-      const state = await magnet.evaluate((el, [px, py]) => ({ mx: (el as HTMLElement).style.getPropertyValue('--mx'), under: document.elementFromPoint(px, py)?.outerHTML.slice(0, 80), scrollY, innerHeight, transitions: document.getAnimations().filter((a) => (a.effect as KeyframeEffect | null)?.pseudoElement?.includes('view-transition')).length }), [x, y]);
-      expect(state.mx, JSON.stringify({ x, y, ...state })).toMatch(/^-?\d/);
+      for (const dx of [6, 10]) { await page.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2); await frames(page); }
+      expect(await magnet.evaluate((el) => (el as HTMLElement).style.getPropertyValue('--mx'))).toMatch(/^-?\d/);
     }).toPass({ timeout: 6000 });
   });
 
@@ -120,7 +89,7 @@ test.describe('motion', () => {
 });
 
 test.describe('navigation', () => {
-  test('moves between pages without a reload and keeps the shell alive', async ({ page }) => {
+  test('moves between pages without a reload and keeps the shell alive', { tag: '@smoke' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.goto('/cv');
     await page.evaluate(() => { (window as never as { marker: Element }).marker = document.querySelector('.topbar')!; });
@@ -147,39 +116,61 @@ test.describe('navigation', () => {
     const before = await x();
     await page.locator('.navcap a', { hasText: 'About' }).click();
     await expect(page.locator('.navcap a[aria-current="page"]')).toHaveText('About');
-    await expect.poll(x, { timeout: 2000 }).toBeGreaterThan(before + 100);
+    await expect.poll(x).toBeGreaterThan(before + 100);
     const target = await page.locator('.navcap a[aria-current="page"]').evaluate((el) => el.getBoundingClientRect().left);
-    await expect.poll(x, { timeout: 2000 }).toBeCloseTo(target, 0);
+    await expect.poll(x).toBeCloseTo(target, 0);
   });
 
-  test('unknown pages answer 404 and stay out of search engines', async ({ page }) => {
-    const response = await page.goto('/does-not-exist');
-    expect(response?.status()).toBe(404);
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
-    expect((await page.goto('/admin'))?.status()).toBe(404);
+  test('a press during a page transition ends it and still reaches its target', async ({ page }) => {
+    await page.goto('/about');
+    await settled(page);
+    const target = (await page.locator('.navcap a', { hasText: 'CV' }).boundingBox())!;
+    await page.locator('.navcap a', { hasText: 'Lab' }).click();
+    await expect(page).toHaveURL(/\/lab$/);
+    await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
+    await expect(page).toHaveURL(/\/cv$/);
+    await expect(page.locator('.cv-card, .cv-frame')).toBeVisible();
+  });
+
+  test('pages start loading on hover', { tag: '@once' }, async ({ page }) => {
+    await page.goto('/about');
+    await settled(page);
+    await page.locator('.navcap a', { hasText: 'Lab' }).hover();
+    await expect.poll(() => page.evaluate(() => !!document.querySelector('link[rel="prefetch"][href$="/lab"]'))).toBe(true);
   });
 });
 
 test.describe('skins', () => {
-  test('a chosen skin spreads, persists across navigation and reloads', async ({ page }) => {
+  test('a chosen skin persists across navigation and reloads, with the tab icon and the monogram', { tag: '@smoke' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.goto('/cv');
     await settled(page);
+    const icon = page.locator('link[data-skin-icon]');
+    // The monogram's dot takes the skin's accent: no green on graphite or paper.
+    const dot = page.locator('.cap.brand .i-dot');
+    await expect(icon).toHaveAttribute('href', '/icons/graphite.svg');
+    await expect(dot).toHaveCSS('fill', 'rgb(243, 243, 241)');
     await page.locator('[data-skin-trigger]').click();
-    await page.locator('.skin-opt', { hasText: 'Terminal' }).click();
+    await page.getByRole('radio', { name: /^Terminal/ }).click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'terminal');
     await expect(page.locator('[data-skin-label]')).toHaveText('Terminal');
+    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
+    await expect(dot).toHaveCSS('fill', 'rgb(125, 255, 168)');
     await page.keyboard.press('Escape');
     await page.locator('.navcap a', { hasText: 'About' }).click();
     await expect(page).toHaveURL(/\/about$/);
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'terminal');
+    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
+    // A reload while fonts still download aborts them, which Firefox reports as an error.
+    await page.evaluate(() => document.fonts.ready);
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'terminal');
     await expect(page.locator('[data-skin-trigger]')).toHaveAttribute('aria-label', /Terminal/);
+    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
     expect(problems).toEqual([]);
   });
 
-  test('Auto follows the clock', async ({ page }) => {
+  test('Auto follows the clock', { tag: '@once' }, async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-11-05T22:00:00'));
     await page.addInitScript(() => localStorage.setItem('fx-skin', JSON.stringify('auto')));
     await page.goto('/cv');
@@ -200,14 +191,36 @@ test.describe('skins', () => {
     });
     expect(fits).toBe(true);
   });
+
+  for (const [skin, radius] of [['terminal', 0], ['blueprint', 8]] as const) {
+    test(`${skin} panels follow the skin's corners`, { tag: '@once' }, async ({ page }) => {
+      await page.addInitScript((s) => localStorage.setItem('fx-skin', JSON.stringify(s)), skin);
+      await page.goto('/cv');
+      await settled(page);
+      const clip = await page.locator('.cvwrap > .cut-fill').evaluate((el) => (el as HTMLElement).style.clipPath);
+      const radii = [...clip.matchAll(/A([\d.]+),/g)].map((m) => Number(m[1]));
+      if (radius === 0) expect(radii).toEqual([]);
+      else for (const value of radii) expect(value).toBeLessThanOrEqual(radius);
+    });
+  }
+
+  test('changing skin re-clips panels straight away', { tag: '@once' }, async ({ page }) => {
+    await page.goto('/cv');
+    await settled(page);
+    await page.locator('[data-skin-trigger]').click();
+    await page.getByRole('radio', { name: /^Terminal/ }).click();
+    await expect.poll(() => page.locator('.cvwrap > .cut-fill').evaluate((el) => (el as HTMLElement).style.clipPath.includes('A'))).toBe(false);
+  });
 });
 
 test.describe('overlays', () => {
-  test('search finds a project and navigates', async ({ page }) => {
+  test('search finds a project and navigates, and never offers the unlisted pages', { tag: '@smoke' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.goto('/cv');
     await settled(page);
     await page.keyboard.press('Control+k');
+    await page.locator('[cmdk-input]').fill('secret');
+    await expect(page.locator('[cmdk-item]', { hasText: '/secret' })).toHaveCount(0);
     await page.locator('[cmdk-input]').fill('fastapi');
     await expect(page.locator('[cmdk-item][data-selected="true"]')).toContainText('Orbis');
     await page.keyboard.press('Enter');
@@ -216,17 +229,6 @@ test.describe('overlays', () => {
     await page.keyboard.press('Control+k');
     await expect(page.locator('[cmdk-input]')).toBeVisible();
     expect(problems).toEqual([]);
-  });
-
-  test('search lists public pages only, and never the easter egg', async ({ page, request }) => {
-    const index = await (await request.get('/search-index.json')).json();
-    const pages = index.pages.map((p: { href: string }) => p.href);
-    for (const hidden of ['/uses', '/now', '/secret', '/admin']) expect(pages).not.toContain(hidden);
-    await page.goto('/cv');
-    await settled(page);
-    await page.keyboard.press('Control+k');
-    await page.locator('[cmdk-input]').fill('secret');
-    await expect(page.locator('[cmdk-item]', { hasText: '/secret' })).toHaveCount(0);
   });
 
   test('contact opens from the top bar and the footer, closes with Escape, returns focus', async ({ page }) => {
@@ -243,7 +245,7 @@ test.describe('overlays', () => {
     expect(problems).toEqual([]);
   });
 
-  test('copying the email address confirms with a toast, after navigating too', async ({ page }) => {
+  test('copying the email address confirms with a toast, after navigating too', { tag: '@once' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.addInitScript(() => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (text: string) => { (window as never as { copied: string }).copied = text; } } }); });
     await page.goto('/cv');
@@ -256,7 +258,7 @@ test.describe('overlays', () => {
     expect(problems).toEqual([]);
   });
 
-  test('overlays survive navigation: the sheet closes, reopens and nothing crashes', async ({ browser, baseURL }) => {
+  test('on a phone the menu sheet closes on navigation and reopens without errors', { tag: '@smoke' }, async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     const problems = await watchForProblems(page);
@@ -273,10 +275,22 @@ test.describe('overlays', () => {
     expect(problems).toEqual([]);
     await context.close();
   });
+
+  test('language can be switched from the phone menu', { tag: '@once' }, async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, locale: 'en-US' });
+    const page = await context.newPage();
+    await page.goto('/about');
+    await settled(page);
+    await page.locator('.menu-btn').click();
+    await page.locator('.ov-sheet [data-set-lang="tr"]').click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'tr');
+    await expect(page.locator('main h1')).toContainText('Merhaba');
+    await context.close();
+  });
 });
 
 test.describe('language', () => {
-  test('follows the browser, can be switched, and the choice wins afterwards', async ({ browser, baseURL }) => {
+  test('follows the browser, can be switched, and the choice wins afterwards', { tag: '@smoke' }, async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, locale: 'tr-TR' });
     const page = await context.newPage();
     await page.goto('/cv');
@@ -291,77 +305,29 @@ test.describe('language', () => {
     await context.close();
   });
 
-  test('both languages share one clean address for crawlers and sharing', async ({ page }) => {
-    await page.goto('/about?lang=tr');
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://oztozlu.dev/about');
-    await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute('content', 'tr_TR');
-    await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0);
-  });
-
-  test('the Turkish copy is served at the same address, and the internal one is never reachable', async ({ request, baseURL }) => {
-    for (const headers of [{ cookie: 'lang=tr' }, { 'accept-language': 'tr-TR,tr;q=0.9' }] as Record<string, string>[]) {
-      const r = await request.get('/about', { headers });
-      expect(r.headers()['content-language']).toBe('tr');
-      expect(await r.text()).toContain('<html lang="tr"');
-    }
-    // Full addresses: a path starting with // would otherwise be read as a host name.
-    for (const path of ['/__tr/about', '/__TR/about', '/%5F%5Ftr/about', '//__tr/about', '/__tr/about/index.html', '/__tr']) expect((await request.get(`${baseURL}${path}`)).status(), path).toBe(404);
-    const direct = await request.get('/about/index.html', { headers: { cookie: 'lang=tr' } });
-    expect(direct.status()).toBe(200);
-    expect(direct.headers()['content-language']).toBe('tr');
-    expect(direct.headers().vary).toBe('Cookie, Accept-Language');
-  });
-
-  test('unlisted pages say noindex in both languages and stay out of the sitemap and search', async ({ request }) => {
-    const unlisted = ['/uses', '/now', '/secret'];
-    for (const path of unlisted) for (const headers of [{}, { cookie: 'lang=tr' }] as Record<string, string>[]) {
-      const r = await request.get(path, { headers });
-      expect(r.headers()['x-robots-tag'], path).toBe('noindex');
-      expect(await r.text()).toContain('<meta name="robots" content="noindex">');
-    }
-    expect((await request.get('/about')).headers()['x-robots-tag']).toBeUndefined();
-    const sitemap = await (await request.get('/sitemap.xml')).text();
-    expect(sitemap).toContain('<loc>https://oztozlu.dev/about</loc>');
-    for (const path of unlisted) expect(sitemap).not.toContain(`${path}<`);
-    expect(sitemap).not.toContain('__tr');
-    for (const headers of [{}, { cookie: 'lang=tr' }] as Record<string, string>[]) {
-      const index = await (await request.get('/search-index.json', { headers })).text();
-      for (const path of unlisted) expect(index).not.toContain(`"${path}"`);
+  test('Turkish pages are translated, with a correct dotted capital', { tag: '@once' }, async ({ page }) => {
+    for (const [path, locator, text] of [
+      ['/?lang=tr', 'h1', 'Tepki veren'],
+      ['/about?lang=tr', 'main h1', 'Merhaba, ben İzzet Can'],
+      ['/projects/helios?lang=tr', 'main', 'İnsan ölçeğinde gezegen bilimi'],
+      ['/lab?lang=tr', 'main', 'burada neler olacak'],
+    ]) {
+      await page.goto(path);
+      await expect(page.locator(locator).first()).toContainText(text);
     }
   });
 });
 
-test.describe('security headers', () => {
-  test('the policy really blocks injected scripts and framing', async ({ page }) => {
-    const response = await page.goto('/cv');
-    // Framing is refused by header; scripts are locked to hashes by the page's own policy tag.
-    expect(response?.headers()['content-security-policy']).toBe("frame-ancestors 'none'");
-    const csp = (await page.locator('meta[http-equiv="content-security-policy"]').getAttribute('content')) ?? '';
-    expect(csp).toMatch(/script-src 'self' 'sha256-/);
-    expect(csp).not.toMatch(/script-src[^;]*unsafe-inline/);
+test.describe('security', () => {
+  test('the page policy blocks injected scripts', { tag: '@smoke' }, async ({ page }) => {
+    await page.goto('/cv');
+    await expect(page.locator('main#main')).toBeVisible();
     await page.evaluate(() => { const s = document.createElement('script'); s.textContent = 'window.injected = true'; document.head.appendChild(s); });
     expect(await page.evaluate(() => (window as never as { injected?: boolean }).injected)).toBeUndefined();
   });
-
-  test('every language variant is marked as such for caches', async ({ request }) => {
-    const response = await request.get('/cv', { headers: { 'accept-language': 'tr' } });
-    expect(response.headers()['content-language']).toBe('tr');
-    expect(response.headers().vary).toContain('Accept-Language');
-    expect(response.headers().vary).toContain('Cookie');
-    expect(response.headers()['cache-control']).toBe('private, max-age=60');
-  });
 });
 
-test.describe('accessibility and robustness', () => {
-  test('reduced motion: no intro, reveals land immediately', async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ baseURL, reducedMotion: 'reduce' });
-    const page = await context.newPage();
-    await page.goto('/cv');
-    await expect(page.locator('html')).not.toHaveClass(/intro/);
-    await expect(page.locator('.cv-card, .cv-frame')).toHaveCSS('opacity', '1');
-    await context.close();
-  });
-
+test.describe('accessibility', () => {
   test('keyboard: the skip link comes first and moves focus to the content', async ({ page }) => {
     await page.goto('/cv');
     await settled(page);
@@ -370,33 +336,10 @@ test.describe('accessibility and robustness', () => {
     await page.keyboard.press('Enter');
     await expect(page.locator('main')).toBeFocused();
   });
-
-  test('without JavaScript the page is complete', async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
-    const page = await context.newPage();
-    await page.goto('/cv');
-    await expect(page.locator('.cv-card, .cv-frame')).toBeVisible();
-    await expect(page.locator('.cv-card, .cv-frame')).toHaveCSS('opacity', '1');
-    await expect(page.locator('.cv-head')).toHaveCSS('opacity', '1');
-    await page.locator('.navcap a', { hasText: 'Lab' }).click();
-    await expect(page).toHaveURL(/\/lab$/);
-    await context.close();
-  });
-
-  for (const width of [320, 360, 390, 768, 1100, 1440]) {
-    test(`no horizontal overflow at ${width}px`, async ({ browser, baseURL }) => {
-      const context = await browser.newContext({ baseURL, viewport: { width, height: 900 } });
-      const page = await context.newPage();
-      await page.goto('/cv');
-      await settled(page);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-      await context.close();
-    });
-  }
 });
 
-test.describe('CV: the owner\'s own PDFs', () => {
-  test('shows the chosen language, and opening or downloading gives the original file', async ({ page, request }) => {
+test.describe("CV: the owner's own PDFs", () => {
+  test('shows the chosen language, and its buttons open or download the original file', { tag: '@smoke' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.goto('/cv');
     await settled(page);
@@ -406,21 +349,14 @@ test.describe('CV: the owner\'s own PDFs', () => {
     await expect(save).toHaveAttribute('download', 'Izzet-Can-Oztozlu-CV-EN.pdf');
     await page.locator('.cvbar .seg button', { hasText: 'Türkçe' }).click();
     await expect(save).toHaveAttribute('href', '/cv/tr.pdf');
+    await expect(save).toHaveAttribute('download', 'Izzet-Can-Oztozlu-CV-TR.pdf');
     await expect(page.locator('.cvbar a[target="_blank"]')).toHaveAttribute('href', '/cv/tr.pdf');
+    // The top bar's CV button follows the page language, not the CV switch.
     await expect(page.locator('.tools a.tool[download]')).toHaveAttribute('href', '/cv/en.pdf');
-    for (const lang of ['en', 'tr']) {
-      const r = await request.get(`/cv/${lang}.pdf`);
-      expect(r.status()).toBe(200);
-      expect(r.headers()['content-type']).toBe('application/pdf');
-      expect(r.headers()['cache-control'], 'a replaced PDF is never served stale').toBe('no-cache');
-      expect(r.headers().etag).toBeTruthy();
-      const sha = (b: Buffer) => createHash('sha256').update(b).digest('hex');
-      expect(sha(await r.body())).toBe(sha(readFileSync(`public/cv/${lang}.pdf`)));
-    }
     expect(problems).toEqual([]);
   });
 
-  test('embeds the PDF where the browser can show it, and offers open and download where it cannot', async ({ browser, baseURL }) => {
+  test('embeds the PDF where the browser can show it, and offers open and download where it cannot', { tag: '@smoke' }, async ({ browser, baseURL }) => {
     for (const [viewer, width, expected] of [[true, 1280, '.cv-frame'], [false, 1280, '.cv-card'], [true, 390, '.cv-card']] as const) {
       const context = await browser.newContext({ baseURL, viewport: { width, height: 900 } });
       await context.addInitScript((enabled) => Object.defineProperty(Navigator.prototype, 'pdfViewerEnabled', { get: () => enabled }), viewer);
@@ -435,11 +371,5 @@ test.describe('CV: the owner\'s own PDFs', () => {
       }
       await context.close();
     }
-  });
-
-  test('/_build.json names the live build and nothing more', async ({ request }) => {
-    const r = await request.get('/_build.json');
-    expect(r.headers()['cache-control']).toBe('no-store');
-    expect(Object.keys(await r.json())).toEqual(['sha', 'builtAt', 'trigger', 'github', 'counts']);
   });
 });

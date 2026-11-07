@@ -7,5 +7,6 @@ dist/
 *.log
 test-results/
 playwright-report/
+tests/e2e/__screenshots__/
 worker-configuration.d.ts
 .folio/

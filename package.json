@@ -12,7 +12,9 @@
     "preview": "wrangler dev --port 4321",
     "check": "wrangler types >/dev/null && astro check",
     "test": "node --test \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=chromium --project=firefox",
+    "test:smoke": "playwright test --project=chromium --project=firefox --grep @smoke",
+    "test:visual": "playwright test --project=visual",
     "types": "wrangler types"
   },
   "dependencies": {

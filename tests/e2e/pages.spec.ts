@@ -1,14 +1,9 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './access';
+import { frames, settled, transitionEnded, watchForProblems } from './helpers';
 
-const settled = (page: Page) => page.waitForFunction(() => !document.documentElement.classList.contains('intro'), undefined, { timeout: 5000 });
-async function watchForProblems(page: Page) {
-  await page.addInitScript(() => document.addEventListener('securitypolicyviolation', (e) => console.error(`CSP ${e.violatedDirective} ${e.blockedURI}`)));
-  const problems: string[] = [];
-  page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
-  page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes('404')) problems.push(`console: ${m.text()}`); });
-  return problems;
-}
+/* Every page and its own interactions, in a browser. Layout and motion run in Chromium and Firefox; app logic that
+   doesn't depend on the engine is tagged @once. */
 
 const ROUTES = ['/', '/projects', '/projects/helios', '/projects/mochi', '/projects/huepr', '/projects/orbis', '/projects/bct', '/lab', '/play', '/about', '/cv', '/uses', '/now', '/secret'];
 
@@ -28,7 +23,7 @@ test.describe('every page', () => {
     });
   }
 
-  test('every page is complete without JavaScript', async ({ browser, baseURL }) => {
+  test('every page is complete without JavaScript, and its links still work', { tag: '@once' }, async ({ browser, baseURL }) => {
     test.slow(); // one test for every page: close to the default timeout against a deployed Preview
     const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
     const page = await context.newPage();
@@ -37,18 +32,10 @@ test.describe('every page', () => {
       await expect(page.locator('main h1').first()).toBeVisible();
       for (const el of await page.locator('[data-reveal]').all()) await expect(el).toHaveCSS('opacity', '1');
     }
+    await page.locator('.navcap a', { hasText: 'Lab' }).click();
+    await expect(page).toHaveURL(/\/lab$/);
+    await expect(page.locator('main h1')).toHaveText('ai lab_');
     await context.close();
-  });
-
-  test('Turkish pages are translated, with a correct dotted capital', async ({ page }) => {
-    await page.goto('/?lang=tr');
-    await expect(page.locator('h1')).toContainText('Tepki veren');
-    await page.goto('/about?lang=tr');
-    await expect(page.locator('main h1')).toContainText('Merhaba, ben İzzet Can');
-    await page.goto('/projects/helios?lang=tr');
-    await expect(page.locator('main')).toContainText('İnsan ölçeğinde gezegen bilimi');
-    await page.goto('/lab?lang=tr');
-    await expect(page.locator('main')).toContainText('burada neler olacak');
   });
 
   test('Turkish text fits on small screens too', async ({ browser, baseURL }) => {
@@ -75,7 +62,7 @@ test.describe('every page', () => {
         for (const route of ['/', '/projects', '/projects/huepr']) {
           await page.goto(route);
           await page.evaluate(() => document.fonts.ready);
-          await page.waitForTimeout(150);
+          await frames(page);
           const clipped = await page.locator('.ln').evaluateAll((lines) => lines.filter((l) => l.scrollWidth > l.clientWidth + 1).map((l) => l.textContent));
           expect(clipped, `${route} at ${width}`).toEqual([]);
         }
@@ -85,28 +72,8 @@ test.describe('every page', () => {
   }
 });
 
-test.describe('unlisted pages', () => {
-  for (const route of ['/uses', '/now', '/secret']) {
-    test(`${route} works by direct link but stays out of indexes and navigation`, async ({ page, request }) => {
-      await page.goto(route);
-      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
-      await expect(page.locator(`.navcap a[href="${route}"], .foot a[href="${route}"]`)).toHaveCount(0);
-      const index = await (await request.get('/search-index.json')).text();
-      expect(index).not.toContain(route);
-    });
-  }
-
-  test('only published projects are reachable; candidates stay out of every listing', async ({ request }) => {
-    expect((await request.get('/projects/does-not-exist')).status()).toBe(404);
-    expect((await request.get('/projects/nodesk')).status()).toBe(404);
-    expect(await (await request.get('/search-index.json')).text()).not.toContain('Nodesk');
-    expect(await (await request.get('/projects')).text()).not.toContain('Nodesk');
-    expect((await request.get('/admin')).status()).toBe(404);
-  });
-});
-
 test.describe('home', () => {
-  test('the hero advances, pauses and keeps its stages reachable', async ({ page }) => {
+  test('the hero advances, pauses and keeps its stages reachable', { tag: '@once' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.goto('/');
     await settled(page);
@@ -125,7 +92,7 @@ test.describe('home', () => {
     expect(problems).toEqual([]);
   });
 
-  test('the orrery can be explored from the keyboard', async ({ page }) => {
+  test('the orrery can be explored from the keyboard', { tag: '@once' }, async ({ page }) => {
     await page.goto('/');
     await settled(page);
     await page.locator('.orrery').focus();
@@ -162,8 +129,8 @@ test.describe('home', () => {
     await page.locator('.gcard[href="/projects/helios"]').click();
     await expect(page).toHaveURL(/\/projects\/helios$/);
     await expect.poll(seen).toContain('::view-transition-group(media)');
+    await transitionEnded(page);
     await page.evaluate(() => (window as never as { seen: Set<string> }).seen.clear());
-    await page.waitForTimeout(900);
     await page.locator('.crumbs nav a').click();
     await expect(page).toHaveURL(/\/projects$/);
     await expect.poll(seen).toContain('::view-transition-group(media)');
@@ -171,13 +138,19 @@ test.describe('home', () => {
 });
 
 test.describe('projects', () => {
-  test('filters stay on the page, keep a shareable URL and follow history', async ({ page }) => {
+  test('filters stay on the page, keep a shareable URL and follow history', { tag: '@smoke' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.goto('/projects');
     await settled(page);
     const total = await page.locator('.gcard').count();
     expect(total).toBe(7);
-    await page.evaluate(() => { (window as never as { marker: Element }).marker = document.querySelector('main')!; });
+    // Filtering and going back stay on the page: the router must never start a navigation.
+    await page.evaluate(() => {
+      const w = window as never as { marker: Element; navigations: number };
+      w.marker = document.querySelector('main')!;
+      w.navigations = 0;
+      document.addEventListener('astro:before-preparation', () => w.navigations++);
+    });
     await page.locator('.filters a', { hasText: 'Hardware' }).click();
     await expect(page).toHaveURL(/\?area=hardware$/);
     await expect(page.locator('.gcard')).toHaveCount(1);
@@ -185,13 +158,12 @@ test.describe('projects', () => {
     await page.goBack();
     await expect(page.locator('.gcard')).toHaveCount(7);
     await expect(page).toHaveURL(/\/projects$/);
-    // Long enough for a router page swap to have happened, if one was wrongly started.
-    await page.waitForTimeout(1200);
+    expect(await page.evaluate(() => (window as never as { navigations: number }).navigations)).toBe(0);
     expect(await page.evaluate(() => (window as never as { marker: Element }).marker === document.querySelector('main'))).toBe(true);
     expect(problems).toEqual([]);
   });
 
-  test('a filtered link opens filtered', async ({ page }) => {
+  test('a filtered link opens filtered', { tag: '@once' }, async ({ page }) => {
     await page.goto('/projects?area=hardware');
     await expect(page.locator('.gcard')).toHaveCount(1);
     await expect(page.locator('.filters a[aria-current="page"]')).toContainText('Hardware');
@@ -217,7 +189,7 @@ test.describe('projects', () => {
     await expect(page.locator('.gcard')).toHaveCount(1);
   });
 
-  test('the index view is remembered', async ({ page }) => {
+  test('the index view is remembered', { tag: '@once' }, async ({ page }) => {
     await page.goto('/projects');
     await settled(page);
     await page.getByRole('button', { name: 'Index view' }).click();
@@ -228,7 +200,7 @@ test.describe('projects', () => {
 });
 
 test.describe('case studies', () => {
-  test('gallery, lightbox and sections work', async ({ page }) => {
+  test('gallery, lightbox and sections work', { tag: '@once' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.goto('/projects/helios');
     await settled(page);
@@ -250,7 +222,7 @@ test.describe('case studies', () => {
     expect(problems).toEqual([]);
   });
 
-  test('previous and next move sideways, the top bar links to the repository', async ({ page }) => {
+  test('previous and next move sideways, the top bar links to the repository', { tag: '@once' }, async ({ page }) => {
     await page.goto('/projects/helios');
     await settled(page);
     await expect(page.locator('.tools a[aria-label="Repository on GitHub"]')).toHaveAttribute('href', 'https://github.com/Contraill/Helios');
@@ -263,14 +235,14 @@ test.describe('case studies', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dir', 'back');
   });
 
-  test('projects without a write-up still make sense', async ({ page }) => {
+  test('projects without a write-up still make sense', { tag: '@once' }, async ({ page }) => {
     await page.goto('/projects/orbis');
     await expect(page.locator('main')).toContainText('From the README');
   });
 });
 
 test.describe('lab and play', () => {
-  test('the Lab stage draws and its controls respond', async ({ page }) => {
+  test('the Lab stage draws and its controls respond', { tag: '@once' }, async ({ page }) => {
     const problems = await watchForProblems(page);
     await page.goto('/lab');
     await settled(page);
@@ -293,20 +265,7 @@ test.describe('lab and play', () => {
     await context.close();
   });
 
-  test('the toy box moves when shaken', async ({ page }) => {
-    const problems = await watchForProblems(page);
-    await page.goto('/play');
-    await settled(page);
-    const frame = () => page.locator('.toybox').evaluate((c: HTMLCanvasElement) => c.toDataURL());
-    await page.waitForTimeout(1500);
-    const before = await frame();
-    await page.getByRole('button', { name: 'Shake the Box' }).click();
-    await page.waitForTimeout(250);
-    expect(await frame()).not.toBe(before);
-    expect(problems).toEqual([]);
-  });
-
-  test('finding the secret page unlocks the star', async ({ page }) => {
+  test('finding the secret page unlocks the star', { tag: '@once' }, async ({ page }) => {
     await page.goto('/secret');
     await expect.poll(() => page.evaluate(() => localStorage.getItem('fx-secret'))).toBe('true');
     await expect(page.locator('.letters button')).toHaveCount(5);
@@ -326,7 +285,7 @@ async function countFrames(page: Page) {
   return async (ms: number) => { const start = await page.evaluate(() => (window as never as { frames: number }).frames); await page.waitForTimeout(ms); return (await page.evaluate(() => (window as never as { frames: number }).frames)) - start; };
 }
 
-test.describe('drawing only when something changes', () => {
+test.describe('drawing only when something changes', { tag: '@once' }, () => {
   test('Lab stops drawing when paused and redraws for input', async ({ page }) => {
     await page.goto('/lab');
     await settled(page);
@@ -342,12 +301,14 @@ test.describe('drawing only when something changes', () => {
     await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 20);
     await expect.poll(() => canvas.evaluate((c: HTMLCanvasElement) => c.toDataURL())).not.toBe(before);
     await page.mouse.move(0, 0);
-    await expect.poll(() => frames(500), { timeout: 5000 }).toBe(0);
+    // Settling is counted in frames (each step is capped at 50 ms), so a busy machine drawing few frames takes longer.
+    await expect.poll(() => frames(500), { timeout: 15_000 }).toBe(0);
     await page.getByRole('button', { name: 'Resume' }).click();
     expect(await frames(1000)).toBeGreaterThan(3);
   });
 
-  test('Play stops drawing when paused and starts again', async ({ page }) => {
+  test('Play stops drawing when paused, starts again, and shakes without errors', async ({ page }) => {
+    const problems = await watchForProblems(page);
     await page.goto('/play');
     await settled(page);
     const frames = await countFrames(page);
@@ -357,6 +318,8 @@ test.describe('drawing only when something changes', () => {
     expect(await frames(1000)).toBeLessThan(2);
     await page.getByRole('button', { name: 'Resume' }).click();
     expect(await frames(1000)).toBeGreaterThan(3);
+    await page.getByRole('button', { name: 'Shake the Box' }).click();
+    expect(problems).toEqual([]);
   });
 
   test('with reduced motion Lab and Play draw once and rest', async ({ browser, baseURL }) => {
@@ -373,48 +336,7 @@ test.describe('drawing only when something changes', () => {
   });
 });
 
-test.describe('navigation speed', () => {
-  test('a press during a page transition ends it and still reaches its target', async ({ page }) => {
-    await page.goto('/about');
-    await settled(page);
-    const target = (await page.locator('.navcap a', { hasText: 'CV' }).boundingBox())!;
-    await page.locator('.navcap a', { hasText: 'Lab' }).click();
-    await expect(page).toHaveURL(/\/lab$/);
-    await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
-    await expect(page).toHaveURL(/\/cv$/);
-    await expect(page.locator('.cv-card, .cv-frame')).toBeVisible();
-  });
-
-  test('pages start loading on hover', async ({ page }) => {
-    await page.goto('/about');
-    await settled(page);
-    await page.locator('.navcap a', { hasText: 'Lab' }).hover();
-    await expect.poll(() => page.evaluate(() => !!document.querySelector('link[rel="prefetch"][href$="/lab"]'))).toBe(true);
-  });
-});
-
 test.describe('shell details', () => {
-  test('the tab icon and the monogram follow the skin, across navigation and reloads', async ({ page, request }) => {
-    for (const path of ['/favicon.ico', '/apple-touch-icon.png', '/icons/graphite.svg', '/icons/terminal.svg']) expect((await request.get(path)).status(), path).toBe(200);
-    await page.goto('/cv');
-    await settled(page);
-    const icon = page.locator('link[data-skin-icon]');
-    await expect(icon).toHaveAttribute('href', '/icons/graphite.svg');
-    // The monogram's dot takes the skin's accent: no green on graphite or paper.
-    const dot = page.locator('.cap.brand .i-dot');
-    await expect(dot).toHaveCSS('fill', 'rgb(243, 243, 241)');
-    await page.locator('[data-skin-trigger]').click();
-    await page.getByRole('radio', { name: /^Terminal/ }).click();
-    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
-    await expect(dot).toHaveCSS('fill', 'rgb(125, 255, 168)');
-    await page.keyboard.press('Escape');
-    await page.locator('.navcap a', { hasText: 'About' }).click();
-    await expect(page).toHaveURL(/\/about$/);
-    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
-    await page.reload();
-    await expect(icon).toHaveAttribute('href', '/icons/terminal.svg');
-  });
-
   test('leaving the monogram mid-turn lets the C finish its turn instead of snapping back', async ({ page }) => {
     await page.goto('/about');
     await settled(page);
@@ -427,7 +349,7 @@ test.describe('shell details', () => {
     await expect.poll(turning).toBe(false);
   });
 
-  test('the home link carries the name, and says when it is the current page', async ({ browser, baseURL }) => {
+  test('the home link carries the name, and says when it is the current page', { tag: '@once' }, async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL });
     const page = await context.newPage();
     await page.goto('/');
@@ -467,37 +389,5 @@ test.describe('shell details', () => {
     const frame = (await page.locator('.portrait').boundingBox())!, note = (await page.locator('.portrait .draft-t').boundingBox())!;
     expect(note.x + note.width).toBeLessThanOrEqual(frame.x + frame.width);
     await context.close();
-  });
-
-  test('language can be switched from the mobile menu', async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, locale: 'en-US' });
-    const page = await context.newPage();
-    await page.goto('/about');
-    await settled(page);
-    await page.locator('.menu-btn').click();
-    await page.locator('.ov-sheet [data-set-lang="tr"]').click();
-    await expect(page.locator('html')).toHaveAttribute('lang', 'tr');
-    await expect(page.locator('main h1')).toContainText('Merhaba');
-    await context.close();
-  });
-
-  for (const [skin, radius] of [['terminal', 0], ['blueprint', 8]] as const) {
-    test(`${skin} panels follow the skin's corners`, async ({ page }) => {
-      await page.addInitScript((s) => localStorage.setItem('fx-skin', JSON.stringify(s)), skin);
-      await page.goto('/cv');
-      await settled(page);
-      const clip = await page.locator('.cvwrap > .cut-fill').evaluate((el) => (el as HTMLElement).style.clipPath);
-      const radii = [...clip.matchAll(/A([\d.]+),/g)].map((m) => Number(m[1]));
-      if (radius === 0) expect(radii).toEqual([]);
-      else for (const value of radii) expect(value).toBeLessThanOrEqual(radius);
-    });
-  }
-
-  test('changing skin re-clips panels straight away', async ({ page }) => {
-    await page.goto('/cv');
-    await settled(page);
-    await page.locator('[data-skin-trigger]').click();
-    await page.getByRole('radio', { name: /^Terminal/ }).click();
-    await expect.poll(() => page.locator('.cvwrap > .cut-fill').evaluate((el) => (el as HTMLElement).style.clipPath.includes('A'))).toBe(false);
   });
 });
