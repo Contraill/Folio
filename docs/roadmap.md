@@ -12,11 +12,11 @@ Folio was first built on a D1 content store (milestones 1 to 3, kept under the `
 
 The develop head of M3 is tagged `archive/m3-d1`. A workflow in a separate private repository showed that the job's own `GITHUB_TOKEN` reads repositories, topics, homepages, social previews and pins through GraphQL, and that a private repository never appears in topic results, pins or logs. GitHub drops a repository from the pins when it goes private.
 
-## Stage 1 — Static site and pipeline ✅ (on `develop`, waiting for the first Actions run)
+## Stage 1 — Static site and pipeline ✅ (on `develop`)
 
 Static Astro build with a small language Worker; the D1 reads, server rendering and Workers Cache code removed. GitHub Actions for CI, Preview, production, the six-hour schedule and Refresh, with the production safeguards in [deployment.md](deployment.md).
 
-Still to do with the owner: disconnect Workers Builds, add the Actions secrets, protect `main`, and watch the pipeline tests run (concurrency, a deliberately broken build, CI minutes).
+Workers Builds is disconnected and the Actions environments hold their secrets; the first Preview run deployed. Still to do with the owner: correct the Access token values in the `preview` environment, protect `main`, and watch the pipeline tests run (concurrency, a deliberately broken build, CI minutes).
 
 ## Stage 2 — Content, themes, language, CV ✅
 
@@ -51,7 +51,7 @@ The current Git history, the M3 code and seed content, tags and Actions logs are
 | Risk | Impact | Mitigation | Status |
 | --- | --- | --- | --- |
 | A merge to `main` replaces the coming-soon page | High | Branch protection with required checks; merging needs the owner's approval | Protection to be added in stage 1 |
-| Workers Builds and Actions both deploy | Double or out-of-order deploys | Disconnect Workers Builds before the first Actions run | Waiting for the owner |
+| Workers Builds and Actions both deploy | Double or out-of-order deploys | Disconnect Workers Builds before the first Actions run | Done |
 | GitHub delays or skips scheduled runs | Stale project data | `/_build.json` shows the data time; Refresh runs at once | In place |
 | GitHub unreachable during a build | Failed run | The build fails and production keeps its last good version | In place |
 | A repository goes private | Its data stays online until the next build | Removed at the next build (at most six hours, or Refresh); pins drop it immediately | In place |

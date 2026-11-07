@@ -14,7 +14,7 @@ Astro (static) · TypeScript · React islands · Cloudflare Workers with Static 
 
 ## Getting started
 
-Requires Node 22.23.4 or newer, and pnpm.
+Requires Node 26 (`.node-version`) and pnpm 12.
 
 ```sh
 pnpm install

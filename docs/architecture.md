@@ -51,6 +51,7 @@ How it fits together:
 - CSS in `motion.css` drives the animations through the `page`, `bar` and `media` transition names, as in the prototype.
 - Project filters change the URL without a page transition. `ProjectsBrowser` handles their history entries ahead of the router, which would otherwise reload the page, and keeps the router's state on them so returning from another page works.
 - Without JavaScript the site is a normal multi-page site.
+- A page left before React has taken over its islands (a slow phone, a quick click) unmounts them mid-hydration. React reports that as error 424 although nothing is wrong, so a small patch to Astro's React renderer treats that one case as expected; see [deployment.md](deployment.md#tooling).
 
 Nothing on the page can be hit while a transition is on screen, because the animated elements are not hit-testable. So a press during a transition ends it at once, and the click is re-sent to whatever is under the pointer. Transitions also run about 0.7 seconds instead of 0.9: the same choreography with a shorter tail.
 
