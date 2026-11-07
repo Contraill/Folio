@@ -1,3 +1,5 @@
 allowBuilds:
   esbuild: true
   workerd: true
+patchedDependencies:
+  '@astrojs/react': patches/@astrojs__react.patch

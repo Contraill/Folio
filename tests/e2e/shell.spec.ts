@@ -109,6 +109,22 @@ test.describe('navigation', () => {
     expect(problems).toEqual([]);
   });
 
+  test('leaving a page before its components finish starting raises no error', { tag: '@once' }, async ({ page }) => {
+    // A slow phone: the next page is asked for while React is still taking over this one's components.
+    const problems = await watchForProblems(page);
+    const cpu = await page.context().newCDPSession(page);
+    await cpu.send('Emulation.setCPUThrottlingRate', { rate: 10 });
+    for (const [from, to, url] of [['/lab', 'About', /\/about$/], ['/cv', 'Lab', /\/lab$/], ['/projects', 'CV', /\/cv$/]] as const) {
+      await page.goto(from, { waitUntil: 'domcontentloaded' });
+      // Forced: waiting until the link is still would let the components finish first.
+      await page.locator('.navcap a', { hasText: to }).click({ force: true });
+      await expect(page).toHaveURL(url);
+      await expect(page.locator('main h1').first()).toBeVisible();
+    }
+    await cpu.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    expect(problems).toEqual([]);
+  });
+
   test('the sliding indicator follows the active item', async ({ page }) => {
     await page.goto('/projects');
     await settled(page);
