@@ -18,6 +18,9 @@ jobs:
   preview:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # Its secrets (the Preview's Cloudflare token, the Access service token) exist only in this environment,
+    # which only develop may use. Uses `wrangler preview`: the `previews` settings and bindings, never production's.
+    environment: preview
     env:
       PREVIEW_URL: https://develop-folio.i-canoztozlu.workers.dev
     steps:

@@ -21,15 +21,14 @@ Scheduled workflows run only on the default branch, so nothing scheduled runs wh
 
 ## Secrets
 
-Set in the repository's Actions secrets; none is in the code or in a log.
+Kept as **environment** secrets, never repository secrets, so each workflow reaches only its own. Neither is in the code or in a log.
 
-| Name | What | Used by |
+| Environment (branches allowed) | Secrets | Used by |
 | --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Token allowed only to deploy Workers (Workers Scripts: Edit) on this account | Preview, Production |
-| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account | Preview, Production |
-| `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Access service token of the `develop` Service Auth policy | Preview browser run |
+| `preview` (`develop`) | `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit, D1: Read for the Preview's leftover binding), `CLOUDFLARE_ACCOUNT_ID`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Preview |
+| `production` (`main`) | `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit), `CLOUDFLARE_ACCOUNT_ID` | Production |
 
-GitHub data needs no stored token: each job's own `GITHUB_TOKEN` reads it and expires with the job.
+The environments are created by hand with their branch rule before the first run, so GitHub never creates an open one. GitHub data needs no stored token: each job's own `GITHUB_TOKEN` reads it and expires with the job. The Preview is made with `wrangler preview --name develop`, which uses the `previews` settings and bindings; `wrangler versions upload --preview-alias` would run on production's.
 
 ## Preview
 

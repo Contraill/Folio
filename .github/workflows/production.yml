@@ -21,6 +21,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # Production secrets exist only in this environment, which only main may use; the condition says the same in code,
+    # so a manual run started from another branch does nothing.
+    if: github.ref == 'refs/heads/main'
     environment: production
     steps:
       # main as it is now, not the commit that queued this run.
