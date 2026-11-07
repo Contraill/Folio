@@ -25,13 +25,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm check
-      - run: pnpm test
       - name: Build
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FOLIO_TRIGGER: ci
         run: pnpm build
+      - run: pnpm check
+      - run: pnpm test
       - name: Check the build output
         run: node --test src/build.test.ts
       - run: pnpm exec playwright install --with-deps chromium firefox

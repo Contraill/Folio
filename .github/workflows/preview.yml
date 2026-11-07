@@ -30,13 +30,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm check
-      - run: pnpm test
       - name: Build
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FOLIO_TRIGGER: preview
         run: pnpm build
+      - run: pnpm check
+      - run: pnpm test
       - name: Check the build output
         run: node --test src/build.test.ts
       - name: Deploy the Preview
