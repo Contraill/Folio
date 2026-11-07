@@ -292,7 +292,8 @@ test.describe('drawing only when something changes', { tag: '@once' }, () => {
     const frames = await countFrames(page);
     expect(await frames(1000)).toBeGreaterThan(3);
     await page.getByRole('button', { name: 'Pause' }).click();
-    await page.waitForTimeout(400);
+    // A walker that settled just before the pause still fades its ring out (1.2 s), then the drawing stops for good.
+    await expect.poll(() => frames(500), { timeout: 15_000 }).toBe(0);
     expect(await frames(1000)).toBeLessThan(2);
     const canvas = page.locator('.field');
     const before = await canvas.evaluate((c: HTMLCanvasElement) => c.toDataURL());
