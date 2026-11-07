@@ -28,7 +28,7 @@ export const messages = {
     skins: {
       auto: ['Auto', 'Paper by day, Graphite at night, from your clock'],
       graphite: ['Graphite', 'Dark, soft and rounded'],
-      paper: ['Paper', 'Light and warm'],
+      paper: ['Paper', 'Light and crisp'],
       blueprint: ['Blueprint', 'Sharp corners, grid, blue duotone'],
       terminal: ['Terminal', 'Monospace, square, green phosphor'],
     },
@@ -80,7 +80,7 @@ export const messages = {
     skins: {
       auto: ['Otomatik', 'Gündüz Paper, gece Graphite; saatine göre'],
       graphite: ['Graphite', 'Koyu, yumuşak ve yuvarlak'],
-      paper: ['Paper', 'Açık ve sıcak'],
+      paper: ['Paper', 'Açık ve net'],
       blueprint: ['Blueprint', 'Keskin köşeler, ızgara, mavi çift ton'],
       terminal: ['Terminal', 'Monospace, köşeli, yeşil fosfor'],
     },

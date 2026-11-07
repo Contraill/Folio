@@ -9,7 +9,7 @@ export const SKIN_KEYS: SkinKey[] = ['auto', 'graphite', 'paper', 'blueprint', '
 type State = { skin: SkinKey; effective: EffectiveSkin; path: string; repo: string; searchOpen: boolean; contactOpen: boolean };
 
 const STORAGE_KEY = 'fx-skin';
-const THEME_COLOR: Record<EffectiveSkin, string> = { graphite: '#0f0f10', paper: '#e6e2d9', blueprint: '#061529', terminal: '#000000' };
+const THEME_COLOR: Record<EffectiveSkin, string> = { graphite: '#0f0f10', paper: '#e7eaee', blueprint: '#061529', terminal: '#000000' };
 const inBrowser = typeof document !== 'undefined';
 
 const autoSkin = (): EffectiveSkin => { const h = new Date().getHours(); return h >= 7 && h < 19 ? 'paper' : 'graphite'; };

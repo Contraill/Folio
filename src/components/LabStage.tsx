@@ -10,7 +10,7 @@ import { Cut, useLoop, useMedia } from './kit';
    looks like, not a model, and the page says so. */
 type Walker = { x: number; y: number; vx: number; vy: number; tr: number[]; still: number; age: number; done: number };
 type Api = { drop: (n: number) => void; calm: () => void };
-const INK: Record<string, [string, string]> = { graphite: ['#e9e9e4', '#b8f26c'], paper: ['#1d1d1b', '#1c7a45'], blueprint: ['#cfe6ff', '#8fd8ff'], terminal: ['#9be9b2', '#7dffa8'] };
+const INK: Record<string, [string, string]> = { graphite: ['#e9e9e4', '#b8f26c'], paper: ['#0d1117', '#2b4ad8'], blueprint: ['#cfe6ff', '#8fd8ff'], terminal: ['#9be9b2', '#7dffa8'] };
 
 function Field({ paused, api, label }: { paused: boolean; api: RefObject<Api | null>; label: string }) {
   const effective = useStore((s) => s.effective);

@@ -12,13 +12,16 @@
   --accent-h: 240 4% 17%; --destructive: 0 70% 55%; --destructive-foreground: 0 0% 100%; --border: 240 4% 19%; --input: 240 4% 22%; --ring: 60 6% 95%; --radius: 14px;
   color-scheme: dark;
 }
+/* Paper: white sheets on a cool light table, blue-black ink, crisp card-stock corners. Cobalt is the only colour, kept
+   for signals (status, focus, a live dot), never for decoration. */
 [data-skin='paper'] {
-  --page: #e6e2d9; --slab: #f4f1ea; --slab-2: #ffffff; --slab-3: #e9e5dc; --line: rgba(0,0,0,.09); --line-2: rgba(0,0,0,.18);
-  --ink: #161616; --soft: #3a3a3a; --mute: #5d5d5a; --accent: #161616; --accent-ink: #ffffff; --signal: #1c7a45;
-  --glass: rgba(255,255,255,.72); --glass-line: rgba(0,0,0,.08); --word: rgba(0,0,0,.06);
-  --background: 40 18% 88%; --foreground: 0 0% 9%; --card: 42 30% 94%; --card-foreground: 0 0% 9%; --popover: 0 0% 100%; --popover-foreground: 0 0% 9%;
-  --primary: 0 0% 9%; --primary-foreground: 0 0% 100%; --secondary: 40 18% 90%; --secondary-foreground: 0 0% 9%; --muted: 40 18% 90%; --muted-foreground: 60 1% 36%;
-  --accent-h: 40 18% 88%; --border: 40 10% 80%; --input: 40 10% 78%; --ring: 0 0% 9%;
+  --page: #e7eaee; --slab: #fbfcfd; --slab-2: #f0f2f5; --slab-3: #e1e5eb; --line: rgba(16,24,40,.1); --line-2: rgba(16,24,40,.2);
+  --ink: #0d1117; --soft: #2e3542; --mute: #566070; --accent: #0d1117; --accent-ink: #ffffff; --signal: #2b4ad8;
+  --glass: rgba(251,252,253,.82); --glass-line: rgba(16,24,40,.12); --scrim: rgba(13,17,23,.0); --word: rgba(13,17,23,.055);
+  --r-frame: 24px; --r-slab: 20px; --r-card: 14px; --r-sm: 9px;
+  --background: 213 14% 92%; --foreground: 216 28% 7%; --card: 210 33% 99%; --card-foreground: 216 28% 7%; --popover: 0 0% 100%; --popover-foreground: 216 28% 7%;
+  --primary: 216 28% 7%; --primary-foreground: 0 0% 100%; --secondary: 216 20% 95%; --secondary-foreground: 216 28% 7%; --muted: 216 20% 95%; --muted-foreground: 218 13% 39%;
+  --accent-h: 213 14% 92%; --border: 214 16% 84%; --input: 214 16% 80%; --ring: 216 28% 7%; --radius: 10px;
   color-scheme: light;
 }
 [data-skin='blueprint'] {

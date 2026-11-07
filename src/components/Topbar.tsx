@@ -43,7 +43,7 @@ function turnMark(link: HTMLElement) {
 
 const SWATCH: Record<Exclude<SkinKey, 'auto'>, string> = {
   graphite: 'linear-gradient(135deg,#2e2e32 50%,#f3f3f1 50%)',
-  paper: 'linear-gradient(135deg,#f4f1ea 50%,#161616 50%)',
+  paper: 'linear-gradient(135deg,#fbfcfd 50%,#0d1117 50%)',
   blueprint: 'linear-gradient(135deg,#0b2444 50%,#8fd8ff 50%)',
   terminal: 'linear-gradient(135deg,#050b05 50%,#7dffa8 50%)',
 };
@@ -54,7 +54,7 @@ export function Swatch({ skin, size = 28 }: { skin: SkinKey; size?: number }) {
     <span className="sw sw-auto" style={{ width: size, height: size }} aria-hidden="true">
       <svg viewBox="0 0 28 28" width={size} height={size}>
         <g transform="translate(14 14) scale(.94) translate(-14 -14)">
-          <circle cx="14" cy="14" r="13.5" fill="#f4f1ea" />
+          <circle cx="14" cy="14" r="13.5" fill="#fbfcfd" />
           <path d="M14 .5a13.5 13.5 0 0 1 0 27a9 9 0 0 1 0-13.5a9 9 0 0 0 0-13.5Z" fill="#2e2e32" />
           <circle cx="8.6" cy="10.4" r="2.3" fill="#ffb020" />
           <circle cx="19.6" cy="18.2" r="2.4" fill="#f3f3f1" /><circle cx="20.7" cy="17.2" r="2.1" fill="#2e2e32" />

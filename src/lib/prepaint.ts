@@ -7,7 +7,7 @@ export const PREPAINT = `(() => {
   let skin = null;
   try { skin = JSON.parse(localStorage.getItem('fx-skin')); } catch (e) {}
   if (skin === 'auto') { const h = new Date().getHours(); skin = h >= 7 && h < 19 ? 'paper' : 'graphite'; }
-  const colors = { graphite: '#0f0f10', paper: '#e6e2d9', blueprint: '#061529', terminal: '#000000' };
+  const colors = { graphite: '#0f0f10', paper: '#e7eaee', blueprint: '#061529', terminal: '#000000' };
   if (colors[skin]) {
     html.dataset.skin = skin;
     document.querySelector('meta[name="theme-color"]').setAttribute('content', colors[skin]);
