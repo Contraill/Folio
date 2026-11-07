@@ -19,7 +19,8 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # A fixed image rather than ubuntu-latest, which is moving to 26.04: change it on purpose, with a test run.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     # Production secrets exist only in this environment, which only main may use; the condition says the same in code,
     # so a manual run started from another branch does nothing.
@@ -27,22 +28,20 @@ jobs:
     environment: production
     steps:
       # main as it is now, not the commit that queued this run.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { ref: main }
-      - uses: pnpm/action-setup@v4
-        with: { version: 12.18.0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: pnpm }
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1; pnpm's version is packageManager in package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version-file: .node-version, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - run: pnpm check
       - name: Build
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FOLIO_TRIGGER: ${{ github.event_name == 'schedule' && 'cron' || github.event_name == 'workflow_dispatch' && 'manual' || 'push' }}
         run: pnpm build
-      - run: pnpm check
-      - run: pnpm test
-      - name: Check the build output
-        run: node --test src/build.test.ts
+      - name: Unit tests and checks on the build output
+        run: pnpm test
       - name: Is this still the newest main?
         id: fresh
         run: |
