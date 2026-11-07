@@ -46,8 +46,6 @@ title: { tr: "Yılan" }           # English is the repository name
 summary: { tr: "..." }           # English is the repository description
 order: 3                         # earlier than projects without one
 area: web                        # web, theming, self-hosted, hardware, desktop-apps
-embed: true                      # Play and Lab apps: show in Folio, or false for a link only
-embedOptions: { aspect: "16:9", orientation: landscape, input: [keyboard, touch] }
 ```
 
 ### Projects written in Folio
@@ -58,8 +56,10 @@ When a repository has a Folio entry, the entry's text, images (or their absence,
 
 **Until the repositories carry the `folio` topic**, the seven projects shown before this change have `listed: true`, which keeps them on the site while their repository is public. Their `featured` and `selected` ranks decide the home page until a pinned repository has the topic. Once the topics are in place, `listed` can be removed so that GitHub decides alone. The other public repositories have entries with `listed: false`: tagging one with `folio` shows it with the text and images written for it.
 
-Games and lab apps carry `folio-play` or `folio-lab` instead; they are counted now and get their own pages in stage 4.
+## Games and lab apps
+
+Games and lab apps are not projects: they are repositories made from `folio-play-template` or `folio-lab-template`, published by the Folio controller, and listed from its catalogue. What a card shows (title and summary in both languages, order, whether Folio frames the app, its aspect and inputs) is in the `folio.yaml` at the repository's root, documented in each template's README. A public app appears once its first build is live; one with `access: password` or `access: access` is never listed. A catalogue entry that doesn't fit the schema is left out with a warning; if the catalogue can't be read, the build fails. Locally and in tests, `tests/fixtures/catalog.json` stands in for it.
 
 ## CV
 
-`public/cv/en.pdf` and `public/cv/tr.pdf` are the owner's own PDFs, served exactly as committed at `/cv/en.pdf` and `/cv/tr.pdf`. Updating the CV means replacing a file; nothing else changes. Browsers revalidate them on every visit (`Cache-Control: no-cache`), so a replaced file is never served stale. Only the public versions are ever committed.
+`public/cv/en.pdf` and `public/cv/tr.pdf` are the owner's own PDFs, served exactly as committed at `/cv/en.pdf` and `/cv/tr.pdf`. The CV page draws them itself with pdf.js (text, links, zoom), and offers to open or download the file when that isn't possible. Updating the CV means replacing a file; nothing else changes. Browsers revalidate them on every visit (`Cache-Control: no-cache`), so a replaced file is never served stale. Only the public versions are ever committed.

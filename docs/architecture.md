@@ -8,7 +8,9 @@ Status markers: **built** exists on the development branch, **planned** comes in
 
 ```text
  GitHub ── Folio repo (code, content, CV PDFs) ───────────┐
-       └── public repos: topics, pins, folio.yaml ─────────┤ read at build, job token only
+       ├── public repos: topics, pins, folio.yaml ─────────┤ read at build, job token only
+       └── template repos ─► Folio controller ─ catalog ───┤ games and lab apps, read at build
+           (own Workers at <name>.oztozlu.dev)             │
                                                            ▼
                                         GitHub Actions: checks → build → deploy
                                                            │
@@ -100,13 +102,14 @@ Content lives in the repository and is checked at build; an error in Folio's own
 
 - Page copy: `src/content/pages/<group>/{en,tr}.md`
 - Projects: GitHub repositories with the `folio` topic, merged with `src/content/projects/<id>/{en,tr}.md`
-- CV: the owner's PDFs in `public/cv/{en,tr}.pdf`, served as they are
+- Games and lab apps: the Folio controller's catalogue (see [Play, Lab and sites](#play-lab-and-sites-built))
+- CV: the owner's PDFs in `public/cv/{en,tr}.pdf`, served as they are and drawn in the page by pdf.js
 
 ## Security model **(built unless noted)**
 
 **Nothing to write to.** The site has no database, admin or write endpoint: changing it means a commit that passes the checks and a deploy.
 
-**Private content is not in this site.** Public and unlisted pages are part of the public build; private pages will live in a separate repository and deployment behind Cloudflare Access (**planned**, stage 5), so they are physically absent from this build.
+**Private content is not in this site.** Public and unlisted pages are part of the public build; private pages live in their own repositories and deployments, behind Cloudflare Access or a password, so they are physically absent from this build (see [Play, Lab and sites](#play-lab-and-sites-built)).
 
 **Visibility levels:**
 
@@ -136,7 +139,11 @@ The Preview still binds the old `folio-preview` D1 database, which nothing reads
 
 Projects are managed from GitHub; see [content-model.md](content-model.md#projects). Data is read at build, never while a visitor waits. A repository that goes private, or loses the `folio` topic, leaves the site at the next build; social previews are downloaded and optimised at build, so nothing points back at GitHub.
 
-## Play and Lab **(planned, stage 4)**
+## Play, Lab and sites **(built)**
 
-Games and lab apps live in their own repositories and deployments, found by the `folio-play` and `folio-lab` topics. The build already sorts them out of the projects and counts them in `/_build.json`; their catalogues and pages come in stage 4.
+Games, lab apps and separate sites live in their own repositories, made from three public templates (`folio-play-template`, `folio-lab-template`, `folio-site-template`). Each has a `folio.yaml` at its root (`kind`, `access`, and for apps how Folio lists them) and a workflow that tests and builds it with no secrets.
+
+The private `folio-controller` repository publishes them: its GitHub App reports each finished build, and the controller workflow, which never runs a repository's code, checks the build's files and deploys them behind its own Worker, `folio-r<repository id>`, at `https://<name>.oztozlu.dev`. Sites with `access: access` get a Cloudflare Access application first, and their Worker verifies Access's token on every request; `access: password` sites are encrypted at build. After each deploy the controller requests the address and detaches it if a protected site answers openly. Archiving or deleting the repository, or removing `folio.yaml`, takes the site down. The controller's README describes the rules and credentials.
+
+Public games and lab apps that deployed go into the controller's catalogue (`/catalog.json` on its Worker). Folio reads it at build, so its build fails rather than silently dropping apps if the controller can't be reached; when the catalogue changes, the controller starts Folio's Preview workflow. Each app has a page at `/play/<id>` or `/lab/<id>` that frames it only on request, sandboxed, with full screen and a new-tab link, and the Content Security Policy's `frame-src` lists exactly the origins of the apps in that build.
 

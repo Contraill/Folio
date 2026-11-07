@@ -26,13 +26,13 @@ Page copy and projects in content collections, the four skins unchanged, the lan
 
 Projects from the `folio` topic, featured from pins, Turkish and extras from `.github/folio.yaml`, social previews downloaded at build, projects not on GitHub, and the seven current projects kept until their repositories are tagged. See [content-model.md](content-model.md#projects).
 
-## Stage 4 — Play, Lab and the app template
+## Stage 4 — Play, Lab, the templates and the controller ✅ (on `develop`)
 
-`folio-app-template` (with approval), `/play` and `/lab` catalogues with one page template, a pilot app connected end to end.
+Three public templates, `folio-play-template`, `folio-lab-template` and `folio-site-template`, each with one `folio.yaml` and a build that needs no secrets. The private `folio-controller` (a GitHub App, a small Worker and one workflow) publishes every repository made from them at `https://<name>.oztozlu.dev` after each push, lists public games and lab apps in its catalogue and has Folio rebuild. Making a site is *Use this template → name → push*: no Cloudflare dashboard, no change to Folio. `/play` and `/lab` list the catalogue, with one framed page per app. Pilots: Gates (`pilot-gates`) and Two Spirals (`pilot-spirals`). See [architecture.md](architecture.md#play-lab-and-sites-built) and the controller's README.
 
-## Stage 5 — Private site
+## Stage 5 — Private sites ✅ (on `develop`)
 
-`folio-private` and a private Worker at `vault.oztozlu.dev` (with approval), with two templates: Cloudflare Access with Google sign-in and one-time PIN, per-person groups; and password pages encrypted at build and decrypted in the browser, with an Access bypass on their path only. Private assets reachable only by the allowed group.
+Private sites are separate repositories made from `folio-site-template`, so they are never in Folio's build. `access: access` puts the site behind Cloudflare Access (one-time PIN to the addresses in `allow`, or named service tokens), and the site's Worker checks Access's token itself, refusing if anything is wrong. `access: password` encrypts every page at build (PBKDF2, AES-GCM) and decrypts it in the browser. Repository visibility is separate from who may open the site. Tested end to end with temporary `folio-test-*` repositories, since removed.
 
 ## Stage 6 — Going live
 
@@ -62,6 +62,9 @@ The current Git history, the M3 code and seed content, tags and Actions logs are
 | JavaScript on every page, about 125 KB compressed | Slower start on weak devices | Engines are split per page already | Watch |
 | WebKit untested locally | Safari or iOS regressions | Real-device pass before going live | Stage 6 |
 | Prototype placeholders shown publicly | Unfinished content live | Launch checklist (see below) | Open |
+| Cloudflare Web Analytics injects its beacon into every page on the zone | The CSP blocks it (console errors, no analytics) | Turn off automatic injection for `oztozlu.dev`, or allow its origin on purpose | Owner's decision |
+| The controller's GitHub App sees all the owner's repositories and may start their workflows | A stolen App key could start builds anywhere | The key is only in the `controller` environment (limited to `main`) and the Worker's secrets; the App can't write code | Accepted |
+| Controller runs are billed Actions minutes (private repository) | Monthly quota | Runs only on events, due retries and a six-hourly sweep | In place |
 
 ## Launch content checklist
 

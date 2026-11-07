@@ -6,6 +6,7 @@ All builds and deploys run in GitHub Actions (`.github/workflows/`). Code reache
 | --- | --- | --- |
 | Push to `develop` | Preview | Checks, build, unit tests and checks on the build output, Preview deploy (`wrangler preview --name develop`), the smoke tests against the Preview with the Access service token |
 | Run workflow on Preview, with *full* | Preview | The same, with the whole browser suite against the Preview |
+| The Folio controller's catalogue changes | Preview | The same as a push, started by the controller so a new or removed game or lab app shows up |
 | Pull request into `main` | CI | Checks, build, unit tests and checks on the build output, the whole browser suite in Chromium and Firefox. Required for merging |
 | Merge into `main` | Production | Build and `wrangler deploy` |
 | Every six hours (`17 */6 * * *`) | Production | The same, on `main` as it is. GitHub may delay or skip scheduled runs: six hours is a target, not a promise |
@@ -43,7 +44,7 @@ A push to `develop` updates the Preview at `https://develop-folio.<subdomain>.wo
 
 ## Emergency removal
 
-Make the repository private, or remove its `folio` topic, then run Refresh. The project is gone once the run finishes (usually a few minutes, depending on the Actions queue); check `/_build.json`. Rolling back to an earlier Worker version is not a removal: the project is still in it. For Google's index, use Search Console → Removals.
+Make the repository private, or remove its `folio` topic, then run Refresh. For a game, lab app or site made from a template, archive or delete its repository (or remove its `folio.yaml`): the controller takes the address down within a minute and drops it from the catalogue; then run Refresh. The project is gone once the run finishes (usually a few minutes, depending on the Actions queue); check `/_build.json`. Rolling back to an earlier Worker version is not a removal: the project is still in it. For Google's index, use Search Console → Removals.
 
 ## Local development
 
@@ -56,7 +57,7 @@ pnpm build        # GitHub snapshot, static build, route list and /_build.json
 pnpm preview      # the build behind the language Worker, at http://localhost:4321
 ```
 
-Without `GITHUB_TOKEN` the build uses the recorded snapshot in `tests/fixtures/github.json`; in CI a missing token stops the build. `FOLIO_GITHUB=fixture` forces the snapshot.
+Without `GITHUB_TOKEN` the build uses the recorded snapshot in `tests/fixtures/github.json` and the recorded catalogue in `tests/fixtures/catalog.json`; in CI a missing token stops the build. `FOLIO_GITHUB=fixture` forces both. With a token, games and lab apps come from the controller's catalogue (`FOLIO_CATALOG_URL` overrides its address).
 
 ## Checks
 
