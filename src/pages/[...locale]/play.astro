@@ -1,4 +1,5 @@
 ---
+import AppCatalog from '@/components/AppCatalog.astro';
 import PlayStage from '@/components/PlayStage';
 import { getContent } from '@/content/load';
 import Base from '@/layouts/Base.astro';
@@ -6,12 +7,17 @@ import { localePaths } from '@/lib/locales';
 
 export const getStaticPaths = localePaths;
 
-const c = (await getContent(Astro.locals)).pages.play;
+const { pages, apps } = await getContent(Astro.locals);
+const games = apps.filter((a) => a.kind === 'play');
+const c = pages.play;
+// Once there are games, the stage says so; the toy box stays.
+const stage = games.length ? { ...c, status: c.statusReady, h1: c.h1Ready, note: c.noteReady } : c;
 const colors = ['#ff5a36', '#3ec7ff', '#ffd23f'];
 ---
 <Base title={c.title}>
   <div class="play">
-    <PlayStage client:load c={c} />
+    <PlayStage client:load c={stage} ready={games.length > 0} />
+    {games.length > 0 && <AppCatalog apps={games} heading={c.catalogH} note={c.catalogNote} locale={Astro.locals.locale} />}
     <section class="slab pad play-rules" aria-labelledby="rules-h">
       <h2 id="rules-h" class="play-h2" data-reveal>{c.rulesH}</h2>
       <ol>

@@ -52,13 +52,26 @@ export const FolioYaml = z.object({
   summary: Localized.optional(),
   order: z.number().int().optional(),
   area: z.enum(DOMAIN_SLUG as [string, ...string[]]).optional(),
-  embed: z.boolean().optional(),
-  embedOptions: z.object({
-    aspect: z.string().regex(/^\d+:\d+$/).optional(),
-    orientation: z.enum(['landscape', 'portrait', 'any']).optional(),
-    input: z.array(z.enum(['keyboard', 'touch', 'mouse', 'gamepad'])).optional(),
-  }).strict().optional(),
 }).strict();
+
+/* A game or lab app as the Folio controller lists it after deploying it (catalog.json): only apps that are public. */
+const INPUTS = ['keyboard', 'touch', 'mouse', 'gamepad'] as const;
+export const CatalogApp = z.object({
+  kind: z.enum(['play', 'lab']),
+  id: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/),
+  url: z.url({ protocol: /^https$/ }),
+  title: z.object({ en: z.string().min(1), tr: z.string().optional() }).strict(),
+  summary: z.object({ en: z.string(), tr: z.string().optional() }).strict(),
+  order: z.number().int().optional(),
+  embed: z.boolean(),
+  aspect: z.string().regex(/^\d+:\d+$/),
+  inputs: z.array(z.enum(INPUTS)),
+  updated: z.string().regex(/^\d{4}-\d{2}-\d{2}/),
+  repo: z.url().nullable(),
+  language: z.string().nullable(),
+  stars: z.number().int().min(0),
+}).strict();
+export type CatalogApp = z.infer<typeof CatalogApp>;
 
 /* Page copy, one entry per group (src/content/pages/<group>/{en,tr}.md). */
 export const PageBodies = {
@@ -82,8 +95,9 @@ export const PageBodies = {
     ...text('projects breadcrumb previous next live repo specs language area started stars noStars topics lesson fromReadme about noWriteUp screensGroup show enlarge enlargeScreen enlarged screenshot nextProject readNext allProjects'),
     screens: pair,
   }).strict(),
-  lab: z.object({ ...text('title label kicker lede canvas controls drop surface pause resume notebook now nextLabel rule nowText nextText ruleText foot planH planned'), plan: z.array(pair) }).strict(),
-  play: z.object({ ...text('title label status h1 note canvas shake pause resume tape rulesH'), rules: z.array(pair) }).strict(),
+  lab: z.object({ ...text('title label kicker lede kickerReady ledeReady catalogH catalogNote canvas controls drop surface pause resume notebook now nextLabel rule nowText nextText ruleText foot planH planned'), plan: z.array(pair) }).strict(),
+  play: z.object({ ...text('title label status h1 note statusReady h1Ready noteReady catalogH catalogNote canvas shake pause resume tape rulesH'), rules: z.array(pair) }).strict(),
+  apps: z.object(text('breadcrumb play lab start newTab repo fullscreen exitFullscreen loading slow noEmbed frameLabel hostNote inputs language updated stars noStars')).strict(),
   about: z.object({
     ...text('title eyebrow h1a h1em h1b lede draft portraitLabel portraitDraft patternsH path pathH pathNote formal formalLead formalTail readCv uses now next totals repos languages stars'),
     patterns: z.array(z.tuple([z.string(), z.string(), z.string()])),

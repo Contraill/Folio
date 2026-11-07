@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { parse } from 'yaml';
-import { discover, localize, type ManualProject, type RepoData, type Snapshot } from './discover.ts';
+import { appOrigins, discover, localize, type ManualProject, type RepoData, type Snapshot } from './discover.ts';
 import { ProjectEntry, ProjectTranslation } from './schema.ts';
 
 const recorded: Snapshot = JSON.parse(readFileSync(new URL('../../tests/fixtures/github.json', import.meta.url), 'utf8'));
@@ -92,10 +92,33 @@ test('projects with an order come first; the rest follow by last push', () => {
   assert.deepEqual(shown(s), ['huepr', 'helios', 'nothing', 'orbis', 'ranked', 'campuseats', 'bct', 'mochi', 'new', 'old']);
 });
 
-test('games and lab apps are sorted out of the projects', () => {
-  const d = discover(snap((s) => s.repos.push(repo('Snake', { topics: ['folio-play'] }), repo('Lander', { topics: ['folio-lab', 'folio'] }))), manual, 'Folio');
-  assert.deepEqual(d.apps.map((a) => [a.kind, a.id]), [['play', 'snake'], ['lab', 'lander']]);
-  assert.ok(!d.projects.some((p) => p.id === 'snake' || p.id === 'lander'));
+const app = (id: string, extra: Record<string, unknown> = {}) => ({
+  kind: 'play', id, url: `https://${id}.oztozlu.dev/`, title: { en: id }, summary: { en: '' }, embed: true, aspect: '16:9', inputs: [],
+  updated: '2026-11-01', repo: null, language: null, stars: 0, ...extra,
+});
+
+test('games and lab apps come from the controller catalog, never from topics', () => {
+  const d = discover(snap((s) => {
+    s.repos.push(repo('Snake', { topics: ['folio-play'], homepageUrl: 'https://snake.example.dev/' }));
+    s.apps = [app('gates'), app('spirals', { kind: 'lab' })];
+  }), manual, 'Folio');
+  assert.deepEqual(d.apps.map((a) => [a.kind, a.id]), [['play', 'gates'], ['lab', 'spirals']]);
+  assert.ok(!d.projects.some((p) => p.id === 'snake'), 'a play topic alone makes neither an app nor a project');
+});
+
+test('catalog entries are checked and ordered like projects', () => {
+  const d = discover(snap((s) => { s.apps = [
+    app('old', { updated: '2026-01-01' }), app('new', { updated: '2026-11-05' }), app('first', { order: 1, updated: '2025-01-01' }),
+    app('plain', { url: 'http://plain.oztozlu.dev/' }), app('Bad Id'), { kind: 'play' }, app('new'),
+  ]; }), manual, 'Folio');
+  assert.deepEqual(d.apps.map((a) => a.id), ['first', 'new', 'old']);
+  assert.equal(d.warnings.length, 4);
+});
+
+test('Folio may frame only the origins of catalogued apps that allow embedding', () => {
+  const s = snap((s) => { s.apps = [app('game', { url: 'https://game.oztozlu.dev/play/' }), app('link', { embed: false })]; });
+  assert.deepEqual(appOrigins(s, 'Folio'), ['https://game.oztozlu.dev']);
+  assert.deepEqual(appOrigins(recorded, 'Folio'), []);
 });
 
 test('a repository whose address is taken by a Folio project is left out, with a warning', () => {

@@ -1,10 +1,12 @@
 /* Before the build: reads the owner's repositories and profile pins from GitHub into .folio/github.json.
    It uses only GITHUB_TOKEN, which in GitHub Actions is the job's own short-lived token. Private repositories and
    pins are dropped before anything is written, Folio's own repository too, and the log carries counts only.
-   Without a token: in CI the build stops; on a developer machine the recorded snapshot in tests/fixtures is used.
-   FOLIO_GITHUB=fixture forces the recorded snapshot. A failed request fails the build, so production keeps its
+   Without a token: in CI the build stops; on a developer machine the recorded snapshot in tests/fixtures is used,
+   with the recorded catalog of games and lab apps (tests/fixtures/catalog.json). FOLIO_GITHUB=fixture forces both.
+   Games and lab apps come from the Folio controller's public catalog (FOLIO_CATALOG_URL), which lists an app once it
+   is deployed; an unreachable catalog fails the build like an unreachable GitHub. A failed request fails the build, so production keeps its
    last good version. */
-import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Snapshot } from '../src/content/discover.ts';
 import { type Node, type Pin, publicData } from './github-data.ts';
 
@@ -12,6 +14,8 @@ const OWNER = process.env.FOLIO_OWNER ?? 'Contraill';
 const SELF = (process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'Folio').toLowerCase();
 const OUT = '.folio/github.json';
 const FIXTURE = 'tests/fixtures/github.json';
+const CATALOG = 'tests/fixtures/catalog.json';
+const CATALOG_URL = process.env.FOLIO_CATALOG_URL ?? 'https://folio-controller.i-canoztozlu.workers.dev/catalog.json';
 mkdirSync('.folio', { recursive: true });
 
 const token = process.env.GITHUB_TOKEN;
@@ -20,7 +24,9 @@ if (process.env.FOLIO_GITHUB === 'fixture' || !token) {
     console.error('GITHUB_TOKEN is missing: refusing to build without GitHub data.');
     process.exit(1);
   }
-  copyFileSync(FIXTURE, OUT);
+  const recorded: Snapshot = JSON.parse(readFileSync(FIXTURE, 'utf8'));
+  recorded.apps = JSON.parse(readFileSync(CATALOG, 'utf8')).apps;
+  writeFileSync(OUT, JSON.stringify(recorded, null, 2) + '\n');
   console.warn(`GitHub: using the recorded snapshot (${FIXTURE}), not live data.`);
   process.exit(0);
 }
@@ -64,7 +70,11 @@ do {
 // Private repositories and pins are dropped here, before anything is written or logged.
 const { repos, pins } = publicData(nodes, pinned, SELF);
 
-const snapshot: Snapshot = { fetchedAt: new Date().toISOString(), source: 'live', owner: OWNER, repos, pins };
+const catalog = await fetch(CATALOG_URL, { headers: { 'user-agent': 'folio-build' } });
+if (!catalog.ok) throw new Error(`The app catalog answered ${catalog.status}`);
+const apps = ((await catalog.json()) as { apps: unknown[] }).apps;
+if (!Array.isArray(apps)) throw new Error('The app catalog has no list of apps');
+const snapshot: Snapshot = { fetchedAt: new Date().toISOString(), source: 'live', owner: OWNER, repos, pins, apps };
 writeFileSync(OUT, JSON.stringify(snapshot, null, 2) + '\n');
 const tagged = (t: string) => repos.filter((r) => r.topics.includes(t)).length;
-console.log(`GitHub: ${repos.length} public repositories, ${snapshot.pins.length} pins; topics folio ${tagged('folio')}, folio-play ${tagged('folio-play')}, folio-lab ${tagged('folio-lab')}.`);
+console.log(`GitHub: ${repos.length} public repositories, ${snapshot.pins.length} pins, ${tagged('folio')} with the folio topic; catalog: ${apps.length} apps.`);

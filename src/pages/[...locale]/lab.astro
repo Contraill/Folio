@@ -1,4 +1,5 @@
 ---
+import AppCatalog from '@/components/AppCatalog.astro';
 import LabStage from '@/components/LabStage';
 import { getContent } from '@/content/load';
 import Base from '@/layouts/Base.astro';
@@ -6,11 +7,16 @@ import { localePaths } from '@/lib/locales';
 
 export const getStaticPaths = localePaths;
 
-const c = (await getContent(Astro.locals)).pages.lab;
+const { pages, apps } = await getContent(Astro.locals);
+const experiments = apps.filter((a) => a.kind === 'lab');
+const c = pages.lab;
+// Once there are experiments, the stage says so; the sketch stays.
+const stage = experiments.length ? { ...c, kicker: c.kickerReady, lede: c.ledeReady } : c;
 ---
 <Base title={c.title}>
   <div class="lab">
-    <LabStage client:load c={c} />
+    <LabStage client:load c={stage} ready={experiments.length > 0} />
+    {experiments.length > 0 && <AppCatalog apps={experiments} heading={c.catalogH} note={c.catalogNote} locale={Astro.locals.locale} />}
     <section class="slab pad lab-plan" aria-labelledby="plan-h">
       <h2 id="plan-h" class="lab-h2" data-reveal>{c.planH}</h2>
       <ol class="plan">

@@ -1,0 +1,55 @@
+{
+  "updatedAt": "2026-11-08T00:00:00Z",
+  "apps": [
+    {
+      "kind": "play",
+      "id": "pilot-gates",
+      "url": "https://pilot-gates.oztozlu.dev/",
+      "title": {
+        "en": "Gates",
+        "tr": "Kapılar"
+      },
+      "summary": {
+        "en": "Steer through the gaps as the gates speed up.",
+        "tr": "Kapılar hızlanırken aralarından geç."
+      },
+      "order": 1,
+      "embed": true,
+      "aspect": "16:10",
+      "inputs": [
+        "keyboard",
+        "touch",
+        "gamepad"
+      ],
+      "updated": "2026-11-08",
+      "repo": "https://github.com/Contraill/folio-pilot-gates",
+      "language": "TypeScript",
+      "stars": 0
+    },
+    {
+      "kind": "lab",
+      "id": "pilot-spirals",
+      "url": "https://pilot-spirals.oztozlu.dev/",
+      "title": {
+        "en": "Two Spirals",
+        "tr": "İki Sarmal"
+      },
+      "summary": {
+        "en": "A small neural network learns to tell two spirals apart. Compare what it knows at round 100, 500 and 1000.",
+        "tr": "Küçük bir sinir ağı iki sarmalı birbirinden ayırmayı öğreniyor. 100., 500. ve 1000. turda bildiklerini karşılaştır."
+      },
+      "order": 1,
+      "embed": true,
+      "aspect": "16:10",
+      "inputs": [
+        "mouse",
+        "touch",
+        "keyboard"
+      ],
+      "updated": "2026-11-08",
+      "repo": "https://github.com/Contraill/folio-pilot-spirals",
+      "language": "TypeScript",
+      "stars": 0
+    }
+  ]
+}

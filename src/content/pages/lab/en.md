@@ -3,6 +3,10 @@ title: AI Lab
 label: AI Lab, under construction
 kicker: under construction · notebook open since Nov 2026
 lede: "A place for experiments with learning systems. Nothing is published yet. What you see is a sketch: dots rolling downhill on an invented surface, which is roughly what training feels like from the inside."
+kickerReady: notebook open since Nov 2026
+ledeReady: "Experiments with learning systems, written up with what failed. Each one runs in the page and keeps its runs on your device, so you can compare what it knew early and late."
+catalogH: Experiments
+catalogNote: Every run can be saved, compared and exported as a file.
 canvas: Decorative contour map. Small dots roll downhill toward the lowest points.
 controls: Sketch controls
 drop: Drop Explorers

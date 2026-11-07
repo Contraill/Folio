@@ -406,3 +406,53 @@ body { overflow-x: clip; }
 .hero-tag .bar { box-shadow: 0 0 0 8px var(--page); }
 .hero-card::before { content: ''; position: absolute; z-index: -1; top: -10px; left: -10px; right: -28px; height: calc(100% - 64px + 10px); background: var(--page); border-top-left-radius: calc(var(--r-card) + 10px); pointer-events: none; }
 @media (max-width: 760px) { .hero-card::before { left: -12px; right: -12px; height: calc(100% - 58px + 10px); border-top-right-radius: 0; border-top-left-radius: 0; } }
+
+/* ============ games and lab apps ============ */
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); display: inline-block; }
+.eyebrow .live-dot { margin-right: -2px; } .eyebrow:has(.live-dot)::before { display: none; }
+.apps { display: flex; flex-direction: column; gap: 22px; }
+.apps-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+.apps-h2 { font-family: var(--fd); font-stretch: var(--fd-w); font-weight: var(--fd-wt); text-transform: uppercase; font-size: clamp(26px, 3vw, 40px); line-height: 1; margin: 0; }
+.app-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.app-card { position: relative; display: flex; flex-direction: column; height: 100%; background: var(--slab-2); border-radius: var(--r-card); color: var(--ink); text-decoration: none; overflow: hidden; transition: transform 500ms var(--e-spring), box-shadow .3s ease; }
+.app-card:hover { box-shadow: 0 0 0 1px var(--line-2); }
+.app-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.app-thumb { display: grid; place-items: center; aspect-ratio: var(--ar, 16 / 9); background: radial-gradient(120% 90% at 20% 10%, var(--slab-3), var(--slab) 70%); overflow: hidden; }
+.app-thumb img { width: 100%; height: 100%; object-fit: cover; filter: var(--img-filter); }
+.app-mark { font-family: var(--fd); font-stretch: var(--fd-w); font-weight: var(--fd-wt); text-transform: uppercase; font-size: clamp(56px, 7vw, 96px); letter-spacing: -.03em; color: var(--line-2); }
+.app-text { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px 22px; padding-right: 72px; }
+.app-name { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+.app-sum { color: var(--mute); font-size: 15px; line-height: 1.5; text-wrap: pretty; }
+.app-inputs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.app-go { position: absolute; right: 16px; bottom: 18px; }
+.app-card:hover .app-go { background: var(--accent); color: var(--accent-ink); }
+
+.app-view { display: flex; flex-direction: column; gap: clamp(18px, 2.4vw, 28px); }
+.app-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 40px; align-items: end; }
+.app-h1 { font-size: clamp(48px, 8.4vw, 132px); overflow-wrap: anywhere; }
+.app-lede { font-size: clamp(19px, 1.6vw, 23px); }
+.app-frame { display: flex; flex-direction: column; gap: 10px; }
+.app-box { position: relative; aspect-ratio: var(--ar, 16 / 9); max-height: calc(100svh - 160px); width: 100%; margin-inline: auto; background: var(--page); border-radius: var(--r-card); overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
+.app-frame:fullscreen { background: var(--page); padding: 10px; }
+.app-frame:fullscreen .app-box { flex: 1; max-height: none; aspect-ratio: auto; }
+.app-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--page); }
+.app-poster { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink); text-decoration: none; background: radial-gradient(90% 120% at 50% 0%, var(--slab-3), var(--page) 75%); }
+.app-poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: var(--img-filter); opacity: .55; }
+.app-start { position: relative; display: inline-flex; align-items: center; gap: 14px; padding: 10px 22px 10px 10px; border-radius: var(--r-pill); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line); backdrop-filter: blur(12px); font-weight: 600; font-size: 16px; transition: transform .3s var(--e-spring); }
+.app-play { width: 52px; height: 52px; border-radius: var(--r-pill); display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
+.app-poster:hover .app-start { transform: scale(1.03); }
+.app-poster:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+.app-note { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); margin: 0; padding: 8px 14px; border-radius: var(--r-pill); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line); font-size: 13.5px; color: var(--soft); max-width: calc(100% - 32px); text-align: center; }
+.app-bar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.app-meta { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px 40px; align-items: start; }
+.app-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0; margin: 0; }
+.app-facts div { border-top: 1px solid var(--line); padding: 12px 0; }
+.app-facts dt { font-family: var(--fl); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+.app-facts dd { margin: 4px 0 0; font-size: 15px; }
+.app-side { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+@media (max-width: 760px) {
+  .app-intro, .app-meta { grid-template-columns: minmax(0, 1fr); }
+  /* A phone gets a tall frame: games letterbox themselves, lab apps stack their panels. */
+  .app-box { aspect-ratio: auto; height: min(78svh, 720px); max-height: none; }
+  .app-bar { justify-content: stretch; } .app-bar > * { flex: 1; justify-content: center; }
+}

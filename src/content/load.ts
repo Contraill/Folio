@@ -8,8 +8,14 @@ import type { Locale } from '../i18n/locale';
 import { discover, localize, type Discovery, type ManualProject, type Snapshot } from './discover';
 import { type Case, type Img, PAGE_GROUPS, PageBodies, type Pages, type Project, ProjectEntry, ProjectTranslation } from './schema';
 
+/** A game or lab app in one language: it runs at its own address and Folio frames it. */
+export type AppPage = {
+  kind: 'play' | 'lab'; id: string; name: string; summary: string; url: string; host: string; embed: boolean; aspect: string;
+  inputs: string[]; repoUrl: string | null; lang: string | null; stars: number; updated: string; translated: boolean;
+};
+
 export type Content = {
-  pages: Pages; projects: Project[]; featured: Project[]; selected: Project[]; cases: Record<string, Case>;
+  pages: Pages; projects: Project[]; featured: Project[]; selected: Project[]; cases: Record<string, Case>; apps: AppPage[];
   /** Projects whose text has no Turkish version yet, by id. */
   untranslated: Set<string>;
   /** Page groups shown in English because their Turkish file is missing. */
@@ -78,7 +84,13 @@ const load = async (locale: Locale): Promise<Content> => {
     return project;
   }));
   const pick = (ids: string[]) => ids.map((id) => projects.find((p) => p.id === id)!).filter(Boolean);
-  return { pages, projects, featured: pick(found.featured), selected: pick(found.selected), cases, untranslated, fallbackGroups };
+  const apps = found.apps.map((a): AppPage => ({
+    kind: a.kind, id: a.id, url: a.url, host: new URL(a.url).host, embed: a.embed, aspect: a.aspect, inputs: a.inputs,
+    name: (locale === 'tr' && a.title.tr) || a.title.en, summary: (locale === 'tr' && a.summary.tr) || a.summary.en,
+    repoUrl: a.repo, lang: a.language, stars: a.stars, updated: a.updated.slice(0, 10),
+    translated: locale === 'en' || !!a.summary.tr,
+  }));
+  return { pages, projects, featured: pick(found.featured), selected: pick(found.selected), cases, apps, untranslated, fallbackGroups };
 };
 
 /** This page's content, in its language. */

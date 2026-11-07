@@ -392,3 +392,74 @@ test.describe('shell details', () => {
     await context.close();
   });
 });
+
+/* Games and lab apps come from the Folio controller's catalog, so what /play and /lab list depends on the build: the
+   recorded catalog has the two template pilots, a live build has whatever is deployed. The catalogue is checked against
+   /_build.json either way; the app page against the pilots, checked only when the build lists them. */
+const PILOTS = { play: { id: 'pilot-gates', name: 'Gates', host: 'pilot-gates.oztozlu.dev' }, lab: { id: 'pilot-spirals', name: 'Two Spirals', host: 'pilot-spirals.oztozlu.dev' } } as const;
+
+test.describe('games and lab apps', () => {
+  for (const kind of ['play', 'lab'] as const) {
+    test(`/${kind} lists exactly the ${kind === 'play' ? 'games' : 'lab apps'} of this build`, { tag: '@once' }, async ({ page, request }) => {
+      const counts = (await (await request.get('/_build.json')).json()).counts;
+      await page.goto(`/${kind}`);
+      await expect(page.locator('main h1')).toBeVisible();
+      await expect(page.locator('.app-card')).toHaveCount(counts[kind]);
+      // Until there is one, the stage still says the section is being built.
+      await expect(page.locator('main .wip-dot')).toHaveCount(counts[kind] ? 0 : 1);
+      for (const href of await page.locator('.app-card').evaluateAll((cards) => cards.map((c) => c.getAttribute('href')))) {
+        expect((await request.get(href!)).status(), href!).toBe(200);
+      }
+    });
+  }
+
+  test('an app runs in the page only when asked: framed, sandboxed, in the visitor language, with full screen and a new tab', async ({ page, request }) => {
+    const pilot = PILOTS.play;
+    test.skip((await request.get(`/play/${pilot.id}`)).status() === 404, 'the pilot is not in this build');
+    const asked: string[] = [];
+    await page.route(`https://${pilot.host}/**`, (route) => { asked.push(route.request().url()); return route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Gates</title><p id="game">running</p>' }); });
+    const problems = await watchForProblems(page);
+    await page.goto(`/play/${pilot.id}`);
+    await expect(page.locator('main h1')).toHaveText(pilot.name);
+    await expect(page.locator('.navcap a[aria-current="page"]')).toHaveText('Play');
+    const newTab = page.locator('.app-bar a', { hasText: 'Open in a new tab' });
+    await expect(newTab).toHaveAttribute('href', `https://${pilot.host}/`);
+    await expect(newTab).toHaveAttribute('target', '_blank');
+    expect(asked, 'nothing reaches the app before it is started').toEqual([]);
+
+    await page.locator('.app-poster').click();
+    const frame = page.locator('.app-box iframe');
+    await expect(frame).toHaveAttribute('title', `Gates, running from ${pilot.host}`);
+    const src = new URL((await frame.getAttribute('src'))!);
+    expect([src.host, src.searchParams.get('folio'), src.searchParams.get('lang'), src.searchParams.get('skin')]).toEqual([pilot.host, '1', 'en', 'graphite']);
+    expect((await frame.getAttribute('sandbox'))!.split(' ').sort()).toEqual(['allow-downloads', 'allow-pointer-lock', 'allow-popups', 'allow-popups-to-escape-sandbox', 'allow-same-origin', 'allow-scripts']);
+    await expect(page.frameLocator('.app-box iframe').locator('#game')).toHaveText('running');
+
+    const full = page.getByRole('button', { name: 'Full screen' });
+    await full.click();
+    await expect.poll(() => page.evaluate(() => document.fullscreenElement?.className)).toBe('app-frame');
+    await page.getByRole('button', { name: 'Leave full screen' }).click();
+    await expect.poll(() => page.evaluate(() => document.fullscreenElement)).toBeNull();
+    expect(problems).toEqual([]);
+  });
+
+  test('without JavaScript the same button opens the app in its own tab', { tag: '@once' }, async ({ browser, baseURL, request }) => {
+    const pilot = PILOTS.lab;
+    test.skip((await request.get(`/lab/${pilot.id}`)).status() === 404, 'the pilot is not in this build');
+    const context = await browser.newContext({ baseURL, javaScriptEnabled: false, locale: 'tr-TR' });
+    const page = await context.newPage();
+    await page.goto(`/lab/${pilot.id}`);
+    await expect(page.locator('main h1')).toHaveText('İki Sarmal');
+    await expect(page.locator('.app-poster')).toHaveAttribute('href', `https://${pilot.host}/`);
+    await expect(page.locator('.app-poster')).toHaveAttribute('target', '_blank');
+    await expect(page.locator('.app-poster')).toContainText('İki Sarmal: başlat');
+    await context.close();
+  });
+
+  test('pages may frame only the apps of this build', { tag: '@once' }, async ({ page }) => {
+    await page.goto('/play');
+    const violations = page.evaluate(() => new Promise<string>((resolve) => document.addEventListener('securitypolicyviolation', (e) => resolve(e.effectiveDirective), { once: true })));
+    await page.evaluate(() => { const f = document.createElement('iframe'); f.src = 'https://example.com/'; document.body.appendChild(f); });
+    expect(await violations).toBe('frame-src');
+  });
+});
