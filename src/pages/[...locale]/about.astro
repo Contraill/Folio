@@ -8,7 +8,6 @@ import { localePaths } from '@/lib/locales';
 
 export const getStaticPaths = localePaths;
 
-const locale = Astro.locals.locale;
 const { pages: content, projects } = await getContent(Astro.locals);
 const c = content.about;
 const languages = new Set(projects.map((p) => p.lang)).size;

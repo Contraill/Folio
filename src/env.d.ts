@@ -9,3 +9,9 @@ declare namespace App {
     fallback?: boolean;
   }
 }
+
+/** The route list `scripts/postbuild.ts` writes for the language Worker, declared so type checks need no build. */
+declare module '*/.folio/routes.json' {
+  const routes: import('./lib/language-worker').Routes;
+  export default routes;
+}
