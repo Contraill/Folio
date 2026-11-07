@@ -3,3 +3,6 @@ allowBuilds:
   workerd: true
 patchedDependencies:
   '@astrojs/react': patches/@astrojs__react.patch
+# pdf.js renders in the browser; its optional Node canvas (a native binary) is never needed here.
+ignoredOptionalDependencies:
+  - '@napi-rs/canvas'

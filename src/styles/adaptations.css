@@ -128,8 +128,28 @@ html.js .cut:not([data-cut-ready]) > .cut-fill { opacity: 0; }
 /* A Turkish page showing English text because its translation isn't written yet. */
 .fallback-note { margin: 0 0 var(--G); padding: 10px 16px; border-radius: var(--r-sm); background: var(--slab); box-shadow: inset 0 0 0 1px var(--line); color: var(--mute); font-size: 14px; }
 
-/* CV: the owner's PDF, shown by the browser's own viewer where it can, otherwise a card to open or download it. */
-.cv-frame { position: relative; z-index: 2; display: block; width: 100%; max-width: 900px; aspect-ratio: 1 / 1.414; max-height: 88vh; margin: 28px auto 0; border: 0; border-radius: var(--r-card); background: var(--slab-2); box-shadow: inset 0 0 0 1px var(--line); }
+/* CV: the owner's PDF, drawn by the site on a desk in the current skin; a card to open or download it otherwise. */
+.cv-viewer { position: relative; z-index: 2; margin-top: 28px; }
+.cv-stage { display: flex; flex-direction: column; align-items: center; gap: 20px; overflow-x: auto; padding: clamp(12px, 4vw, 32px) clamp(12px, 4vw, 32px) 88px; border-radius: var(--r-card); background: var(--slab-2); box-shadow: inset 0 0 0 1px var(--line); }
+.cv-stage:focus-visible { outline-offset: -2px; }
+/* The sheet stays paper-white in every skin: it is the document itself, as printed. */
+.cv-page { position: relative; flex: none; background: #fff; color: #111; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 24px 60px -28px rgba(0,0,0,.45); }
+.cv-page canvas { display: block; width: 100%; height: 100%; border-radius: inherit; }
+.cv-blank { width: min(880px, 100%); aspect-ratio: 1 / 1.414; display: grid; place-items: center; color: #5b616e; font-size: 14px; }
+.cv-links a { position: absolute; z-index: 2; border-radius: 2px; }
+.cv-links a:hover { background: rgba(43, 74, 216, .1); }
+.cv-zoom { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: var(--r-pill); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line); backdrop-filter: blur(14px); }
+.cv-zoom output { min-width: 56px; text-align: center; font-family: var(--fl); font-size: 13px; color: var(--soft); }
+.cv-zoom .circle[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); }
+.cv-zoom .circle:disabled { opacity: .4; cursor: default; }
+/* pdf.js's text layer (from its pdf_viewer.css): transparent text placed over the drawing, to select and read. */
+.textLayer { color-scheme: only light; position: absolute; inset: 0; overflow: clip; line-height: 1; letter-spacing: normal; word-spacing: normal; text-align: initial; text-size-adjust: none; forced-color-adjust: none; transform-origin: 0 0; caret-color: CanvasText; z-index: 1;
+  --min-font-size: 1; --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size)); --min-font-size-inv: calc(1 / var(--min-font-size)); }
+.textLayer :is(span, br) { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%; user-select: text; }
+.textLayer > :not(.markedContent), .textLayer .markedContent span:not(.markedContent) { z-index: 1; --font-height: 0; font-size: calc(var(--text-scale-factor) * var(--font-height)); --scale-x: 1; --rotate: 0deg; transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv)); }
+.textLayer .markedContent { display: contents; }
+.textLayer ::selection { background: rgba(43, 74, 216, .3); }
+.textLayer br::selection { background: transparent; }
 .cv-card { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 18px; max-width: 900px; margin: 28px auto 0; padding: 24px; border-radius: var(--r-card); background: var(--slab-2); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); }
 .cv-card > div:nth-child(2) { flex: 1; min-width: 180px; }
 .cv-card-name { margin: 0 0 4px; font-weight: 600; }

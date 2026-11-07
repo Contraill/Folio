@@ -272,24 +272,6 @@ h2.h2 { font-size: clamp(32px, 4.4vw, 64px); }
 .cvwrap { min-height: 900px; }
 .cvwrap .cut-fill { background: var(--slab); }
 .cvbar { right: 0; top: 0; display: flex; gap: 8px; align-items: center; padding: 0 0 10px 10px; flex-wrap: wrap; justify-content: flex-end; }
-.sheet { position: relative; z-index: 2; max-width: 860px; margin: 40px auto 0; background: #fbfaf7; color: #161616; border-radius: 6px; padding: 56px 64px 64px; box-shadow: 0 30px 80px rgba(0,0,0,.25); font-size: 15px; }
-.sheet header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; padding-bottom: 26px; border-bottom: 2px solid #161616; }
-.sheet h1 { font-size: 44px; color: #161616; }
-.sheet .role { margin: 10px 0 0; color: #444; }
-.sheet .contact { font-family: var(--fl); font-size: 12.5px; line-height: 1.7; text-align: right; color: #333; }
-.sheet section { display: grid; grid-template-columns: 150px 1fr; gap: 24px; padding: 22px 0; border-bottom: 1px solid #ddd8cd; }
-.sheet section h2 { font-family: var(--fl); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: #6b6b66; margin: 3px 0 0; font-weight: 500; }
-.sheet p { margin: 0; line-height: 1.55; }
-.sheet .item + .item { margin-top: 14px; }
-.sheet .item b { font-weight: 600; }
-.sheet .item b span { font-weight: 400; color: #6b6b66; font-family: var(--fl); font-size: 12px; margin-left: 6px; }
-.ph { background: #fff1b8; color: #6a5300; padding: 0 4px; border-radius: 3px; }
-@media print {
-  body * { visibility: hidden !important; }
-  .sheet, .sheet * { visibility: visible !important; }
-  .sheet { position: absolute; left: 0; top: 0; margin: 0; box-shadow: none; max-width: none; width: 100%; padding: 0; }
-  .ph { background: none; }
-}
 
 /* ============ admin ============ */
 .wgrid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(150px, auto); gap: 12px; }
@@ -401,7 +383,6 @@ h2.h2 { font-size: clamp(32px, 4.4vw, 64px); }
   .tl li { grid-template-columns: 30px 1fr; } .tl .when { grid-column: 2; padding: 0; }
   .tl li > div { grid-column: 2; }
   .cvbar { position: relative; top: auto; right: auto; justify-content: flex-start; padding: 0 0 18px; }
-  .sheet { padding: 28px 22px; margin-top: 28px; } .sheet header { flex-direction: column; align-items: flex-start; } .sheet .contact { text-align: left; } .sheet section { grid-template-columns: 1fr; gap: 8px; } .sheet h1 { font-size: 30px; }
   .wgrid { grid-template-columns: 1fr; } .w.s2, .w.s4 { grid-column: auto; } .w.t2 { grid-row: auto; } .radio2 { grid-template-columns: 1fr; }
   .uses-tbl td:last-child { display: block; text-align: left; padding-top: 0; } .uses-tbl td { display: block; border: 0; padding: 12px 0 2px; } .uses-tbl tr { display: block; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
   .four { min-height: 420px; } .four .oledmini { width: 200px; }

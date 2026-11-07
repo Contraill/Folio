@@ -49,7 +49,7 @@ test.describe('motion', () => {
     await recordAnimations(page);
     await page.locator('.navcap a', { hasText: 'CV' }).click();
     await expect(page).toHaveURL(/\/cv$/);
-    await expect(page.locator('.cv-card, .cv-frame')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.cv-head')).toHaveCSS('opacity', '1');
     await page.locator('[data-skin-trigger]').click();
     await page.getByRole('radio', { name: /^Paper/ }).click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'paper');
@@ -65,7 +65,7 @@ test.describe('motion', () => {
     await expect(page.locator('main [data-reveal]').first()).toHaveClass(/\bin\b/);
     await transitionEnded(page);
     await page.locator('.navcap a', { hasText: 'CV' }).click();
-    await expect(page.locator('.cv-card, .cv-frame')).toHaveClass(/\bin\b/);
+    await expect(page.locator('.cv-head')).toHaveClass(/\bin\b/);
     await transitionEnded(page);
     const magnet = page.locator('.foot [data-magnet]');
     await magnet.scrollIntoViewIfNeeded();
@@ -145,7 +145,7 @@ test.describe('navigation', () => {
     await expect(page).toHaveURL(/\/lab$/);
     await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
     await expect(page).toHaveURL(/\/cv$/);
-    await expect(page.locator('.cv-card, .cv-frame')).toBeVisible();
+    await expect(page.locator('.cv-head')).toBeVisible();
   });
 
   test('pages start loading on hover', { tag: '@once' }, async ({ page }) => {
@@ -372,20 +372,40 @@ test.describe("CV: the owner's own PDFs", () => {
     expect(problems).toEqual([]);
   });
 
-  test('embeds the PDF where the browser can show it, and offers open and download where it cannot', { tag: '@smoke' }, async ({ browser, baseURL }) => {
-    for (const [viewer, width, expected] of [[true, 1280, '.cv-frame'], [false, 1280, '.cv-card'], [true, 390, '.cv-card']] as const) {
-      const context = await browser.newContext({ baseURL, viewport: { width, height: 900 } });
-      await context.addInitScript((enabled) => Object.defineProperty(Navigator.prototype, 'pdfViewerEnabled', { get: () => enabled }), viewer);
-      const page = await context.newPage();
-      await page.goto('/cv');
-      await expect(page.locator(expected), `viewer ${viewer}, ${width}px`).toBeVisible();
-      if (expected === '.cv-frame') {
-        await expect(page.locator('.cv-frame')).toHaveAttribute('src', '/cv/en.pdf#view=FitH');
-        await expect(page.locator('.cv-frame')).toHaveAttribute('title', 'CV in English, PDF');
-      } else {
-        await expect(page.locator('.cv-card a[download]')).toHaveAttribute('href', '/cv/en.pdf');
-      }
-      await context.close();
-    }
+  test('draws the CV in the page: selectable text, its links, zoom and the other language', { tag: '@smoke' }, async ({ page }) => {
+    const problems = await watchForProblems(page);
+    await page.goto('/cv');
+    const sheet = page.getByRole('document', { name: 'CV in English, PDF' });
+    await expect(sheet.locator('canvas')).toBeVisible();
+    await expect(sheet.locator('.textLayer')).toContainText('Full-Stack Developer');
+    expect(await sheet.locator('.cv-links a[href^="https://github.com/"]').count()).toBeGreaterThan(0);
+    const zoom = page.locator('.cv-zoom output');
+    const fit = await zoom.textContent();
+    const width = (await sheet.boundingBox())!.width;
+    await page.getByRole('button', { name: 'Zoom in' }).click();
+    await expect(zoom).not.toHaveText(fit!);
+    await expect.poll(async () => (await sheet.boundingBox())!.width).toBeGreaterThan(width);
+    await page.getByRole('button', { name: 'Fit to width' }).click();
+    await expect(zoom).toHaveText(fit!);
+    await page.locator('.cvbar .seg button', { hasText: 'Türkçe' }).click();
+    await expect(page.getByRole('document', { name: 'CV in Türkçe, PDF' }).locator('.textLayer')).toContainText('İstanbul');
+    expect(problems).toEqual([]);
+  });
+
+  test('without JavaScript, or when the CV can\'t be drawn, the same place offers to open or download it', { tag: '@once' }, async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/cv');
+    await expect(page.locator('.cv-card a[download]')).toHaveAttribute('href', '/cv/en.pdf');
+    await expect(page.locator('.cv-card a[target="_blank"]')).toHaveAttribute('href', '/cv/en.pdf');
+    await context.close();
+    const broken = await browser.newContext({ baseURL });
+    const failing = await broken.newPage();
+    // The download link must still work, so only the viewer's own request is made to fail.
+    await failing.route('**/cv/en.pdf', (route) => (route.request().resourceType() === 'fetch' ? route.abort() : route.fallback()));
+    await failing.goto('/cv');
+    await expect(failing.locator('.cv-card [role="alert"]')).toHaveText('The CV couldn’t be shown here. Open or download the PDF instead.');
+    await expect(failing.locator('.cv-card a[download]')).toHaveAttribute('href', '/cv/en.pdf');
+    await broken.close();
   });
 });
