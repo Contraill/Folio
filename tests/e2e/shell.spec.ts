@@ -365,7 +365,7 @@ test.describe('language', () => {
 
   test('Turkish pages are translated, with a correct dotted capital', { tag: '@once' }, async ({ page }) => {
     for (const [path, locator, text] of [
-      ['/?lang=tr', 'h1', 'Tepki veren'],
+      ['/?lang=tr', 'h1', 'Kodun ötesine geçen'],
       ['/about?lang=tr', 'main h1', 'Merhaba, ben İzzet Can'],
       ['/projects/helios?lang=tr', 'main', 'İnsan ölçeğinde gezegen bilimi'],
       ['/lab?lang=tr', 'main', 'Etkileşimli deneyler'],

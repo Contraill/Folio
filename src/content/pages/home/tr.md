@@ -1,8 +1,8 @@
 ---
 heroLabel: Tanıtım ve canlı proje sahnesi
 eyebrow: Firmware · Web · Linux masaüstü · Self-hosted
-line1: Tepki veren
-line2: şeyler yapıyorum.
+line1: Kodun ötesine
+line2: "geçen şeyler\nüretiyorum."
 lede: Gerçek veriyle çalışan web uygulamaları, masaüstü tema araçları, self-hosted servisler ve yüzü olan küçük cihazlar. Ekran görüntüsü olarak değil, çalışırken.
 allProjects: Tüm Projeleri Gör
 about: Hakkımda

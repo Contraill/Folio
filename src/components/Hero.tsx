@@ -50,10 +50,11 @@ export default function Hero({ projects, c, stage, mochi, locale }: { projects: 
       <div className="carve">
         <div className="c1" data-cut>
           <p className="eyebrow after">{c.eyebrow}</p>
-          <h1 className="display hl" style={{ marginTop: 18 }}><Lines lines={[c.line1]} /><span className="sr"> {c.line2}</span></h1>
+          <h1 className="display hl" style={{ marginTop: 18 }}><Lines lines={[c.line1]} /><span className="sr"> {c.line2.replace(/\n/g, ' ')}</span></h1>
         </div>
         <div className="c2" data-cut>
-          <p className="display hl" aria-hidden="true"><span className="lines"><span className="ln" style={{ '--k': 1 } as CSSProperties}><span>{c.line2}</span></span></span></p>
+          {/* The second line may break in two (\n), so a longer headline keeps the panels narrow and the stage in view. */}
+          <p className="display hl" aria-hidden="true"><span className="lines">{c.line2.split('\n').map((line, i) => <span key={i} className="ln" style={{ '--k': 1 + i } as CSSProperties}><span>{line}</span></span>)}</span></p>
           <p className="lede after" style={{ '--i': 0 } as CSSProperties}>{c.lede}</p>
           <div className="after" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', paddingBottom: 6, '--i': 1 } as CSSProperties}>
             <a className="btn btn-1" href="/projects">{c.allProjects}<span className="ic"><ArrowRight size={16} aria-hidden="true" /></span></a>
