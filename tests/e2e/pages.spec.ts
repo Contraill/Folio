@@ -138,13 +138,13 @@ test.describe('home', () => {
 });
 
 test.describe('projects', () => {
-  test('filters stay on the page, keep a shareable URL and follow history', { tag: '@smoke' }, async ({ page }) => {
+  test('filters stay on the page, keep a shareable URL and follow history', { tag: '@smoke' }, async ({ page, request }) => {
     const problems = await watchForProblems(page);
     await page.goto('/projects');
     await settled(page);
     // Every public repository of this build is a project.
     const total = await page.locator('.gcard').count();
-    expect(total).toBe((await (await page.request.get('/_build.json')).json()).counts.projects);
+    expect(total).toBe((await (await request.get('/_build.json')).json()).counts.projects);
     // Filtering and going back stay on the page: the router must never start a navigation.
     await page.evaluate(() => {
       const w = window as never as { marker: Element; navigations: number };
