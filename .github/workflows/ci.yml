@@ -30,6 +30,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FOLIO_TRIGGER: ci
+          # CI holds no secrets (a pull request may come from a fork): the recorded catalog and stand-in apps.
+          FOLIO_CATALOG: fixture
         run: pnpm build
       - name: Unit tests and checks on the build output
         run: pnpm test

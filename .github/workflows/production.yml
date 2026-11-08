@@ -44,6 +44,7 @@ jobs:
         if: github.event_name == 'schedule' || inputs.sync
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_CATALOG_TOKEN: ${{ secrets.FOLIO_CATALOG_TOKEN }}
         run: node scripts/fetch-github.ts && node scripts/changed.ts https://oztozlu.dev/_build.json
       - if: steps.changed.outputs.skip != 'true'
         run: pnpm install --frozen-lockfile
@@ -53,6 +54,7 @@ jobs:
         if: steps.changed.outputs.skip != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_CATALOG_TOKEN: ${{ secrets.FOLIO_CATALOG_TOKEN }}
           FOLIO_TRIGGER: ${{ github.event_name == 'schedule' && 'cron' || github.event_name == 'workflow_dispatch' && 'manual' || 'push' }}
         run: pnpm build
       - name: Unit tests and checks on the build output

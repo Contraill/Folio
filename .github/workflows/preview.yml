@@ -47,6 +47,7 @@ jobs:
         if: inputs.sync
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_CATALOG_TOKEN: ${{ secrets.FOLIO_CATALOG_TOKEN }}
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: node scripts/fetch-github.ts && node scripts/changed.ts "$PREVIEW_URL/_build.json"
@@ -58,6 +59,7 @@ jobs:
         if: steps.changed.outputs.skip != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_CATALOG_TOKEN: ${{ secrets.FOLIO_CATALOG_TOKEN }}
           FOLIO_TRIGGER: preview
         run: pnpm build
       - name: Unit tests and checks on the build output
