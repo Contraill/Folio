@@ -168,7 +168,7 @@ export default function PlayStage({ c }: { c: Pages['play'] }) {
       </div>
       <div className="dock play-note" data-cut>
         <div className="pn">
-          <p className="eyebrow"><span className="live-dot" /> {c.status}</p>
+          <p className="eyebrow">{c.status}</p>
           <h1 className="play-h1">{c.h1}</h1>
           <p className="small">{c.note}</p>
           <div className="pn-btns">

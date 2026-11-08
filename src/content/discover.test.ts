@@ -22,7 +22,7 @@ const find = (s: Snapshot, id: string) => discover(s, manual, 'Folio').projects.
 
 test('every public repository is a project, once, with no topic or file needed', () => {
   const d = discover(recorded, manual, 'Folio');
-  assert.equal(d.projects.length, recorded.repos.length);
+  assert.equal(d.projects.length, recorded.repos.length - 1, 'all but the profile README');
   assert.equal(new Set(d.projects.map((p) => p.en.repo)).size, d.projects.length, 'no repository twice');
   assert.deepEqual(d.warnings, []);
   // What Folio wrote wins over GitHub's description; GitHub's current numbers win over Folio's.
@@ -31,7 +31,12 @@ test('every public repository is a project, once, with no topic or file needed',
   assert.equal(helios.en.stars, recorded.repos.find((r) => r.name === 'Helios')!.stargazerCount);
 });
 
-test('private repositories and Folio itself are never discovered, whatever their pins', () => {
+test('private repositories, Folio itself and the profile README repository are never projects, whatever their pins', () => {
+  assert.ok(recorded.repos.some((r) => r.name === 'Contraill'), 'the recording has the profile repository');
+  const profile = discover(snap((s) => s.pins.unshift('Contraill')), manual, 'Folio');
+  assert.ok(!profile.projects.some((p) => p.en.repo === 'Contraill'));
+  assert.ok(!profile.hero.includes('contraill'));
+  assert.ok(!profile.activity.some((a) => a.repo === 'Contraill'));
   const s = snap((s) => {
     s.repos.push(repo('secret-thing', { isPrivate: true, lastCommit: { message: 'private plans', date: '2030-01-01T00:00:00Z', url: 'x' } }), repo('Folio'));
     s.pins.unshift('secret-thing', 'Folio');
@@ -48,13 +53,12 @@ test('a repository that goes private or disappears takes its page with it', () =
   assert.ok(!shown(snap((s) => { s.repos = s.repos.filter((r) => r.name !== 'Comet'); s.repos.push(repo('Comet', { isPrivate: true })); })).includes('comet'));
 });
 
-test('repositories are told apart: profile, templates, forks, games and lab apps', () => {
+test('repositories are told apart: templates, forks, games and lab apps', () => {
   const s = snap((s) => {
     s.repos.push(repo('Forked', { isFork: true }), repo('Snake'), repo('Spiral'));
     s.apps = [app('snake', { repo: 'https://github.com/Contraill/Snake' }), app('spiral', { kind: 'lab', repo: 'https://github.com/Contraill/Spiral' })];
   });
   const type = (id: string) => find(s, id).type;
-  assert.equal(type('contraill'), 'profile');
   assert.equal(type('folio-site-template'), 'template');
   assert.equal(type('forked'), 'fork');
   assert.equal(type('snake'), 'game');
@@ -118,12 +122,12 @@ test('the home page follows the pins: three for the hero, the next three selecte
   assert.deepEqual(swapped.hero, ['orbis', 'campuseats', 'bct'], 'a new pin order moves both sections');
 });
 
-test('order: entries with an order first, then by last push; templates and the profile last', () => {
+test('order: entries with an order first, then by last push; templates last', () => {
   const s = snap((s) => s.repos.push(repo('Old', { pushedAt: '2020-01-01T00:00:00Z' }), repo('New', { pushedAt: '2030-01-01T00:00:00Z' })));
   const all = shown(s);
   assert.equal(all.indexOf('new'), all.findIndex((id) => find(s, id).en.order === undefined));
   assert.ok(all.indexOf('old') < all.indexOf('folio-site-template'));
-  assert.equal(all.at(-1), 'contraill');
+  assert.ok(find(s, all.at(-1)!).type === 'template');
 });
 
 test('activity is the latest commit of each public repository, newest first, at most eight', () => {

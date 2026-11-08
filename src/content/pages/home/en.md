@@ -27,9 +27,7 @@ tail: Firmware for tiny screens, web apps on sourced data, Linux desktops that f
 moreLabel: More on this site
 more: More
 morePages: More pages
-labStatus: Notebook open
-labTeaser: Experiments with learning systems, each running in the page.
-playStatus: Open for play
+labTeaser: Simulations, algorithms and interactive prototypes, running in the page.
 playTeaser: Small browser games, and a toy box to throw around.
 cards:
   orbis:

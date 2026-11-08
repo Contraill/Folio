@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-/* The old coming-soon sign, in the page's language, as letters to throw around. Finding them unlocks a star in the
-   Play toy box. Words stay together, so a narrow screen wraps between them. */
+/* A greeting in the page's language, as letters to throw around. Finding them unlocks a star in the Play toy box.
+   Words stay together, so a narrow screen wraps between them. */
 export default function Letters({ word, label }: { word: string; label: string }) {
   const [offset, setOffset] = useState<Record<number, [number, number]>>({});
   const [drag, setDrag] = useState<number | null>(null);

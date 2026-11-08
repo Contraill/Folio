@@ -74,7 +74,7 @@ export const PageBodies = {
     mochi: z.object({ ...text('label shortLabel poke pet'), moods: z.object(text('idle waking poked petted love happy dizzy sleep')).strict() }).strict(),
   }).strict(),
   home: z.object({
-    ...text('heroLabel eyebrow line1 line2 lede allProjects about featured prev next pause play selectedNote allShort approach approachLabel lead tail moreLabel more morePages labStatus labTeaser playStatus playTeaser'),
+    ...text('heroLabel eyebrow line1 line2 lede allProjects about featured prev next pause play selectedNote allShort approach approachLabel lead tail moreLabel more morePages labTeaser playTeaser'),
     hints: z.record(z.string(), z.string()), selected: pair,
     cards: z.object({
       orbis: z.object({ room: z.string() }).strict(),
@@ -88,10 +88,10 @@ export const PageBodies = {
   }).strict(),
   case: z.object({
     ...text('projects breadcrumb previous next live repo specs language area started stars noStars topics about noWriteUp noDesc englishOnly languages lastPush type archived openApp screensGroup show enlarge enlargeScreen enlarged screenshot nextProject readNext allProjects'),
-    screens: pair, types: z.object(text('project profile template fork game lab')).strict(),
+    screens: pair, types: z.object(text('project template fork game lab')).strict(),
   }).strict(),
-  lab: z.object({ ...text('title label kicker lede empty catalogH catalogNote canvas controls drop surface pause resume notebook now nextLabel rule nowText nextText ruleText foot planH planned'), plan: z.array(pair) }).strict(),
-  play: z.object({ ...text('title label status h1 note empty catalogH catalogNote canvas shake pause resume rulesH'), rules: z.array(pair) }).strict(),
+  lab: z.object(text('title label kicker lede empty catalogH catalogNote canvas controls drop surface pause resume notebook now nextLabel rule nowText nextText ruleText foot')).strict(),
+  play: z.object(text('title label status h1 note empty catalogH catalogNote canvas shake pause resume')).strict(),
   apps: z.object(text('breadcrumb play lab start newTab repo fullscreen exitFullscreen loading slow noEmbed frameLabel hostNote inputs language updated stars noStars englishOnly')).strict(),
   about: z.object({
     ...text('title eyebrow h1a h1em h1b lede portrait patternsH path pathH pathNote formal formalLead formalTail readCv now next totals repos languages stars'),
@@ -110,12 +110,12 @@ export type Img = z.infer<typeof Img>;
 export type CaseSection = z.infer<typeof CaseSection>;
 export type Case = z.infer<typeof Case>;
 export type Kind = z.infer<typeof ProjectFields>['kind'];
-/** What a repository is: the profile README, a template, a fork, a game or lab app in the catalog, or a project. */
-export type RepoKind = 'project' | 'profile' | 'template' | 'fork' | 'game' | 'lab';
+/** What a repository is: a template, a fork, a game or lab app in the catalog, or a project. */
+export type RepoKind = 'project' | 'template' | 'fork' | 'game' | 'lab';
 export type Project = z.infer<typeof ProjectFields> & {
   id: string; d: number; type: RepoKind;
-  /** Whether Folio has a written case study for it. */
-  written: boolean;
+  /** Whether Folio has a written case study for it, and whether it has an entry of its own at all. */
+  written: boolean; entry: boolean;
   langs: string[]; archived: boolean;
   /** The game's or lab app's page in Folio. */
   app?: string;

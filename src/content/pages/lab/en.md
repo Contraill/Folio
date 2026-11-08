@@ -1,32 +1,23 @@
 ---
-title: AI Lab
-label: AI Lab
-kicker: notebook open since Nov 2026
-lede: "Experiments with learning systems, written up with what failed. Each one runs in the page and keeps its runs on your device, so you can compare what it knew early and late."
+title: Lab
+label: Lab
+kicker: Interactive experiments
+lede: "A place for working experiments: simulations, algorithms, shaders and interface prototypes. Each one runs right in the page."
 catalogH: Experiments
-catalogNote: Every run can be saved, compared and exported as a file.
+catalogNote: "Each one runs in the page; what it saves stays on this device."
 canvas: Decorative contour map. Small dots roll downhill toward the lowest points.
-controls: Sketch controls
+controls: Surface controls
 drop: Drop Explorers
 surface: New Surface
 pause: Pause
 resume: Resume
-notebook: notebook · status
-now: now
-nextLabel: next
-rule: rule
-nowText: Each experiment runs in the page and keeps its runs on your device.
-nextText: New experiments are listed here when they are published.
-ruleText: Nothing appears here until it is real.
+notebook: how it works
+now: runs
+nextLabel: keeps
+rule: comes from
+nowText: Every experiment runs in this page, in your browser.
+nextText: What it saves stays on your device.
+ruleText: Each one is built from its own repository and checked before it appears here.
 foot: The surface is decorative, not a model.
-planH: what every experiment has
-planned: always
-plan:
-  - - Experiments
-    - Training runs written up with what failed, not only the final number.
-  - - Comparisons
-    - Checkpoints side by side, once there are real ones to compare.
-  - - Notes
-    - What I tried, what broke and what I would try next.
 empty: No experiments are published yet. New ones show up here as soon as they are.
 ---

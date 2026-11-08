@@ -21,7 +21,6 @@ lastPush: Last push
 type: Type
 types:
   project: Project
-  profile: Profile README
   template: Template
   fork: Fork
   game: Game

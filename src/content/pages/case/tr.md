@@ -21,7 +21,6 @@ lastPush: Son push
 type: Tür
 types:
   project: Proje
-  profile: Profil README’si
   template: Şablon
   fork: Fork
   game: Oyun

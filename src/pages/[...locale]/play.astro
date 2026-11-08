@@ -10,17 +10,10 @@ export const getStaticPaths = localePaths;
 const { pages, apps } = await getContent(Astro.locals);
 const games = apps.filter((a) => a.kind === 'play');
 const c = pages.play;
-const colors = ['#ff5a36', '#3ec7ff', '#ffd23f'];
 ---
 <Base title={c.title}>
   <div class="play">
     <PlayStage client:load c={c} />
     <AppCatalog kind="play" apps={games} heading={c.catalogH} note={c.catalogNote} empty={c.empty} locale={Astro.locals.locale} />
-    <section class="slab pad play-rules" aria-labelledby="rules-h">
-      <h2 id="rules-h" class="play-h2" data-reveal>{c.rulesH}</h2>
-      <ol>
-        {c.rules.map(([title, text], i) => <li data-reveal style={`--i: ${i}; --c: ${colors[i]}`}><span class="rn">{i + 1}</span><b>{title}</b><p>{text}</p></li>)}
-      </ol>
-    </section>
   </div>
 </Base>

@@ -95,11 +95,8 @@ const coverProps = { c: content.stage, altSuffix: c.screenshot };
       </section>
     );
   }) : (
-    <section class="slab pad standard" aria-label={c.about}>
-      <p class="eyebrow">{c.about}</p>
-      {p.desc && <p class="two-tone" style="margin-top: 20px; max-width: 30ch" lang={englishOnly ? 'en' : undefined}>{p.desc}</p>}
-      <p class="small" style="margin-top: 22px">{c.noWriteUp}</p>
-    </section>
+    // A repository Folio has written nothing about says so once; a written entry's page is complete as it is.
+    !p.entry && <section class="slab pad standard" aria-label={c.about}><p class="eyebrow">{c.about}</p><p class="small" style="margin-top: 14px">{c.noWriteUp}</p></section>
   )}
 
   {study && gallery.length > 1 && (

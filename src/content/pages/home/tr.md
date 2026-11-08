@@ -27,9 +27,7 @@ tail: Küçücük ekranlar için firmware, kaynağı belli veriyle çalışan we
 moreLabel: Bu sitede daha fazlası
 more: Daha fazla
 morePages: Diğer sayfalar
-labStatus: Defter açık
-labTeaser: Öğrenen sistemlerle deneyler; her biri sayfanın içinde çalışır.
-playStatus: Oynamaya açık
+labTeaser: Simülasyonlar, algoritmalar ve etkileşimli prototipler; sayfanın içinde çalışır.
 playTeaser: Küçük tarayıcı oyunları ve savurabileceğin bir oyuncak kutusu.
 cards:
   orbis:

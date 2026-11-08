@@ -2,9 +2,10 @@
    in Folio. Pure: no network, no files, so every rule below is unit-tested. Relative imports only (Node loads it).
 
    - Every public repository of the owner is a project, with no topic or file needed; never a private one, never
-     Folio's own. A repository that goes private or is deleted takes its page with it at the next build.
-   - Each is classified: the profile repository (named after the owner), templates, forks, and the repositories of
-     games and lab apps in the controller's catalog; the rest are projects.
+     Folio's own, and never the profile README repository (named after the owner), which is not a project.
+     A repository that goes private or is deleted takes its page with it at the next build.
+   - Each is classified: templates, forks, and the repositories of games and lab apps in the controller's catalog;
+     the rest are projects.
    - A project written in Folio (src/content/projects/<id>) is linked to its repository by `repoId`, which survives
      renames, or else by `repo` (the name). Its text, images and case study win over GitHub's; GitHub's stars, last
      push, languages and current name win over Folio's. Without a repository it is a project that isn't on GitHub.
@@ -12,7 +13,7 @@
      the older repository keeps it and the newer one gets `-2`, `-3`, with a warning. It shows the repository's own
      social preview only if one was uploaded (GitHub's generated card is not a project image).
    - Order: entries with an `order` first; then projects, games and lab apps by last push, newest first; then
-     templates; the profile repository last.
+     templates.
    - The home page follows the profile pins: the first three pinned projects lead the hero, the next three are the
      selected work. Fewer pins mean fewer, never repeated or invented, cards.
    - Activity (/now): the latest commit on the default branch of each public repository, newest first.
@@ -38,6 +39,8 @@ export type App = CatalogApp;
 /** A shown project, before choosing a language. */
 export type Listing = {
   id: string; en: ProjectEntry; tr?: ProjectTranslation; type: RepoKind; langs: string[]; archived: boolean;
+  /** Whether Folio has its own entry (src/content/projects) for it. */
+  entry: boolean;
   /** The game's or lab app's own page in Folio, when the repository is one. */
   app?: string;
   /** The repository's own uploaded social preview, downloaded and optimised at build, when Folio has no image. */
@@ -52,11 +55,12 @@ const ACTIVITY = 8;
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-{2,}/g, '-').replace(/^-+|-+$/g, '');
 const month = (iso: string, locale: Locale) => new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(iso)).replace('.', '');
 const repoName = (url: string | null) => url?.split('/').pop()?.toLowerCase();
-const LAST: Partial<Record<RepoKind, number>> = { template: 1, profile: 2 };
+const LAST: Partial<Record<RepoKind, number>> = { template: 1 };
 
 export function discover(snapshot: Snapshot, manual: ManualProject[], self: string): Discovery {
   const warnings: string[] = [];
-  const repos = snapshot.repos.filter((r) => !r.isPrivate && r.name.toLowerCase() !== self.toLowerCase());
+  const skip = new Set([self.toLowerCase(), snapshot.owner.toLowerCase()]);
+  const repos = snapshot.repos.filter((r) => !r.isPrivate && !skip.has(r.name.toLowerCase()));
   const byId = new Map(repos.map((r) => [r.id, r]));
   const byName = new Map(repos.map((r) => [r.name.toLowerCase(), r]));
 
@@ -70,7 +74,6 @@ export function discover(snapshot: Snapshot, manual: ManualProject[], self: stri
   const appOf = new Map(apps.filter((a) => a.repo).map((a) => [repoName(a.repo)!, a]));
   const typeOf = (r: RepoData): RepoKind => {
     const app = appOf.get(r.name.toLowerCase());
-    if (r.name.toLowerCase() === snapshot.owner.toLowerCase()) return 'profile';
     if (r.isTemplate) return 'template';
     if (app) return app.kind === 'play' ? 'game' : 'lab';
     return r.isFork ? 'fork' : 'project';
@@ -88,11 +91,11 @@ export function discover(snapshot: Snapshot, manual: ManualProject[], self: stri
     const repo = (m.en.repoId !== undefined ? byId.get(m.en.repoId) : undefined) ?? (m.en.repo ? byName.get(m.en.repo.toLowerCase()) : undefined);
     if (linked && !repo) continue; // private or deleted: its page goes
     taken.add(m.id);
-    if (!repo) { projects.push({ id: m.id, en: m.en, tr: m.tr, type: 'project', langs: [m.en.lang], archived: false }); continue; }
+    if (!repo) { projects.push({ id: m.id, en: m.en, tr: m.tr, type: 'project', langs: [m.en.lang], archived: false, entry: true }); continue; }
     if (claimed.has(repo.id)) { warnings.push(`${m.id}: ${repo.name} already has a Folio entry; this one is left out`); taken.delete(m.id); continue; }
     claimed.add(repo.id);
     projects.push({
-      id: m.id, tr: m.tr, ...extra(repo),
+      id: m.id, tr: m.tr, ...extra(repo), entry: true,
       en: { ...m.en, repo: repo.name, stars: repo.stargazerCount, date: repo.pushedAt.slice(0, 10), lang: repo.primaryLanguage ?? m.en.lang, ...(m.en.home || !repo.homepageUrl ? {} : { home: repo.homepageUrl }) },
     });
   }
@@ -106,7 +109,7 @@ export function discover(snapshot: Snapshot, manual: ManualProject[], self: stri
     if (id !== base) warnings.push(`${repo.name}: /projects/${base} is taken, so it is at /projects/${id}`);
     taken.add(id);
     projects.push({
-      id, ...extra(repo), ...(repo.usesCustomOpenGraphImage && repo.openGraphImageUrl ? { remoteImage: repo.openGraphImageUrl } : {}),
+      id, ...extra(repo), entry: false, ...(repo.usesCustomOpenGraphImage && repo.openGraphImageUrl ? { remoteImage: repo.openGraphImageUrl } : {}),
       en: {
         name: repo.name, repo: repo.name, repoId: repo.id, lang: repo.primaryLanguage ?? '', date: repo.pushedAt.slice(0, 10),
         since: month(repo.createdAt, 'en'), stars: repo.stargazerCount, kind: 'img', ...(repo.homepageUrl ? { home: repo.homepageUrl } : {}),
@@ -143,7 +146,7 @@ export function localize(listing: Listing, locale: Locale, image?: Img): { proje
     id: listing.id, name: pick(tr?.name, name), ...(repo === undefined ? {} : { repo }), d: Math.max(0, DOMAIN_SLUG.indexOf(area)),
     ...rest, since: pick(tr?.since, rest.since), desc: pick(tr?.desc, rest.desc),
     ...(image ? { img: image, hero: rest.hero ?? image } : {}),
-    type: listing.type, written: enCase !== undefined, langs: listing.langs, archived: listing.archived, ...(listing.app ? { app: listing.app } : {}),
+    type: listing.type, written: enCase !== undefined, entry: listing.entry, langs: listing.langs, archived: listing.archived, ...(listing.app ? { app: listing.app } : {}),
   };
   const translated = locale === 'en' || (!!rest.desc && tr?.desc !== undefined && (enCase === undefined || tr.case !== undefined)) || (!rest.desc && enCase === undefined);
   return { project, study: pick(tr?.case, enCase), translated };

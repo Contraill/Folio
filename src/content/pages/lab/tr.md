@@ -1,32 +1,23 @@
 ---
-title: AI Lab
-label: AI Lab
-kicker: defter Kasım 2026’dan beri açık
-lede: "Öğrenen sistemlerle deneyler, başarısız olanlarla birlikte yazılmış hâlde. Her biri sayfanın içinde çalışır ve denemelerini senin cihazında tutar; böylece başta ve sonda neyi bildiğini karşılaştırabilirsin."
+title: Lab
+label: Lab
+kicker: Etkileşimli deneyler
+lede: "Çalışan deneylerin yeri: simülasyonlar, algoritmalar, shader’lar ve arayüz prototipleri. Her biri doğrudan sayfanın içinde çalışır."
 catalogH: Deneyler
-catalogNote: Her deneme kaydedilebilir, karşılaştırılabilir ve dosya olarak dışa aktarılabilir.
+catalogNote: "Her biri sayfanın içinde çalışır; kaydettikleri bu cihazda kalır."
 canvas: Dekoratif eş yükselti haritası. Küçük noktalar en alçak yerlere doğru yuvarlanıyor.
-controls: Taslak kontrolleri
+controls: Yüzey kontrolleri
 drop: Kâşif Bırak
 surface: Yeni Yüzey
 pause: Duraklat
 resume: Devam Et
-notebook: defter · durum
-now: şimdi
-nextLabel: sonra
-rule: kural
-nowText: Her deney sayfanın içinde çalışır ve denemelerini senin cihazında tutar.
-nextText: Yeni deneyler yayımlandıkça burada listelenir.
-ruleText: Gerçek olmayan hiçbir şey buraya gelmez.
+notebook: nasıl çalışır
+now: çalışır
+nextLabel: saklar
+rule: kaynağı
+nowText: Her deney bu sayfada, senin tarayıcında çalışır.
+nextText: Kaydettikleri senin cihazında kalır.
+ruleText: Her biri kendi reposundan derlenir ve burada görünmeden önce kontrol edilir.
 foot: Yüzey dekoratif, bir model değil.
-planH: her deneyde olanlar
-planned: her zaman
-plan:
-  - - Deneyler
-    - Yalnızca son sayıyı değil, neyin başarısız olduğunu da anlatan eğitim kayıtları.
-  - - Karşılaştırmalar
-    - Ortada gerçek checkpoint’ler olduğunda yan yana karşılaştırmalar.
-  - - Notlar
-    - Ne denedim, ne bozuldu, sırada ne var.
 empty: Henüz yayımlanmış bir deney yok. Yenileri yayımlanır yayımlanmaz burada görünür.
 ---

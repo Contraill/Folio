@@ -18,7 +18,7 @@ const t = messages[locale];
 const { pages: content, hero, selected } = await getContent(Astro.locals);
 const c = content.home;
 const areas = areasFor(locale);
-const depth = [0.04, 0.09, 0.02, 0.12];
+const depth = [0.03, 0.05, 0.05];
 const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A', '#3ec7ff', 52, 64, 34], ['Y', '#7a5cff', 70, 72, 30], ['', '#20c997', 84, 80, 16], ['', '#ff7ac0', 8, 84, 14], ['', '#f3f3f1', 61, 86, 12]] as const;
 ---
 <Base>
@@ -52,8 +52,7 @@ const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A'
   <section class="trow" aria-label={c.moreLabel}>
     <a class="slab pad tcard lab-t" href="/lab" data-reveal>
       <div>
-        <p class="eyebrow"><span class="live-dot"></span> {c.labStatus}</p>
-        <h3 class="lab-title">ai lab<span class="caret" aria-hidden="true">_</span></h3>
+        <h3 class="lab-title">lab<span class="caret" aria-hidden="true">_</span></h3>
         <p class="small" style="max-width: 38ch">{c.labTeaser}</p>
       </div>
       <div class="canvas-box">
@@ -66,7 +65,6 @@ const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A'
     </a>
     <a class="slab pad tcard play-t" href="/play" data-reveal style="--i: 1">
       <div>
-        <p class="eyebrow"><span class="live-dot"></span> {c.playStatus}</p>
         <h3 class="play-title">Play</h3>
         <p class="small" style="max-width: 38ch">{c.playTeaser}</p>
       </div>

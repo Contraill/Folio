@@ -103,8 +103,8 @@ export default function LabStage({ c }: { c: Pages['lab'] }) {
     <Cut as="section" className="lab-stage" label={c.label}>
       <div className="cut-fill" suppressHydrationWarning><Field paused={paused} api={api} label={c.canvas} /></div>
       <div className="lab-intro">
-        <p className="lab-kicker" data-reveal suppressHydrationWarning><span className="live-dot" /> {c.kicker}</p>
-        <h1 className="lab-h1" data-reveal suppressHydrationWarning style={{ '--i': 1 } as CSSProperties}>ai lab<span className="caret" aria-hidden="true">_</span></h1>
+        <p className="lab-kicker" data-reveal suppressHydrationWarning>{c.kicker}</p>
+        <h1 className="lab-h1" data-reveal suppressHydrationWarning style={{ '--i': 1 } as CSSProperties}>lab<span className="caret" aria-hidden="true">_</span></h1>
         <p className="lab-lede" data-reveal suppressHydrationWarning style={{ '--i': 2 } as CSSProperties}>{c.lede}</p>
       </div>
       <div className="lab-tools glass" role="group" aria-label={c.controls}>

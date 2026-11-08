@@ -2,8 +2,8 @@
 visibility: unlisted
 title: Sır
 h1: Buldun
-note: Eski “çok yakında” tabelası buraya taşındı. Harflerini savur. Play’deki oyuncak kutusunda da seni küçük bir yıldız bekliyor.
-word: ÇOK YAKINDA
+note: Hiçbir yerden bağlantı verilmeyen bir sayfa. Harfleri savur. Play’deki oyuncak kutusunda da seni küçük bir yıldız bekliyor.
+word: MERHABA
 letter: Harf {l}
 open: Play’i Aç
 ---
