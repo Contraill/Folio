@@ -13,6 +13,8 @@ if (!app.translated) Astro.locals.fallback = true;
 const inputs = messages[locale].inputs as Record<string, string>;
 const fill = (text: string) => text.replace('{n}', app.name).replace('{host}', app.host);
 const section = app.kind === 'play' ? c.play : c.lab;
+// The heading may wrap between words but never inside one: its size is capped by the longest word.
+const longest = Math.max(...app.name.split(/\s+/).map((w) => [...w].length));
 const facts = [[c.inputs, app.inputs.map((i) => inputs[i]).join(' · ')], [c.language, app.lang], [c.updated, app.updated], [c.stars, app.stars ? `★ ${app.stars}` : c.noStars]].filter(([, v]) => v);
 ---
 <Base title={app.name} description={app.summary} repo={app.repoUrl ?? undefined}>
@@ -21,7 +23,7 @@ const facts = [[c.inputs, app.inputs.map((i) => inputs[i]).join(' · ')], [c.lan
       <nav aria-label={c.breadcrumb}><a href={`/${app.kind}`} data-dir="back">{section}</a><span aria-hidden="true">/</span><span aria-current="page">{app.name}</span></nav>
     </div>
     <div class="app-intro">
-      <h1 id="app-h" class="display app-h1" data-reveal="fade">{app.name}</h1>
+      <h1 id="app-h" class="display app-h1" data-reveal="fade" style={`--w: ${longest}`}>{app.name}</h1>
       <p class="two-tone app-lede" data-reveal style="--i: 1">{app.summary}</p>
     </div>
     <AppFrame client:load name={app.name} url={app.url} host={app.host} embed={app.embed} aspect={app.aspect} locale={locale}
