@@ -30,10 +30,10 @@ Kept as **environment** secrets, never repository secrets, so each workflow reac
 
 | Environment (branch allowed) | Secrets | Used by |
 | --- | --- | --- |
-| `preview` (`develop` only) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Preview |
-| `production` (`main` only) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | Production |
+| `preview` (`develop` only) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `FOLIO_CATALOG_TOKEN`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Preview |
+| `production` (`main` only) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `FOLIO_CATALOG_TOKEN` | Production |
 
-The Cloudflare tokens can deploy Workers (*Workers Scripts: Edit*). The Preview's also has *D1: Read*, because Previews bind `folio-preview`, an unused D1 database from an earlier version of the site. CI has no secrets: a pull request from a fork runs with a read-only token and never reaches an environment.
+The Cloudflare tokens can deploy Workers (*Workers Scripts: Edit*); `FOLIO_CATALOG_TOKEN` reads the controller's catalog of games and lab apps. CI has no secrets: a pull request from a fork runs with a read-only token and never reaches an environment.
 
 GitHub data needs no stored token: each job's own `GITHUB_TOKEN` reads it and expires with the job. Every workflow sets `permissions: contents: read`.
 

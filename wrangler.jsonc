@@ -19,11 +19,6 @@
   "preview_urls": true,
   // Previews do not inherit production settings.
   "previews": {
-    // A D1 database from an earlier version of the site; nothing reads it.
-    "d1_databases": [
-      { "binding": "DB", "database_name": "folio-preview", "database_id": "6b36ecbe-b860-4df3-92c5-188a49af172b" }
-    ],
-    "vars": { "PAGE_CACHE": "allowed" },
     // Off: a cache keyed on the address alone would mix the two languages.
     "cache": { "enabled": false },
     "observability": {

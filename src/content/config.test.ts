@@ -11,9 +11,9 @@ test('production has no storage bindings and no shared cache', () => {
   assert.equal(config.cache, undefined);
 });
 
-test('Previews keep only the old Preview database, unused, and no shared cache', () => {
-  assert.deepEqual(config.previews.d1_databases.map((d: Record<string, string>) => d.database_name), ['folio-preview']);
-  for (const key of STORAGE.filter((k) => k !== 'd1_databases')) assert.equal(config.previews[key], undefined, key);
+test('Previews have no storage bindings and no shared cache either', () => {
+  for (const key of STORAGE) assert.equal(config.previews[key], undefined, key);
+  assert.equal(config.previews.vars, undefined);
   assert.equal(config.previews.cache.enabled, false);
 });
 
