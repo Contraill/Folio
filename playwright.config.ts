@@ -32,5 +32,7 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /visual\.spec\.ts/ },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: /visual\.spec\.ts/, grepInvert: /@once/ },
     { name: 'visual', use: { ...devices['Desktop Chrome'] }, testMatch: /visual\.spec\.ts/ },
+    // Safari's engine, for the critical path only, in CI's full run (WebKit can't run on every machine): FOLIO_WEBKIT=1.
+    ...(process.env.FOLIO_WEBKIT ? [{ name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /visual\.spec\.ts/, grep: /@smoke/, grepInvert: /@once/ }] : []),
   ],
 });

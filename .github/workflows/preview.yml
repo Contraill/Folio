@@ -68,7 +68,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler preview --name develop
       - if: steps.changed.outputs.skip != 'true'
-        run: pnpm exec playwright install --with-deps chromium firefox
+        run: pnpm exec playwright install --with-deps chromium firefox ${{ inputs.full && 'webkit' || '' }}
       # A preflight first proves that the token reaches this commit's Preview; if not, nothing else runs.
       - name: Browser tests against the Preview
         if: steps.changed.outputs.skip != 'true'
@@ -78,6 +78,8 @@ jobs:
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
           SUITE: ${{ inputs.full && 'test:e2e' || 'test:smoke' }}
+          # The full run adds Safari's engine (WebKit) for the critical path.
+          FOLIO_WEBKIT: ${{ inputs.full && '1' || '' }}
         run: pnpm $SUITE
       # Screenshots and errors only: no traces are recorded while the token is in use, and errors never print it.
       - name: Keep the report of a failed run
