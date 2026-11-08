@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: '17 */6 * * *'
   workflow_dispatch:
+    inputs:
+      sync:
+        description: 'A sync started by the Folio controller, which deploys only if GitHub data or the catalog changed'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -33,16 +38,28 @@ jobs:
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1; pnpm's version is packageManager in package.json
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version-file: .node-version, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check
+      # The schedule and syncs deploy only if something changed since the live build; Refresh always deploys.
+      - name: Has anything changed?
+        id: changed
+        if: github.event_name == 'schedule' || inputs.sync
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/fetch-github.ts && node scripts/changed.ts https://oztozlu.dev/_build.json
+      - if: steps.changed.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.changed.outputs.skip != 'true'
+        run: pnpm check
       - name: Build
+        if: steps.changed.outputs.skip != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FOLIO_TRIGGER: ${{ github.event_name == 'schedule' && 'cron' || github.event_name == 'workflow_dispatch' && 'manual' || 'push' }}
         run: pnpm build
       - name: Unit tests and checks on the build output
+        if: steps.changed.outputs.skip != 'true'
         run: pnpm test
       - name: Is this still the newest main?
+        if: steps.changed.outputs.skip != 'true'
         id: fresh
         run: |
           built=$(git rev-parse HEAD)
@@ -52,11 +69,11 @@ jobs:
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Deploy
-        if: steps.fresh.outputs.deploy == 'true'
+        if: steps.changed.outputs.skip != 'true' && (steps.fresh.outputs.deploy == 'true')
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler deploy
       - name: Production serves this build
-        if: steps.fresh.outputs.deploy == 'true'
+        if: steps.changed.outputs.skip != 'true' && (steps.fresh.outputs.deploy == 'true')
         run: node scripts/check-live.ts https://oztozlu.dev dist/_build.json
