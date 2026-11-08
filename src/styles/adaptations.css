@@ -91,8 +91,8 @@ html.js .cut:not([data-cut-ready]) > .cut-fill { opacity: 0; }
   .td:not(.still) .td-win { top: 58px; }
   .td:not(.still) .td-p { display: none; }
   .td-vars { bottom: 112px; }
-  /* Turkish headline: its longest word has to fit the same width. */
-  html[lang='tr'] .hero .hl { font-size: clamp(32px, 10.4vw, 60px); }
+  /* Turkish headline: its longest word ("üretiyorum.") has to fit the same width, down to 320px. */
+  html[lang='tr'] .hero .hl { font-size: clamp(31px, 9.9vw, 60px); }
   /* About: the portrait's note clears the overlapping device. */
 
   /* CV: the print button matches the toolbar, and the heading clears it. */
