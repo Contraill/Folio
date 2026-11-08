@@ -15,7 +15,7 @@ Every build and deploy runs in GitHub Actions (`.github/workflows/`). Code reach
 | A sync from the Folio controller | Production | As on the Preview, once the controller's `FOLIO_TARGETS` includes `production.yml@main` |
 | Refresh (*Run workflow* on Production) | Production | Always builds and deploys; it can be started from the GitHub mobile app |
 
-Scheduled workflows run only on the default branch, so the Preview's regular sync comes from the controller instead of a schedule of its own. Production has both: the controller's syncs, and its own schedule in case the controller can't start it.
+Scheduled workflows run only on the default branch, so the Preview's regular sync comes from the controller instead of a schedule of its own. A push replaces a Preview run in progress; a sync waits for it. Production has both: the controller's syncs, and its own schedule in case the controller can't start it.
 
 ## Production safeguards
 

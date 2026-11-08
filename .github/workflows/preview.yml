@@ -20,9 +20,11 @@ on:
 permissions:
   contents: read
 
+# A push replaces a run in progress; a sync waits for it instead, so the controller's six-hourly sweep never cancels
+# a push or a full test run (and then usually finds nothing new).
 concurrency:
   group: preview-develop
-  cancel-in-progress: true
+  cancel-in-progress: ${{ !inputs.sync }}
 
 jobs:
   preview:
