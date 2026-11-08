@@ -65,6 +65,8 @@ test('repositories are told apart: templates, forks, games and lab apps', () => 
   assert.equal(find(s, 'snake').app, '/play/snake');
   assert.equal(type('spiral'), 'lab');
   assert.equal(type('helios'), 'project');
+  assert.equal(find(s, 'snake').entry, false, 'nothing written in Folio: its page says it comes from GitHub');
+  assert.equal(find(s, 'helios').entry, true);
 });
 
 test('a written project survives a rename: linked by id, its address stays', () => {

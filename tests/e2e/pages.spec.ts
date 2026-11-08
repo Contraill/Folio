@@ -34,7 +34,7 @@ test.describe('every page', () => {
     }
     await page.locator('.navcap a', { hasText: 'Lab' }).click();
     await expect(page).toHaveURL(/\/lab$/);
-    await expect(page.locator('main h1')).toHaveText('ai lab_');
+    await expect(page.locator('main h1')).toHaveText('lab_');
     await context.close();
   });
 
@@ -246,13 +246,13 @@ test.describe('case studies', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dir', 'back');
   });
 
-  test('projects without a write-up still make sense, and say a longer one is still to come', { tag: '@once' }, async ({ page }) => {
+  test('a project written in Folio is complete as it is: nothing says more is to come', { tag: '@once' }, async ({ page }) => {
     await page.goto('/projects/orbis');
     await expect(page.locator('main h1')).toContainText('Orbis');
-    await expect(page.locator('main')).toContainText('A detailed project write-up is not available yet.');
     await expect(page.locator('main a', { hasText: 'Repository' })).toHaveAttribute('href', /github\.com\/Contraill\/Orbis/i);
+    await expect(page.locator('main')).not.toContainText('comes from the repository on GitHub');
     await page.goto('/projects/orbis?lang=tr');
-    await expect(page.locator('main')).toContainText('Bu projenin detaylı anlatımı henüz hazırlanmadı.');
+    await expect(page.locator('main')).not.toContainText('GitHub’daki repodan geliyor');
   });
 });
 
@@ -280,13 +280,13 @@ test.describe('lab and play', () => {
     await context.close();
   });
 
-  test('finding the secret page unlocks the star; its letters spell the old sign in the page language', { tag: '@once' }, async ({ page }) => {
+  test('finding the secret page unlocks the star; its letters say hello in the page language', { tag: '@once' }, async ({ page }) => {
     await page.goto('/secret');
     await expect.poll(() => page.evaluate(() => localStorage.getItem('fx-secret'))).toBe('true');
-    await expect(page.locator('.letters-word')).toHaveCount(2);
-    expect((await page.locator('.letters button').allInnerTexts()).join('')).toBe('COMINGSOON');
+    await expect(page.locator('.letters-word')).toHaveCount(1);
+    expect((await page.locator('.letters button').allInnerTexts()).join('')).toBe('HELLO');
     await page.goto('/secret?lang=tr');
-    expect((await page.locator('.letters button').allInnerTexts()).join('')).toBe('ÇOKYAKINDA');
+    expect((await page.locator('.letters button').allInnerTexts()).join('')).toBe('MERHABA');
   });
 });
 

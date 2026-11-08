@@ -95,7 +95,7 @@ test.describe('navigation', () => {
     await page.evaluate(() => { (window as never as { marker: Element }).marker = document.querySelector('.topbar')!; });
     await page.locator('.navcap a', { hasText: 'Lab' }).click();
     await expect(page).toHaveURL(/\/lab$/);
-    await expect(page.locator('main h1')).toHaveText('ai lab_');
+    await expect(page.locator('main h1')).toHaveText('lab_');
     expect(await page.evaluate(() => (window as never as { marker: Element }).marker === document.querySelector('.topbar'))).toBe(true);
     await expect(page.locator('.navcap a[aria-current="page"]')).toHaveText('Lab');
     await expect(page.locator('html')).toHaveAttribute('data-dir', 'back');
@@ -368,7 +368,7 @@ test.describe('language', () => {
       ['/?lang=tr', 'h1', 'Tepki veren'],
       ['/about?lang=tr', 'main h1', 'Merhaba, ben İzzet Can'],
       ['/projects/helios?lang=tr', 'main', 'İnsan ölçeğinde gezegen bilimi'],
-      ['/lab?lang=tr', 'main', 'her deneyde olanlar'],
+      ['/lab?lang=tr', 'main', 'Etkileşimli deneyler'],
     ]) {
       await page.goto(path);
       await expect(page.locator(locator).first()).toContainText(text);

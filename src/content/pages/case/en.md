@@ -13,7 +13,7 @@ stars: Stars
 noStars: None yet
 topics: Topics
 about: About this project
-noWriteUp: A detailed project write-up is not available yet.
+noWriteUp: Everything on this page comes from the repository on GitHub.
 noDesc: The repository has no description yet.
 englishOnly: ""
 languages: Languages

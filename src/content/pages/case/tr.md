@@ -13,7 +13,7 @@ stars: Yıldız
 noStars: Henüz yok
 topics: Konular
 about: Bu proje hakkında
-noWriteUp: Bu projenin detaylı anlatımı henüz hazırlanmadı.
+noWriteUp: Bu sayfadaki her şey GitHub’daki repodan geliyor.
 noDesc: Reponun henüz bir açıklaması yok.
 englishOnly: Bu açıklama GitHub’dan geliyor ve şimdilik yalnızca İngilizce.
 languages: Diller
