@@ -208,6 +208,25 @@ test.describe('skins', () => {
     expect(problems).toEqual([]);
   });
 
+  test('the cursor follows the skin on a mouse, and stays the system\'s on touch and in high contrast', async ({ page, browser, baseURL }) => {
+    const problems = await watchForProblems(page);
+    await page.goto('/projects');
+    await settled(page);
+    const cursor = (selector: string) => page.locator(selector).first().evaluate((el) => getComputedStyle(el).cursor);
+    expect(await cursor('main')).toMatch(/^url\("data:image\/svg\+xml,.*%23f3f3f1.*\) 3 2, default$/);
+    expect(await cursor('.btn, a.gcard')).toMatch(/^url\(.*\) 3 2, pointer$/);
+    expect(await cursor('main p')).toBe('text');
+    expect(problems, 'the policy allows the cursor images').toEqual([]);
+    for (const options of [{ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } }, { forcedColors: 'active' as const }]) {
+      if ('isMobile' in options && browser.browserType().name() === 'firefox') continue;
+      const context = await browser.newContext({ baseURL, ...options });
+      const other = await context.newPage();
+      await other.goto('/projects');
+      expect(await other.locator('main').evaluate((el) => getComputedStyle(el).cursor)).not.toMatch(/^url/);
+      await context.close();
+    }
+  });
+
   test('Auto follows the clock', { tag: '@once' }, async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-11-05T22:00:00'));
     await page.addInitScript(() => localStorage.setItem('fx-skin', JSON.stringify('auto')));

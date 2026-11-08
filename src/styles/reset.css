@@ -20,8 +20,8 @@ ol, ul, menu { margin: 0; padding: 0; list-style: none; }
 dialog { padding: 0; }
 textarea { resize: vertical; }
 input::placeholder, textarea::placeholder { opacity: 1; color: #9ca3af; }
-button, [role='button'] { cursor: pointer; }
-:disabled { cursor: default; }
+button, [role='button'] { cursor: var(--cur-pointer, pointer); }
+:disabled { cursor: var(--cur-default, default); }
 img, svg, video, canvas, audio, iframe, embed, object { display: block; vertical-align: middle; }
 img, video { max-width: 100%; height: auto; }
 [hidden] { display: none; }

@@ -67,7 +67,7 @@
 .tv-list i { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); transition: background-color 700ms ease; }
 .tv-list code { font-family: var(--fl); color: #f3f3f1; white-space: nowrap; }
 .tv-list span { color: rgba(243,243,241,.6); font-variant-numeric: tabular-nums; }
-.td-pick button { width: 46px; height: 32px; border-radius: 9px; border: 0; cursor: pointer; box-shadow: 0 0 0 1px rgba(255,255,255,.25); transition: transform 380ms var(--e-spring), box-shadow 300ms ease; }
+.td-pick button { width: 46px; height: 32px; border-radius: 9px; border: 0; cursor: var(--cur-pointer, pointer); box-shadow: 0 0 0 1px rgba(255,255,255,.25); transition: transform 380ms var(--e-spring), box-shadow 300ms ease; }
 .td-pick button[aria-pressed='true'] { box-shadow: 0 0 0 2px #fff; transform: translateY(-3px); }
 .td-pick .td-cap { margin-left: 8px; font-family: var(--fl); font-size: 11.5px; color: rgba(255,255,255,.85); background: rgba(0,0,0,.35); padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
 
@@ -139,7 +139,7 @@
 .lab-h1 { font-family: var(--fl); font-weight: 300; font-size: clamp(56px, 8vw, 128px); letter-spacing: -.05em; line-height: .9; margin: 22px 0 22px; }
 .lab-lede { font-size: clamp(16px, 1.3vw, 18px); line-height: 1.6; color: var(--soft); margin: 0; max-width: 46ch; text-wrap: pretty; background: color-mix(in srgb, var(--slab) 70%, transparent); border-radius: 10px; padding: 2px 0; }
 .lab-tools { position: absolute; left: clamp(16px, 2.6vw, 34px); bottom: clamp(16px, 2.6vw, 34px); z-index: 3; display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border-radius: var(--r-pill); }
-.chip-btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--ink); cursor: pointer; font-family: var(--fl); font-size: 12.5px; }
+.chip-btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--ink); cursor: var(--cur-pointer, pointer); font-family: var(--fl); font-size: 12.5px; }
 .chip-btn:hover, .chip-btn[aria-pressed='true'] { background: var(--slab-2); }
 .lab-note { right: 0; bottom: 0; width: min(380px, 40%); padding: 10px 0 0 10px; }
 .nb { background: var(--slab); border-radius: var(--r-card); padding: 20px 22px; font-family: var(--fl); }
