@@ -77,9 +77,9 @@ export default function Cv({ locale, t }: { locale: Locale; t: Messages }) {
 
   const label = t.cv.frame.replace('{lang}', NAMES[lang]);
   const open = <a className="btn btn-2 btn-sm" href={file(lang)} target="_blank" rel="noopener" type="application/pdf" hrefLang={lang} style={{ background: 'var(--slab)' }}>{t.cv.open}<ArrowUpRight size={15} aria-hidden="true" /></a>;
-  const save = <a className="btn btn-1 cv-pdf" href={file(lang)} download={download(lang)} type="application/pdf" hrefLang={lang}><span className="lbl">{t.cv.download}</span><span className="ic"><ArrowDown size={15} aria-hidden="true" /></span></a>;
+  const save = <a className="btn btn-1 cv-pdf" href={file(lang)} download={download(lang)} type="application/pdf" hrefLang={lang} aria-label={t.cv.download}><span className="lbl">{t.cv.download}</span><span className="ic"><ArrowDown size={15} aria-hidden="true" /></span></a>;
   const card = (
-    <div className="cv-card" lang={lang} data-reveal suppressHydrationWarning style={{ '--i': 1 } as CSSProperties}>
+    <div className="cv-card" lang={lang} data-reveal data-static={state === 'static' ? '' : undefined} suppressHydrationWarning style={{ '--i': 1 } as CSSProperties}>
       <FileText size={40} aria-hidden="true" />
       <div><p className="cv-card-name">İzzet Can Öztozlu — CV</p><p className="small" role={state === 'failed' ? 'alert' : undefined}>{state === 'failed' ? t.cv.failed : `${NAMES[lang]} · PDF`}</p></div>
       <div className="cv-card-actions">{open}{save}</div>

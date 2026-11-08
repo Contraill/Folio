@@ -33,6 +33,8 @@ export default defineConfig({
     { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: /visual\.spec\.ts/, grepInvert: /@once/ },
     { name: 'visual', use: { ...devices['Desktop Chrome'] }, testMatch: /visual\.spec\.ts/ },
     // Safari's engine, for the critical path only, in CI's full run (WebKit can't run on every machine): FOLIO_WEBKIT=1.
-    ...(process.env.FOLIO_WEBKIT ? [{ name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /visual\.spec\.ts/, grep: /@smoke/, grepInvert: /@once/ }] : []),
+    // Against the Preview every request passes through the route that adds the Access headers, which is slow in
+    // WebKit: a page transition is under way but not finished within the default five seconds.
+    ...(process.env.FOLIO_WEBKIT ? [{ name: 'webkit', use: { ...devices['Desktop Safari'] }, expect: { timeout: token ? 15_000 : 5_000 }, testIgnore: /visual\.spec\.ts/, grep: /@smoke/, grepInvert: /@once/ }] : []),
   ],
 });

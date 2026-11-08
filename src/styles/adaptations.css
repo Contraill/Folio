@@ -141,6 +141,8 @@ html.js .cut:not([data-cut-ready]) > .cut-fill { opacity: 0; }
 .cv-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .cvbar a.btn { display: inline-flex; align-items: center; gap: 6px; }
 .cvwrap:has(.cv-card) { min-height: 0; }
+/* With JavaScript the viewer replaces the server's card at once: keep its room, so the footer doesn't jump. */
+.js .cvwrap:has(.cv-card[data-static]) { min-height: 900px; }
 
 /* The cursor follows the skin: an arrow in the skin's ink, outlined in its background, and the same arrow turned
    inside out over anything that can be clicked. Only for a mouse or trackpad, and never in high contrast or forced
