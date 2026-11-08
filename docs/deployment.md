@@ -6,13 +6,14 @@ All builds and deploys run in GitHub Actions (`.github/workflows/`). Code reache
 | --- | --- | --- |
 | Push to `develop` | Preview | Checks, build, unit tests and checks on the build output, Preview deploy (`wrangler preview --name develop`), the smoke tests against the Preview with the Access service token |
 | Run workflow on Preview, with *full* | Preview | The same, with the whole browser suite against the Preview |
-| The Folio controller's catalogue changes | Preview | The same as a push, started by the controller so a new or removed game or lab app shows up |
+| A sync, started by the Folio controller (`sync: true`) | Preview | Every six hours, when its catalogue changes, and at once when a repository is created, deleted, made private or public, renamed, archived or transferred. It reads GitHub first and compares the data's hash and the commit with the live `/_build.json`: nothing new, nothing built. Otherwise the same as a push |
 | Pull request into `main` | CI | Checks, build, unit tests and checks on the build output, the whole browser suite in Chromium and Firefox. Required for merging |
 | Merge into `main` | Production | Build and `wrangler deploy` |
-| Every six hours (`17 */6 * * *`) | Production | The same, on `main` as it is. GitHub may delay or skip scheduled runs: six hours is a target, not a promise |
+| Every six hours (`17 */6 * * *`) | Production | The same, on `main` as it is, but only if the GitHub data or the catalogue changed. GitHub may delay or skip scheduled runs: six hours is a target, not a promise |
+| A sync, started by the Folio controller (`sync: true`) | Production | From go-live, once the controller's `FOLIO_TARGETS` includes `production.yml@main`: as on the Preview |
 | Refresh (Run workflow on Production) | Production | The same, queued at once; can be started from the GitHub mobile app |
 
-Scheduled workflows run only on the default branch, so nothing scheduled runs while the work is on `develop`.
+Scheduled workflows run only on the default branch (`main`), so the Preview's six-hourly sync comes from the controller instead of a schedule of its own.
 
 ## Production safeguards
 
@@ -44,7 +45,9 @@ A push to `develop` updates the Preview at `https://develop-folio.<subdomain>.wo
 
 ## Emergency removal
 
-Make the repository private, or remove its `folio` topic, then run Refresh. For a game, lab app or site made from a template, archive or delete its repository (or remove its `folio.yaml`): the controller takes the address down within a minute and drops it from the catalogue; then run Refresh. The project is gone once the run finishes (usually a few minutes, depending on the Actions queue); check `/_build.json`. Rolling back to an earlier Worker version is not a removal: the project is still in it. For Google's index, use Search Console → Removals.
+A project: make its repository private, or delete it. The controller starts a sync at once; the project is gone once that build is deployed (a few minutes, depending on the Actions queue). Check `/_build.json`, or run Refresh if a sync didn't start. A game or lab app: archive or delete its repository, or remove its `site.yaml`; the controller drops it from the catalogue and starts Folio's build. A separate site: the same; the controller takes its address down within about a minute. Rolling back to an earlier Worker version is not a removal: the project is still in it. For Google's index, use Search Console → Removals.
+
+There is no instant block in the Worker: removal takes one build. That is the accepted cost of keeping the Worker free of per-request lookups.
 
 ## Local development
 
@@ -57,7 +60,7 @@ pnpm build        # GitHub snapshot, static build, route list and /_build.json
 pnpm preview      # the build behind the language Worker, at http://localhost:4321
 ```
 
-Without `GITHUB_TOKEN` the build uses the recorded snapshot in `tests/fixtures/github.json` and the recorded catalogue in `tests/fixtures/catalog.json`; in CI a missing token stops the build. `FOLIO_GITHUB=fixture` forces both. With a token, games and lab apps come from the controller's catalogue (`FOLIO_CATALOG_URL` overrides its address).
+Without `GITHUB_TOKEN` the build uses the recorded snapshot in `tests/fixtures/github.json`, the recorded catalogue in `tests/fixtures/catalog.json` and the two stand-in app builds in `tests/fixtures/builds/`; in CI a missing token stops the build. `FOLIO_GITHUB=fixture` forces all three. With a token, games and lab apps come from the controller's catalogue (`FOLIO_CATALOG_URL` overrides its address), and their builds from the same Worker, by hash.
 
 ## Checks
 
@@ -75,7 +78,7 @@ pnpm test:visual  # the core pages compared with screens recorded earlier on thi
 | `shell.spec.ts` | Navigation, transitions, skins, overlays, language switching, CSP enforcement, the CV page | Chromium and Firefox |
 | `pages.spec.ts` | Every page at desktop and phone widths, with and without JavaScript, and each page's own interactions | Chromium and Firefox |
 
-`@smoke` marks the critical path run after every push; `@once` marks tests whose subject doesn't depend on the browser engine (HTTP, app logic), run in Chromium only. Layout, motion, focus, the router and the PDF viewer differ between engines and run in both.
+`@smoke` marks the critical path run after every push; `@once` marks tests whose subject doesn't depend on the browser engine (HTTP, app logic), run in Chromium only. Layout, motion, focus, the router and the PDF viewer differ between engines and run in both. The full run on the Preview (*Run workflow* with *full*) also runs the critical path in WebKit, Safari's engine (`FOLIO_WEBKIT=1`); WebKit can't run on every machine, so it isn't part of local runs, and a real iPhone or Mac is still the only check of Safari itself.
 
 Against the Preview, which sits behind Access: export `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`, then run `BASE_URL=https://develop-folio.<subdomain>.workers.dev pnpm test:smoke` (or `test:e2e`). A preflight first proves that the token reaches Folio itself, and with `FOLIO_EXPECTED_SHA` that the Preview serves that commit; if not, nothing runs and one error says why, describing the token's shape but never its value. The token's headers are added only to that host; traces are off while it is in use, and request errors are scrubbed of it, so neither the output nor the report holds it. Three workers keep the remote run steady.
 
@@ -95,8 +98,11 @@ A failed run in Actions keeps its HTML report (screenshots and errors) as an art
 Every step needs explicit approval at the time.
 
 1. All stages approved on the Preview.
-2. Branch protection on `main`: the CI check required, force-push and deletion off.
-3. Merge `develop` into `main`; the Production workflow deploys and the schedule starts.
-4. Check production: `/_build.json`, both languages, unlisted pages, the CV.
+2. Branch protection on `main`: the CI check required, force-push and deletion off. (Not set yet: until it is, nothing technical stops a direct push to `main`.)
+3. Decide on Cloudflare Web Analytics for the zone: it injects a beacon script into every page, which the Content Security Policy blocks (console errors, no data). Either turn automatic injection off for `oztozlu.dev` (no analytics, as the privacy page says now), or allow its origin in the policy on purpose and update the privacy page.
+4. Merge `develop` into `main`; the Production workflow deploys and the schedule starts.
+5. In the controller, set `FOLIO_TARGETS` to `preview.yml@develop,production.yml@main` (repository variable and `wrangler.jsonc`, then deploy its Worker), so syncs and app changes reach production too.
+6. Check production: `/_build.json`, both languages, unlisted pages, the CV, `/play` and `/lab`, and `status.oztozlu.dev`.
+7. Optionally publish the Google sign-in app (it needs `https://oztozlu.dev/privacy` live; see the site template's README).
 
 **Rollback:** Workers → `folio` → Deployments → an earlier version. The coming-soon page is the version live today.

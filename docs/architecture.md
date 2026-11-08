@@ -1,24 +1,24 @@
 # Architecture
 
-Folio is the personal site at `oztozlu.dev`: an interactive portfolio built as static pages, with projects read from GitHub at build time. Design and behaviour come from an approved prototype. This document records how it is built and why.
+Folio is the personal site at `oztozlu.dev`: an interactive portfolio built as static pages, with every public GitHub repository of the owner as a project, read at build time. Design and behaviour come from an approved prototype. This document records how it is built and why.
 
 Status markers: **built** exists on the development branch, **planned** comes in a later stage (see [roadmap.md](roadmap.md)).
 
 ## Overview
 
 ```text
- GitHub ── Folio repo (code, content, CV PDFs) ───────────┐
-       ├── public repos: topics, pins, folio.yaml ─────────┤ read at build, job token only
-       └── template repos ─► Folio controller ─ catalog ───┤ games and lab apps, read at build
-           (own Workers at <name>.oztozlu.dev)             │
-                                                           ▼
-                                        GitHub Actions: checks → build → deploy
-                                                           │
-                                                           ▼
+ GitHub ── Folio repo (code, content, CV PDFs) ───────────────┐
+       ├── public repos: metadata, pins, last commits ─────────┤ read at build, job token only
+       └── template repos ─► Folio controller ─ catalog + builds┤ games and lab apps, checked by hash
+           (sites: own Workers at <name>.oztozlu.dev)           │
+                                                               ▼
+                                     GitHub Actions: checks → build → deploy (a sync skips an unchanged build)
+                                                               │
+                                                               ▼
  oztozlu.dev ──► Cloudflare Worker `folio`
                   ├─ static files (/_astro, fonts, images, CV PDFs)  served directly
-                  └─ language Worker (src/worker.ts): picks the English or Turkish
-                     copy of a prebuilt page and sets the response headers
+                  └─ language Worker (src/worker.ts): picks the English or Turkish copy of a prebuilt page,
+                     serves games and lab apps at /play/<id>/app/ and /lab/<id>/app/, sets the headers
 ```
 
 Stack: Astro 7 (static output), TypeScript, React 19 islands, Workers with Static Assets, GitHub Actions. No database, no server-side rendering, no admin: content is edited in Git.
@@ -61,7 +61,7 @@ Links start loading on hover, focus or touch (Astro prefetch). For the browser t
 
 ## Content Security Policy **(built)**
 
-Astro writes the policy into each page as a meta tag: scripts are limited to `'self'` plus SHA-256 hashes, and styles allow `'unsafe-inline'` because components set CSS variables through style attributes. `frame-ancestors` can't be set from a meta tag, so the language Worker sends `frame-ancestors 'none'` as a header.
+Astro writes the policy into each page as a meta tag: scripts are limited to `'self'` plus SHA-256 hashes, styles allow `'unsafe-inline'` because components set CSS variables through style attributes, and `frame-src 'self'` lets pages frame only this site's own games and lab apps. `frame-ancestors` can't be set from a meta tag, so the language Worker sends `frame-ancestors 'none'` as a header. Games and lab apps get their own policy from the Worker (see [Play, Lab and sites](#play-lab-and-sites-built)).
 
 Astro's documentation lists `ClientRouter` as unsupported with `security.csp`. In testing the combination works in Chromium and Firefox, including across navigations. The end-to-end suite fails on any policy violation and asserts that an injected script is blocked.
 
@@ -94,15 +94,17 @@ No language prefixes in addresses. The language Worker resolves the language wit
 | Headers | Set by the Worker: `Content-Language`, `Vary: Cookie, Accept-Language`, `Cache-Control: private, max-age=60`, security headers, and `X-Robots-Tag: noindex` on unlisted pages |
 | Internal prefix | Any direct request for `/__tr/...`, after decoding, collapsing slashes and ignoring case, gets the not-found page |
 | Interface strings | `src/i18n/messages.ts`, shared by all components |
-| Content | A Turkish file per page group in `src/content/pages`; when one is missing the English is used and the page says so |
+| Content | Both languages are required for every page group in `src/content/pages` and every project written in Folio: a missing Turkish file stops the build. Only text that comes from GitHub (a repository's description) may be English-only on a Turkish page, with a short note beside it |
 
 ## Content **(built)**
 
 Content lives in the repository and is checked at build; an error in Folio's own files stops the build. See [content-model.md](content-model.md).
 
 - Page copy: `src/content/pages/<group>/{en,tr}.md`
-- Projects: GitHub repositories with the `folio` topic, merged with `src/content/projects/<id>/{en,tr}.md`
-- Games and lab apps: the Folio controller's catalogue (see [Play, Lab and sites](#play-lab-and-sites-built))
+- Projects: every public GitHub repository of the owner, merged with `src/content/projects/<id>/{en,tr}.md` when Folio has more to say
+- Home page: the profile pins (first three in the hero, the next three as selected work)
+- `/now`: the latest commit on each public repository's default branch
+- Games and lab apps: the Folio controller's catalogue and builds (see [Play, Lab and sites](#play-lab-and-sites-built))
 - CV: the owner's PDFs in `public/cv/{en,tr}.pdf`, served as they are and drawn in the page by pdf.js
 
 ## Security model **(built unless noted)**
@@ -116,7 +118,7 @@ Content lives in the repository and is checked at build; an error in Folio's own
 | Level | URL works | Navigation, search, sitemap | Indexing |
 | --- | --- | --- | --- |
 | `public` | yes | yes | yes |
-| `unlisted` (`uses`, `now`, `secret`) | yes | no | `noindex` meta tag and `X-Robots-Tag` header |
+| `unlisted` (`now`, `secret`) | yes | no | `noindex` meta tag and `X-Robots-Tag` header |
 | `private` | separate site, after sign-in | no | no |
 
 **GitHub data** is read with the job's own `GITHUB_TOKEN`, which expires with the job and cannot see the owner's other private repositories. Private repositories are dropped before anything is written or logged, and again when projects are chosen; Folio's own repository is never a project.
@@ -137,13 +139,23 @@ The Preview still binds the old `folio-preview` D1 database, which nothing reads
 
 ## GitHub projects **(built)**
 
-Projects are managed from GitHub; see [content-model.md](content-model.md#projects). Data is read at build, never while a visitor waits. A repository that goes private, or loses the `folio` topic, leaves the site at the next build; social previews are downloaded and optimised at build, so nothing points back at GitHub.
+Projects are managed from GitHub; see [content-model.md](content-model.md#projects). Data is read at build, never while a visitor waits; social previews are downloaded and optimised at build, so nothing points back at GitHub.
+
+**Keeping up with GitHub.** The Folio controller starts a sync of Folio's workflows every six hours and at once when a repository is created, deleted, made private or public, renamed, archived or transferred (its GitHub App receives those events for every repository). A sync first reads GitHub and compares a hash of the data with the live `/_build.json`: the same commit with the same data skips the build. A repository that goes private therefore leaves the Preview within a few minutes (the time of one build; there is no faster block in the Worker), and pins, descriptions and new commits within six hours. If a sync can't run, the live version stays as it was.
 
 ## Play, Lab and sites **(built)**
 
-Games, lab apps and separate sites live in their own repositories, made from three public templates (`folio-play-template`, `folio-lab-template`, `folio-site-template`). Each has a `folio.yaml` at its root (`kind`, `access`, and for apps how Folio lists them) and a workflow that tests and builds it with no secrets.
+Games, lab apps and separate sites live in their own repositories, made from three public templates (`folio-play-template`, `folio-lab-template`, `folio-site-template`). Each has a `site.yaml` at its root (`kind`, `access`, and for apps how Folio lists them) and a workflow that tests and builds it with no secrets. The private `folio-controller` repository publishes them; its GitHub App reports each finished build, and the controller workflow, which never runs a repository's code, checks the build's files. Its README has the rules, credentials and operations; each template's README what a repository's owner needs.
 
-The private `folio-controller` repository publishes them: its GitHub App reports each finished build, and the controller workflow, which never runs a repository's code, checks the build's files and deploys them behind its own Worker, `folio-r<repository id>`, at `https://<name>.oztozlu.dev`. Sites with `access: access` get a Cloudflare Access application first, and their Worker verifies Access's token on every request; `access: password` sites are encrypted at build. After each deploy the controller requests the address and detaches it if a protected site answers openly. Archiving or deleting the repository, or removing `folio.yaml`, takes the site down. The controller's README describes the rules and credentials.
+**Sites** (`kind: site`) run behind the controller's own Worker at `https://<name>.oztozlu.dev`: public, behind Cloudflare Access, or encrypted with a password, with an optional admin area guarded on its own. They are separate deployments: none of their content is in Folio's build.
 
-Public games and lab apps that deployed go into the controller's catalogue (`/catalog.json` on its Worker). Folio reads it at build, so its build fails rather than silently dropping apps if the controller can't be reached; when the catalogue changes, the controller starts Folio's Preview workflow. Each app has a page at `/play/<id>` or `/lab/<id>` that frames it only on request, sandboxed, with full screen and a new-tab link, and the Content Security Policy's `frame-src` lists exactly the origins of the apps in that build.
+**Games and lab apps** (`kind: play`, `kind: lab`) are part of Folio. The controller packs a checked build, keeps it by its SHA-256 and lists it in its catalogue with that hash. Folio's build downloads the catalogue and each build, keeps only builds whose hash and size match (a missing or wrong one is left out with a warning; an unreachable catalogue fails the build), and `scripts/postbuild.ts` unpacks them into `/play/<id>/app/` and `/lab/<id>/app/` after checking every path. The language Worker serves those folders as built, with the app's own policy: its own files only, WebAssembly allowed, framed by this site only (`frame-ancestors 'self'`), `noindex`; `index.html` uncached, hashed files cached for a year, and an extensionless address the app doesn't have answered with its page and a `<base>` (single-page apps). `/play/<id>` is Folio's page for it, framing it only on request, with full screen and a new-tab link.
+
+Being the same origin as Folio has consequences, accepted on purpose:
+
+- an app's storage is the site's, so saved games and lab runs are the same in the frame and in a tab; the templates name every key and database after the app's place (`play:<id>:`), so apps don't overwrite each other;
+- the frame keeps a sandbox (`allow-scripts allow-same-origin …`), but with the same origin it is not a security boundary: an app's script could reach Folio's page and its storage (skin, language and the like; Folio keeps nothing secret in the browser). Only the owner's own repositories, built by their own workflows and checked by the controller, are ever served;
+- separate subdomains would isolate apps from Folio, but put each one at its own address and outside Folio's build; Cloudflare routes on `oztozlu.dev` would keep the address but change production routing directly and can't be tried on the Preview, which runs on `workers.dev`. Serving the builds from Folio itself keeps every app under `oztozlu.dev`, testable on the Preview and deployed with Folio, at the cost of that isolation.
+
+An app reaches production only with a Folio deploy: on the Preview, the controller starts Folio's Preview workflow when the catalogue changes; at go-live it starts Production's too (`FOLIO_TARGETS`).
 

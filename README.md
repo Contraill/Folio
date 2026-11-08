@@ -4,7 +4,7 @@ Personal website of İzzet Can Öztozlu, for [oztozlu.dev](https://oztozlu.dev).
 
 This branch holds the new site: an interactive portfolio built as static pages on Astro, with projects read from GitHub at build time and a small Worker that picks English or Turkish per visitor. The live site still serves the coming-soon page from `main`.
 
-**Status:** static site, content, CV, GitHub projects, games, lab apps and private sites (through the Folio controller and its templates) are in place on `develop`; going live is next. See the [roadmap](docs/roadmap.md).
+**Status:** static site, content, CV, every public GitHub repository as a project, games and lab apps served at `/play` and `/lab`, and separate sites (through the Folio controller and its templates) are in place on `develop`; going live is next. See the [roadmap](docs/roadmap.md).
 
 [![Production](https://github.com/Contraill/Folio/actions/workflows/production.yml/badge.svg)](https://github.com/Contraill/Folio/actions/workflows/production.yml)
 
