@@ -4,6 +4,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { Routes } from '../src/lib/language-worker.ts';
+import { unpack } from './app-builds.ts';
 import { dataHash } from './data-hash.ts';
 import type { Snapshot } from '../src/content/discover.ts';
 
@@ -39,4 +40,11 @@ const build = {
   counts: JSON.parse(readFileSync('.folio/discovery.json', 'utf8')),
 };
 writeFileSync(join(DIST, '_build.json'), JSON.stringify(build, null, 2) + '\n');
+
+// Games and lab apps: their checked files, at /<kind>/<id>/app/. Only the apps this build lists (discover() kept them).
+const listed: { kind: string; id: string; build: { sha256: string } }[] = JSON.parse(readFileSync('.folio/apps.json', 'utf8'));
+for (const app of listed) {
+  const n = unpack(readFileSync(`.folio/builds/${app.build.sha256}.json`, 'utf8'), DIST, app.kind, app.id);
+  console.log(`postbuild: ${app.kind}/${app.id}/app/ (${n} files)`);
+}
 console.log(`postbuild: ${Object.keys(routes).length} routes (${Object.values(routes).filter((r) => r.unlisted).length} unlisted), build ${sha.slice(0, 7)}`);

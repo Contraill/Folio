@@ -16,10 +16,10 @@
    - The home page follows the profile pins: the first three pinned projects lead the hero, the next three are the
      selected work. Fewer pins mean fewer, never repeated or invented, cards.
    - Activity (/now): the latest commit on the default branch of each public repository, newest first.
-   - Games and lab apps come from the Folio controller's catalog (snapshot.apps): it lists an app once it is deployed
-     and public, and drops it when its repository goes. An entry that doesn't fit the catalog schema is left out, with
-     a warning. Folio may frame only the origins of apps that allow it (`embed`): appOrigins() gives them to the page's
-     Content Security Policy.
+   - Games and lab apps come from the Folio controller's catalog (snapshot.apps): it lists an app once its build is
+     checked and kept, and drops it when its repository goes. An entry that doesn't fit the catalog schema is left out,
+     with a warning (the GitHub step has already dropped any whose build didn't match its hash). This site serves each
+     one itself at /<kind>/<id>/app/, so Folio frames only its own origin.
 */
 import type { Locale } from '../i18n/locale.ts';
 import { type Case, CatalogApp, type Img, type Project, type ProjectEntry, type ProjectTranslation, type RepoKind } from './schema.ts';
@@ -132,10 +132,6 @@ export function discover(snapshot: Snapshot, manual: ManualProject[], self: stri
 
   return { projects, hero: pinned.slice(0, HERO), selected: pinned.slice(HERO, HERO + SELECTED), apps, activity, warnings };
 }
-
-/** Origins Folio may frame: apps that allow embedding. Projects written in Folio don't change the apps. */
-export const appOrigins = (snapshot: Snapshot, self: string) =>
-  [...new Set(discover(snapshot, [], self).apps.filter((a) => a.embed).map((a) => new URL(a.url).origin))].sort();
 
 /** A listing in one language: Turkish lays its translated fields over the English, and falls back to it.
     `translated` is true only when the Turkish text really exists: a description, and the case study if there is one. */

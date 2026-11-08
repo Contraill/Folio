@@ -7,8 +7,9 @@
    Games and lab apps come from the Folio controller's public catalog (FOLIO_CATALOG_URL), which lists an app once it
    is deployed; an unreachable catalog fails the build like an unreachable GitHub. A failed request fails the build, so production keeps its
    last good version. */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { Snapshot } from '../src/content/discover.ts';
+import { matches } from './app-builds.ts';
 import { type Node, type Pin, publicData } from './github-data.ts';
 
 const OWNER = process.env.FOLIO_OWNER ?? 'Contraill';
@@ -17,7 +18,12 @@ const OUT = '.folio/github.json';
 const FIXTURE = 'tests/fixtures/github.json';
 const CATALOG = 'tests/fixtures/catalog.json';
 const CATALOG_URL = process.env.FOLIO_CATALOG_URL ?? 'https://folio-controller.i-canoztozlu.workers.dev/catalog.json';
-mkdirSync('.folio', { recursive: true });
+/* Each game's and lab app's files, by the hash the catalog gives: kept in .folio/builds for postbuild to unpack. */
+const BUILDS = '.folio/builds';
+rmSync(BUILDS, { recursive: true, force: true });
+mkdirSync(BUILDS, { recursive: true });
+type Listed = { kind?: string; id?: string; build?: { sha256?: string; size?: number } };
+const hashOf = (app: Listed) => (typeof app?.build?.sha256 === 'string' && /^[0-9a-f]{64}$/.test(app.build.sha256) ? app.build.sha256 : null);
 
 const token = process.env.GITHUB_TOKEN;
 if (process.env.FOLIO_GITHUB === 'fixture' || !token) {
@@ -27,6 +33,7 @@ if (process.env.FOLIO_GITHUB === 'fixture' || !token) {
   }
   const recorded: Snapshot = JSON.parse(readFileSync(FIXTURE, 'utf8'));
   recorded.apps = JSON.parse(readFileSync(CATALOG, 'utf8')).apps;
+  for (const app of recorded.apps as Listed[]) { const hash = hashOf(app); if (hash && existsSync(`tests/fixtures/builds/${hash}.json`)) copyFileSync(`tests/fixtures/builds/${hash}.json`, `${BUILDS}/${hash}.json`); }
   writeFileSync(OUT, JSON.stringify(recorded, null, 2) + '\n');
   console.warn(`GitHub: using the recorded snapshot (${FIXTURE}), not live data.`);
   process.exit(0);
@@ -74,8 +81,18 @@ const { repos, pins } = publicData(nodes, pinned, SELF);
 
 const catalog = await fetch(CATALOG_URL, { headers: { 'user-agent': 'folio-build' } });
 if (!catalog.ok) throw new Error(`The app catalog answered ${catalog.status}`);
-const apps = ((await catalog.json()) as { apps: unknown[] }).apps;
-if (!Array.isArray(apps)) throw new Error('The app catalog has no list of apps');
+const listed = ((await catalog.json()) as { apps: unknown[] }).apps;
+if (!Array.isArray(listed)) throw new Error('The app catalog has no list of apps');
+// An app whose files can't be fetched, or aren't exactly the checked build, is left out of this build, not trusted.
+const apps: unknown[] = [];
+for (const app of listed as Listed[]) {
+  const hash = hashOf(app);
+  const res = hash ? await fetch(new URL(`/builds/${hash}.json`, CATALOG_URL), { headers: { 'user-agent': 'folio-build' } }).catch(() => null) : null;
+  const body = res?.ok ? new Uint8Array(await res.arrayBuffer()) : null;
+  if (!hash || !body || !matches(body, { sha256: hash, size: app.build?.size ?? -1 })) { console.warn(`catalog: ${app?.kind}/${app?.id} left out: its build ${res ? `answered ${res.status} or ` : ''}does not match its hash`); continue; }
+  writeFileSync(`${BUILDS}/${hash}.json`, body);
+  apps.push(app);
+}
 const snapshot: Snapshot = { fetchedAt: new Date().toISOString(), source: 'live', owner: OWNER, repos, pins, apps };
 writeFileSync(OUT, JSON.stringify(snapshot, null, 2) + '\n');
 console.log(`GitHub: ${repos.length} public repositories, ${snapshot.pins.length} pins; catalog: ${apps.length} apps.`);

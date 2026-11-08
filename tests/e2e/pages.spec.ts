@@ -395,9 +395,10 @@ test.describe('shell details', () => {
 });
 
 /* Games and lab apps come from the Folio controller's catalog, so what /play and /lab list depends on the build: the
-   recorded catalog has the two template pilots, a live build has whatever is deployed. The catalogue is checked against
-   /_build.json either way; the app page against the pilots, checked only when the build lists them. */
-const PILOTS = { play: { id: 'pilot-gates', name: 'Gates', host: 'pilot-gates.oztozlu.dev' }, lab: { id: 'pilot-spirals', name: 'Two Spirals', host: 'pilot-spirals.oztozlu.dev' } } as const;
+   recorded catalog has two stand-in apps (tests/fixtures/apps), a live build has whatever is published. The catalogue
+   is checked against /_build.json either way; the app pages against the stand-ins, only when the build lists them.
+   Apps are this site's own files at /<kind>/<id>/app/: never another host. */
+const SAMPLES = { play: { id: 'sample-game', name: 'Sample game' }, lab: { id: 'sample-lab', name: 'Sample lab' } } as const;
 
 test.describe('games and lab apps', () => {
   for (const kind of ['play', 'lab'] as const) {
@@ -411,54 +412,87 @@ test.describe('games and lab apps', () => {
       await expect(page.locator('main .wip-dot, main .tape')).toHaveCount(0);
       for (const href of await page.locator('.app-card').evaluateAll((cards) => cards.map((c) => c.getAttribute('href')))) {
         expect((await request.get(href!)).status(), href!).toBe(200);
+        expect((await request.get(`${href}/app/`)).status(), `${href}/app/`).toBe(200);
       }
     });
   }
 
-  test('an app runs in the page only when asked: framed, sandboxed, in the visitor language, with full screen and a new tab', async ({ page, request }) => {
-    const pilot = PILOTS.play;
-    test.skip((await request.get(`/play/${pilot.id}`)).status() === 404, 'the pilot is not in this build');
+  test('an app runs in the page only when asked: from this site, in the visitor language, keeping what it saves', async ({ page, request }) => {
+    const app = SAMPLES.play;
+    test.skip((await request.get(`/play/${app.id}`)).status() === 404, 'the stand-in game is not in this build');
     const asked: string[] = [];
-    await page.route(`https://${pilot.host}/**`, (route) => { asked.push(route.request().url()); return route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Gates</title><p id="game">running</p>' }); });
+    page.on('request', (r) => { if (new URL(r.url()).pathname.startsWith(`/play/${app.id}/app/`)) asked.push(r.url()); });
     const problems = await watchForProblems(page);
-    await page.goto(`/play/${pilot.id}`);
-    await expect(page.locator('main h1')).toHaveText(pilot.name);
+    await page.goto(`/play/${app.id}`);
+    await expect(page.locator('main h1')).toHaveText(app.name);
     await expect(page.locator('.navcap a[aria-current="page"]')).toHaveText('Play');
     const newTab = page.locator('.app-bar a', { hasText: 'Open in a new tab' });
-    await expect(newTab).toHaveAttribute('href', `https://${pilot.host}/`);
+    await expect(newTab).toHaveAttribute('href', `/play/${app.id}/app/`);
     await expect(newTab).toHaveAttribute('target', '_blank');
-    expect(asked, 'nothing reaches the app before it is started').toEqual([]);
+    expect(asked, 'nothing of the app loads before it is started').toEqual([]);
 
     await page.locator('.app-poster').click();
     const frame = page.locator('.app-box iframe');
-    await expect(frame).toHaveAttribute('title', `Gates, running from ${pilot.host}`);
-    const src = new URL((await frame.getAttribute('src'))!);
-    expect([src.host, src.searchParams.get('folio'), src.searchParams.get('lang'), src.searchParams.get('skin')]).toEqual([pilot.host, '1', 'en', 'graphite']);
+    await expect(frame).toHaveAttribute('title', `${app.name}, running in this page`);
+    const src = new URL((await frame.getAttribute('src'))!, page.url());
+    expect([src.origin, src.pathname, src.searchParams.get('folio'), src.searchParams.get('lang'), src.searchParams.get('skin')]).toEqual([new URL(page.url()).origin, `/play/${app.id}/app/`, '1', 'en', 'graphite']);
     expect((await frame.getAttribute('sandbox'))!.split(' ').sort()).toEqual(['allow-downloads', 'allow-pointer-lock', 'allow-popups', 'allow-popups-to-escape-sandbox', 'allow-same-origin', 'allow-scripts']);
-    await expect(page.frameLocator('.app-box iframe').locator('#game')).toHaveText('running');
+    const out = page.frameLocator('.app-box iframe').locator('#out');
+    await expect(out).toHaveText(`running play:${app.id} lang=en skin=graphite visits=1`);
 
     const full = page.getByRole('button', { name: 'Full screen' });
     await full.click();
     await expect.poll(() => page.evaluate(() => document.fullscreenElement?.className)).toBe('app-frame');
     await page.getByRole('button', { name: 'Leave full screen' }).click();
     await expect.poll(() => page.evaluate(() => document.fullscreenElement)).toBeNull();
+
+    // Opened on its own, it is the same app with the same storage.
+    await page.goto(`/play/${app.id}/app/`);
+    await expect(page.locator('#out')).toHaveText(`running play:${app.id} lang=- skin=- visits=2`);
     expect(problems).toEqual([]);
   });
 
+  test('a lab app keeps its runs in the site\'s storage, framed or not', { tag: '@once' }, async ({ page, request }) => {
+    const app = SAMPLES.lab;
+    test.skip((await request.get(`/lab/${app.id}`)).status() === 404, 'the stand-in lab app is not in this build');
+    await page.goto(`/lab/${app.id}`);
+    await page.locator('.app-poster').click();
+    await expect(page.frameLocator('.app-box iframe').locator('#out')).toHaveText(`running lab:${app.id} runs=1`);
+    await page.goto(`/lab/${app.id}/app/`);
+    await expect(page.locator('#out')).toHaveText(`running lab:${app.id} runs=2`);
+  });
+
+  test('an app answers with its own policy, under its own folder only', { tag: '@once' }, async ({ request }) => {
+    const app = SAMPLES.play;
+    test.skip((await request.get(`/play/${app.id}`)).status() === 404, 'the stand-in game is not in this build');
+    const noSlash = await request.get(`/play/${app.id}/app`, { maxRedirects: 0 });
+    expect(noSlash.status()).toBe(308);
+    expect(noSlash.headers()['location']).toBe(`/play/${app.id}/app/`);
+    const page = await request.get(`/play/${app.id}/app/`);
+    expect(page.headers()['content-security-policy']).toMatch(/frame-ancestors 'self'/);
+    expect(page.headers()['x-robots-tag']).toBe('noindex');
+    const js = await request.get(`/play/${app.id}/app/assets/app-a1b2c3d4.js`);
+    expect(js.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
+    expect((await request.get(`/play/${app.id}/app/assets/missing.js`)).status()).toBe(404);
+    expect((await request.get(`/play/${app.id}/app/a/route`)).status(), 'a route of a single-page app is its page').toBe(200);
+    expect((await request.get('/play/no-such-app/app/')).status()).toBe(404);
+    // Folio's own pages still refuse every frame but this site's.
+    expect((await request.get(`/play/${app.id}`)).headers()['content-security-policy']).toMatch(/frame-ancestors 'none'/);
+  });
+
   test('without JavaScript the same button opens the app in its own tab', { tag: '@once' }, async ({ browser, baseURL, request }) => {
-    const pilot = PILOTS.lab;
-    test.skip((await request.get(`/lab/${pilot.id}`)).status() === 404, 'the pilot is not in this build');
+    const app = SAMPLES.lab;
+    test.skip((await request.get(`/lab/${app.id}`)).status() === 404, 'the stand-in lab app is not in this build');
     const context = await browser.newContext({ baseURL, javaScriptEnabled: false, locale: 'tr-TR' });
     const page = await context.newPage();
-    await page.goto(`/lab/${pilot.id}`);
-    await expect(page.locator('main h1')).toHaveText('İki Sarmal');
-    await expect(page.locator('.app-poster')).toHaveAttribute('href', `https://${pilot.host}/`);
+    await page.goto(`/lab/${app.id}`);
+    await expect(page.locator('main h1')).toHaveText('Örnek deney');
+    await expect(page.locator('.app-poster')).toHaveAttribute('href', `/lab/${app.id}/app/`);
     await expect(page.locator('.app-poster')).toHaveAttribute('target', '_blank');
-    await expect(page.locator('.app-poster')).toContainText('İki Sarmal: başlat');
     await context.close();
   });
 
-  test('pages may frame only the apps of this build', { tag: '@once' }, async ({ page }) => {
+  test('pages may frame this site only', { tag: '@once' }, async ({ page }) => {
     await page.goto('/play');
     const violations = page.evaluate(() => new Promise<string>((resolve) => document.addEventListener('securitypolicyviolation', (e) => resolve(e.effectiveDirective), { once: true })));
     await page.evaluate(() => { const f = document.createElement('iframe'); f.src = 'https://example.com/'; document.body.appendChild(f); });

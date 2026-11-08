@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { parse } from 'yaml';
-import { appOrigins, discover, localize, type ManualProject, type RepoData, type Snapshot } from './discover.ts';
+import { discover, localize, type ManualProject, type RepoData, type Snapshot } from './discover.ts';
 import { ProjectEntry, ProjectTranslation } from './schema.ts';
 
 const recorded: Snapshot = JSON.parse(readFileSync(new URL('../../tests/fixtures/github.json', import.meta.url), 'utf8'));
@@ -135,8 +135,8 @@ test('activity is the latest commit of each public repository, newest first, at 
 });
 
 const app = (id: string, extra: Record<string, unknown> = {}) => ({
-  kind: 'play', id, url: `https://${id}.oztozlu.dev/`, title: { en: id }, summary: { en: '' }, embed: true, aspect: '16:9', inputs: [],
-  updated: '2026-11-01', repo: null, language: null, stars: 0, ...extra,
+  kind: 'play', id, title: { en: id }, summary: { en: '' }, embed: true, aspect: '16:9', inputs: [],
+  updated: '2026-11-01', repo: null, language: null, stars: 0, build: { sha256: 'a'.repeat(64), size: 10 }, ...extra,
 });
 
 test('games and lab apps come from the controller catalog, never from topics', () => {
@@ -151,14 +151,8 @@ test('games and lab apps come from the controller catalog, never from topics', (
 test('catalog entries are checked and ordered: an order first, then the newest', () => {
   const d = discover(snap((s) => { s.apps = [
     app('old', { updated: '2026-01-01' }), app('new', { updated: '2026-11-05' }), app('first', { order: 1, updated: '2025-01-01' }),
-    app('plain', { url: 'http://plain.oztozlu.dev/' }), app('Bad Id'), { kind: 'play' }, app('new'),
+    app('plain', { build: { sha256: 'not-a-hash', size: 1 } }), app('Bad Id'), { kind: 'play' }, app('new'),
   ]; }), manual, 'Folio');
   assert.deepEqual(d.apps.map((a) => a.id), ['first', 'new', 'old']);
   assert.equal(d.warnings.length, 4);
-});
-
-test('Folio may frame only the origins of catalogued apps that allow embedding', () => {
-  const s = snap((s) => { s.apps = [app('game', { url: 'https://game.oztozlu.dev/play/' }), app('link', { embed: false })]; });
-  assert.deepEqual(appOrigins(s, 'Folio'), ['https://game.oztozlu.dev']);
-  assert.deepEqual(appOrigins(recorded, 'Folio'), []);
 });

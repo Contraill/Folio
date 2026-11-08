@@ -12,7 +12,7 @@ import { type Case, type Img, PAGE_GROUPS, PageBodies, type Pages, type Project,
 
 /** A game or lab app in one language: it runs at its own address and Folio frames it. */
 export type AppPage = {
-  kind: 'play' | 'lab'; id: string; name: string; summary: string; url: string; host: string; embed: boolean; aspect: string;
+  kind: 'play' | 'lab'; id: string; name: string; summary: string; path: string; embed: boolean; aspect: string;
   inputs: string[]; repoUrl: string | null; lang: string | null; stars: number; updated: string; translated: boolean;
 };
 
@@ -51,6 +51,8 @@ export const getDiscovery = () => (discovery ??= (async () => {
   const apps = (kind: string) => found.apps.filter((a) => a.kind === kind).length;
   const written = found.projects.filter((p) => p.en.case).length;
   writeFileSync('.folio/discovery.json', JSON.stringify({ projects: found.projects.length, written, play: apps('play'), lab: apps('lab') }));
+  // The apps scripts/postbuild.ts unpacks: exactly the ones this build lists.
+  writeFileSync('.folio/apps.json', JSON.stringify(found.apps.map((a) => ({ kind: a.kind, id: a.id, build: a.build }))));
   return found;
 })());
 
@@ -88,7 +90,7 @@ const load = async (locale: Locale): Promise<Content> => {
   }));
   const pick = (ids: string[]) => ids.map((id) => projects.find((p) => p.id === id)!).filter(Boolean);
   const apps = found.apps.map((a): AppPage => ({
-    kind: a.kind, id: a.id, url: a.url, host: new URL(a.url).host, embed: a.embed, aspect: a.aspect, inputs: a.inputs,
+    kind: a.kind, id: a.id, path: `/${a.kind}/${a.id}/app/`, embed: a.embed, aspect: a.aspect, inputs: a.inputs,
     name: (locale === 'tr' && a.title.tr) || a.title.en, summary: (locale === 'tr' && a.summary.tr) || a.summary.en,
     repoUrl: a.repo, lang: a.language, stars: a.stars, updated: a.updated.slice(0, 10),
     translated: locale === 'en' || !!a.summary.tr,

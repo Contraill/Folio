@@ -10,7 +10,7 @@ import { Arrow } from './kit';
 type Props = { app: AppPage; c: Pages['apps']; locale: 'en' | 'tr' };
 const { app, c, locale } = Astro.props;
 const inputs = messages[locale].inputs as Record<string, string>;
-const fill = (text: string) => text.replace('{n}', app.name).replace('{host}', app.host);
+const fill = (text: string) => text.replace('{n}', app.name);
 const section = app.kind === 'play' ? c.play : c.lab;
 // The heading may wrap between words but never inside one: its size is capped by the longest word.
 const longest = Math.max(...app.name.split(/\s+/).map((w) => [...w].length));
@@ -25,7 +25,7 @@ const facts = [[c.inputs, app.inputs.map((i) => inputs[i]).join(' · ')], [c.lan
       <h1 id="app-h" class="display app-h1" data-reveal="fade" style={`--w: ${longest}`}>{app.name}</h1>
       <div data-reveal style="--i: 1"><p class="two-tone app-lede" lang={app.translated ? undefined : 'en'}>{app.summary}</p>{!app.translated && <p class="en-note" style="margin-top: 10px">{c.englishOnly}</p>}</div>
     </div>
-    <AppFrame client:load name={app.name} url={app.url} host={app.host} embed={app.embed} aspect={app.aspect} locale={locale}
+    <AppFrame client:load name={app.name} path={app.path} embed={app.embed} aspect={app.aspect} locale={locale}
       c={{ start: c.start, newTab: c.newTab, fullscreen: c.fullscreen, exitFullscreen: c.exitFullscreen, loading: c.loading, slow: c.slow, noEmbed: c.noEmbed, frameLabel: c.frameLabel }} />
     <div class="app-meta">
       <dl class="app-facts">{facts.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}</dl>

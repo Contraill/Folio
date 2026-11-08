@@ -43,12 +43,12 @@ export const ProjectEntry = ProjectFields.extend({
 /* Turkish only holds what is translated, laid over the English. */
 export const ProjectTranslation = z.object({ name: z.string().optional(), desc: z.string().optional(), since: z.string().optional(), case: Case.optional() }).strict();
 
-/* A game or lab app as the Folio controller lists it after deploying it (catalog.json): only apps that are public. */
+/* A game or lab app as the Folio controller lists it (catalog.json). Its checked files are fetched at build by their
+   hash and served by this site at /<kind>/<id>/app/. */
 const INPUTS = ['keyboard', 'touch', 'mouse', 'gamepad'] as const;
 export const CatalogApp = z.object({
   kind: z.enum(['play', 'lab']),
   id: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/),
-  url: z.url({ protocol: /^https$/ }),
   title: z.object({ en: z.string().min(1), tr: z.string().optional() }).strict(),
   summary: z.object({ en: z.string(), tr: z.string().optional() }).strict(),
   order: z.number().int().optional(),
@@ -59,6 +59,7 @@ export const CatalogApp = z.object({
   repo: z.url().nullable(),
   language: z.string().nullable(),
   stars: z.number().int().min(0),
+  build: z.object({ sha256: z.string().regex(/^[0-9a-f]{64}$/), size: z.number().int().positive() }).strict(),
 }).strict();
 export type CatalogApp = z.infer<typeof CatalogApp>;
 

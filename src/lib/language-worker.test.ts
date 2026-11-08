@@ -6,6 +6,8 @@ const routes: Routes = { '/': { tr: true, unlisted: false }, '/about': { tr: tru
 const files: Record<string, [string, string]> = {
   '/': ['home en', 'text/html'], '/__tr': ['home tr', 'text/html'], '/about': ['about en', 'text/html'], '/__tr/about': ['about tr', 'text/html'],
   '/now': ['now en', 'text/html'], '/__tr/now': ['now tr', 'text/html'], '/only-en': ['only en', 'text/html'],
+  '/play/gates/app': ['<html><head><title>Gates</title></head><body>game</body></html>', 'text/html'], '/play/gates/app/assets/index-AbCdEf12.js': ['js', 'text/javascript'],
+  '/play/gates/app/sounds.json': ['{}', 'application/json'],
   [NOT_FOUND]: ['missing en', 'text/html'], [`/__tr${NOT_FOUND}`]: ['missing tr', 'text/html'], '/search-index.json': ['{"en":1}', 'application/json'], '/__tr/search-index.json': ['{"tr":1}', 'application/json'],
 };
 const asked: string[] = [];
@@ -72,4 +74,32 @@ test('only GET and HEAD are answered', async () => {
   const head = await get('/about', {}, 'HEAD');
   assert.equal(head.status, 200);
   assert.equal(await head.text(), '');
+});
+
+test('a game or lab app is served from its own folder, framed by Folio only, with its own policy', async () => {
+  const slash = await get('/play/gates/app?folio=1');
+  assert.equal(slash.status, 308);
+  assert.equal(slash.headers.get('location'), '/play/gates/app/?folio=1', 'relative files need the trailing slash');
+  const page = await get('/play/gates/app/', { cookie: 'lang=tr' });
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /<head><title>Gates/, 'the app as built, never a language copy');
+  assert.match(page.headers.get('content-security-policy')!, /frame-ancestors 'self'/);
+  assert.match(page.headers.get('content-security-policy')!, /script-src 'self' 'wasm-unsafe-eval'/);
+  assert.equal(page.headers.get('cache-control'), 'no-cache');
+  assert.equal(page.headers.get('content-language'), null);
+  assert.equal((await get('/play/gates/app/index.html')).status, 200);
+  const js = await get('/play/gates/app/assets/index-AbCdEf12.js');
+  assert.equal(js.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal((await get('/play/gates/app/sounds.json')).headers.get('cache-control'), 'no-cache');
+});
+
+test('an app address it does not have is its page, with a base for its files; a missing file or app is 404', async () => {
+  const route = await get('/play/gates/app/level/3');
+  assert.equal(route.status, 200);
+  assert.match(await route.text(), /<head><base href="\/play\/gates\/app\/"><title>/);
+  assert.equal((await get('/play/gates/app/missing.js')).status, 404);
+  assert.equal((await get('/play/nothing/app/')).status, 404);
+  assert.equal((await get('/lab/gates/app/')).status, 404, 'a game is not a lab app');
+  assert.equal((await get('/play/Gates/app/')).status, 404, 'addresses are lower case');
+  assert.equal((await get('/play/gates/app/', {}, 'POST')).status, 405);
 });

@@ -1,12 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs';
 import react from '@astrojs/react';
 import { defineConfig } from 'astro/config';
-import { appOrigins } from './src/content/discover.ts';
-
-// Pages may frame only the games and lab apps this build shows (from the GitHub snapshot written before the build).
-const SNAPSHOT = '.folio/github.json';
-const SELF = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'Folio';
-const frames = existsSync(SNAPSHOT) ? appOrigins(JSON.parse(readFileSync(SNAPSHOT, 'utf8')), SELF) : [];
 
 /* Static: every page is built in English and Turkish, and a small Worker (src/worker.ts) picks one per visitor. */
 export default defineConfig({
@@ -20,7 +13,8 @@ export default defineConfig({
   security: {
     csp: {
       // frame-ancestors can't be set from a meta tag: the language Worker sends it as a header.
-      directives: ["default-src 'self'", "img-src 'self' data:", "base-uri 'self'", "form-action 'self'", "object-src 'none'", `frame-src ${frames.join(' ') || "'none'"}`],
+      directives: ["default-src 'self'", "img-src 'self' data:", "base-uri 'self'", "form-action 'self'", "object-src 'none'", // Games and lab apps are this site's own files (/play/<id>/app/), so pages frame this origin only.
+        "frame-src 'self'"],
       // Components set CSS variables through style attributes; scripts stay locked to hashes.
       styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
     },
