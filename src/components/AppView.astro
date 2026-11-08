@@ -1,0 +1,38 @@
+---
+import type { AppPage } from '@/content/load';
+import type { Pages } from '@/content/schema';
+import { messages } from '@/i18n/messages';
+import Base from '@/layouts/Base.astro';
+import AppFrame from './AppFrame';
+import { Arrow } from './kit';
+
+/* One game or lab app: what it is, the app itself in a frame, and where else to run it. */
+type Props = { app: AppPage; c: Pages['apps']; locale: 'en' | 'tr' };
+const { app, c, locale } = Astro.props;
+const inputs = messages[locale].inputs as Record<string, string>;
+const fill = (text: string) => text.replace('{n}', app.name);
+const section = app.kind === 'play' ? c.play : c.lab;
+// The heading may wrap between words but never inside one: its size is capped by the longest word.
+const longest = Math.max(...app.name.split(/\s+/).map((w) => [...w].length));
+const facts = [[c.inputs, app.inputs.map((i) => inputs[i]).join(' · ')], [c.language, app.lang], [c.updated, app.updated], [c.stars, app.stars ? `★ ${app.stars}` : c.noStars]].filter(([, v]) => v);
+---
+<Base title={app.name} description={app.summary} repo={app.repoUrl ?? undefined}>
+  <article class="slab pad app-view" aria-labelledby="app-h">
+    <div class="crumbs">
+      <nav aria-label={c.breadcrumb}><a href={`/${app.kind}`} data-dir="back">{section}</a><span aria-hidden="true">/</span><span aria-current="page">{app.name}</span></nav>
+    </div>
+    <div class="app-intro">
+      <h1 id="app-h" class="display app-h1" data-reveal="fade" style={`--w: ${longest}`}>{app.name}</h1>
+      <div data-reveal style="--i: 1"><p class="two-tone app-lede" lang={app.translated ? undefined : 'en'}>{app.summary}</p>{!app.translated && <p class="en-note" style="margin-top: 10px">{c.englishOnly}</p>}</div>
+    </div>
+    <AppFrame client:load name={app.name} path={app.path} embed={app.embed} aspect={app.aspect} locale={locale}
+      c={{ start: c.start, newTab: c.newTab, fullscreen: c.fullscreen, exitFullscreen: c.exitFullscreen, loading: c.loading, slow: c.slow, noEmbed: c.noEmbed, frameLabel: c.frameLabel }} />
+    <div class="app-meta">
+      <dl class="app-facts">{facts.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+      <div class="app-side">
+        <p class="small">{fill(c.hostNote)}</p>
+        {app.repoUrl && <a class="btn btn-2" href={app.repoUrl} target="_blank" rel="noreferrer">{c.repo}<Arrow size={16} /></a>}
+      </div>
+    </div>
+  </article>
+</Base>

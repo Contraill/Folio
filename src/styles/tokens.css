@@ -1,0 +1,49 @@
+/* ============ skins ============ */
+:root, [data-skin='graphite'] {
+  --page: #0f0f10; --slab: #1a1a1c; --slab-2: #232326; --slab-3: #2e2e32; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
+  --ink: #f3f3f1; --soft: #cacac6; --mute: #9d9d99; --accent: #f3f3f1; --accent-ink: #111112; --signal: #b8f26c;
+  --glass: rgba(22,22,24,.72); --glass-line: rgba(255,255,255,.14); --scrim: rgba(10,10,11,.0);
+  --r-frame: 34px; --r-slab: 28px; --r-card: 20px; --r-sm: 12px; --r-pill: 999px; --G: 10px;
+  --fd: 'Archivo', system-ui, sans-serif; --fd-w: 125%; --fd-wt: 760; --fb: 'Geist', system-ui, sans-serif; --fl: 'Geist Mono', ui-monospace, monospace;
+  --img-filter: none; --grid: transparent; --word: rgba(255,255,255,.07);
+  /* shadcn tokens */
+  --background: 240 3% 6%; --foreground: 60 6% 95%; --card: 240 4% 11%; --card-foreground: 60 6% 95%; --popover: 240 4% 12%; --popover-foreground: 60 6% 95%;
+  --primary: 60 6% 95%; --primary-foreground: 240 4% 7%; --secondary: 240 4% 15%; --secondary-foreground: 60 6% 95%; --muted: 240 4% 15%; --muted-foreground: 60 2% 61%;
+  --accent-h: 240 4% 17%; --destructive: 0 70% 55%; --destructive-foreground: 0 0% 100%; --border: 240 4% 19%; --input: 240 4% 22%; --ring: 60 6% 95%; --radius: 14px;
+  color-scheme: dark;
+}
+/* Paper: white sheets on a cool light table, blue-black ink, crisp card-stock corners. Cobalt is the only colour, kept
+   for signals (status, focus, a live dot), never for decoration. */
+[data-skin='paper'] {
+  --page: #e7eaee; --slab: #fbfcfd; --slab-2: #f0f2f5; --slab-3: #e1e5eb; --line: rgba(16,24,40,.1); --line-2: rgba(16,24,40,.2);
+  --ink: #0d1117; --soft: #2e3542; --mute: #566070; --accent: #0d1117; --accent-ink: #ffffff; --signal: #2b4ad8;
+  --glass: rgba(251,252,253,.82); --glass-line: rgba(16,24,40,.12); --scrim: rgba(13,17,23,.0); --word: rgba(13,17,23,.055);
+  --r-frame: 24px; --r-slab: 20px; --r-card: 14px; --r-sm: 9px;
+  --background: 213 14% 92%; --foreground: 216 28% 7%; --card: 210 33% 99%; --card-foreground: 216 28% 7%; --popover: 0 0% 100%; --popover-foreground: 216 28% 7%;
+  --primary: 216 28% 7%; --primary-foreground: 0 0% 100%; --secondary: 216 20% 95%; --secondary-foreground: 216 28% 7%; --muted: 216 20% 95%; --muted-foreground: 218 13% 39%;
+  --accent-h: 213 14% 92%; --border: 214 16% 84%; --input: 214 16% 80%; --ring: 216 28% 7%; --radius: 10px;
+  color-scheme: light;
+}
+[data-skin='blueprint'] {
+  --page: #061529; --slab: #0b2444; --slab-2: #102f57; --slab-3: #173a68; --line: rgba(150,200,255,.22); --line-2: rgba(150,200,255,.38);
+  --ink: #eaf3ff; --soft: #bfd4f1; --mute: #98b4da; --accent: #8fd8ff; --accent-ink: #04203a; --signal: #8fd8ff;
+  --glass: rgba(9,30,58,.78); --glass-line: rgba(150,200,255,.3); --word: rgba(143,216,255,.08);
+  --r-frame: 10px; --r-slab: 8px; --r-card: 6px; --r-sm: 4px; --r-pill: 6px; --fd-w: 112%; --fd-wt: 640;
+  --img-filter: grayscale(1) sepia(1) hue-rotate(170deg) saturate(1.7) brightness(.86); --grid: rgba(150,200,255,.07);
+  --background: 213 75% 9%; --foreground: 214 100% 96%; --card: 214 70% 15%; --card-foreground: 214 100% 96%; --popover: 214 70% 15%; --popover-foreground: 214 100% 96%;
+  --primary: 199 100% 78%; --primary-foreground: 209 87% 12%; --secondary: 214 69% 20%; --secondary-foreground: 214 100% 96%; --muted: 214 69% 20%; --muted-foreground: 214 46% 73%;
+  --accent-h: 214 60% 24%; --border: 214 50% 28%; --input: 214 50% 30%; --ring: 199 100% 78%; --radius: 6px;
+  color-scheme: dark;
+}
+[data-skin='terminal'] {
+  --page: #000; --slab: #050b05; --slab-2: #0a160a; --slab-3: #112211; --line: rgba(120,255,160,.2); --line-2: rgba(120,255,160,.36);
+  --ink: #c9ffd8; --soft: #9be9b2; --mute: #7cc994; --accent: #7dffa8; --accent-ink: #001a08; --signal: #7dffa8;
+  --glass: rgba(2,10,3,.86); --glass-line: rgba(120,255,160,.3); --word: rgba(125,255,168,.07);
+  --r-frame: 0px; --r-slab: 0px; --r-card: 0px; --r-sm: 0px; --r-pill: 0px;
+  --fd: 'Geist Mono', ui-monospace, monospace; --fd-w: 100%; --fd-wt: 600; --fb: 'Geist Mono', ui-monospace, monospace;
+  --img-filter: grayscale(1) sepia(1) hue-rotate(65deg) saturate(2.4) brightness(.8) contrast(1.1);
+  --background: 0 0% 0%; --foreground: 137 100% 89%; --card: 120 38% 3%; --card-foreground: 137 100% 89%; --popover: 120 38% 4%; --popover-foreground: 137 100% 89%;
+  --primary: 141 100% 75%; --primary-foreground: 138 100% 5%; --secondary: 120 38% 8%; --secondary-foreground: 137 100% 89%; --muted: 120 38% 8%; --muted-foreground: 139 41% 64%;
+  --accent-h: 120 38% 10%; --border: 139 60% 18%; --input: 139 60% 20%; --ring: 141 100% 75%; --radius: 0px;
+  color-scheme: dark;
+}

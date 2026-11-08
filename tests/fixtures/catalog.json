@@ -1,0 +1,59 @@
+{
+  "updatedAt": "2026-11-08T00:00:00Z",
+  "apps": [
+    {
+      "kind": "lab",
+      "id": "sample-lab",
+      "title": {
+        "en": "Sample lab",
+        "tr": "Örnek deney"
+      },
+      "summary": {
+        "en": "A stand-in lab app for the tests: it saves a run on this device.",
+        "tr": "Testler için yer tutan bir deney: bu cihazda bir deneme kaydeder."
+      },
+      "order": 1,
+      "embed": true,
+      "aspect": "16:10",
+      "inputs": [
+        "mouse",
+        "touch"
+      ],
+      "updated": "2026-11-08",
+      "repo": null,
+      "language": null,
+      "stars": 0,
+      "build": {
+        "sha256": "a62449969f8222770eb5e1cb8adb919eec252926aaf1c91a2988ebdac58d321b",
+        "size": 1371
+      }
+    },
+    {
+      "kind": "play",
+      "id": "sample-game",
+      "title": {
+        "en": "Sample game",
+        "tr": "Örnek oyun"
+      },
+      "summary": {
+        "en": "A stand-in game for the tests.",
+        "tr": "Testler için yer tutan bir oyun."
+      },
+      "order": 1,
+      "embed": true,
+      "aspect": "16:10",
+      "inputs": [
+        "keyboard",
+        "touch"
+      ],
+      "updated": "2026-11-08",
+      "repo": null,
+      "language": null,
+      "stars": 0,
+      "build": {
+        "sha256": "6279baf8014a2827854e594e41c7464242d82bbb3eed518184b27fdb36ddee81",
+        "size": 1643
+      }
+    }
+  ]
+}

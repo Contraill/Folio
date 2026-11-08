@@ -1,0 +1,14 @@
+---
+import AppView from '@/components/AppView.astro';
+import { getContent, getDiscovery } from '@/content/load';
+import { localePaths } from '@/lib/locales';
+
+export async function getStaticPaths() {
+  const { apps } = await getDiscovery();
+  return localePaths().flatMap(({ params }) => apps.filter((a) => a.kind === 'play').map((a) => ({ params: { ...params, id: a.id } })));
+}
+
+const { pages, apps } = await getContent(Astro.locals);
+const app = apps.find((a) => a.kind === 'play' && a.id === Astro.params.id)!;
+---
+<AppView app={app} c={pages.apps} locale={Astro.locals.locale} />

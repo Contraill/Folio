@@ -1,0 +1,92 @@
+name: Preview
+
+# A push to develop: checks, a build with live GitHub data, the Preview deploy (develop-folio.<subdomain>.workers.dev,
+# behind Cloudflare Access) and the smoke tests against it with the Access service token. Run by hand with "full",
+# it runs the whole browser suite against the Preview instead.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      full:
+        description: The whole browser suite, not only the smoke tests
+        type: boolean
+        default: false
+      sync:
+        description: 'A sync started by the Folio controller, which deploys only if GitHub data or the catalog changed'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A push replaces a run in progress; a sync waits for it instead, so the controller's six-hourly sweep never cancels
+# a push or a full test run (and then usually finds nothing new).
+concurrency:
+  group: preview-develop
+  cancel-in-progress: ${{ !inputs.sync }}
+
+jobs:
+  preview:
+    # A fixed image rather than ubuntu-latest, which is moving to 26.04: change it on purpose, with a test run.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # Its secrets (the Preview's Cloudflare token, the Access service token) exist only in this environment,
+    # which only develop may use. Uses `wrangler preview`: the `previews` settings and bindings, never production's.
+    environment: preview
+    env:
+      PREVIEW_URL: https://develop-folio.i-canoztozlu.workers.dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1; pnpm's version is packageManager in package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version-file: .node-version, cache: pnpm }
+      # A sync deploys only if something changed since the live Preview: the same commit with the same data is skipped.
+      - name: Has anything changed?
+        id: changed
+        if: inputs.sync
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_CATALOG_TOKEN: ${{ secrets.FOLIO_CATALOG_TOKEN }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: node scripts/fetch-github.ts && node scripts/changed.ts "$PREVIEW_URL/_build.json"
+      - if: steps.changed.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.changed.outputs.skip != 'true'
+        run: pnpm check
+      - name: Build
+        if: steps.changed.outputs.skip != 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_CATALOG_TOKEN: ${{ secrets.FOLIO_CATALOG_TOKEN }}
+          FOLIO_TRIGGER: preview
+        run: pnpm build
+      - name: Unit tests and checks on the build output
+        if: steps.changed.outputs.skip != 'true'
+        run: pnpm test
+      - name: Deploy the Preview
+        if: steps.changed.outputs.skip != 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler preview --name develop
+      - if: steps.changed.outputs.skip != 'true'
+        run: pnpm exec playwright install --with-deps chromium firefox ${{ inputs.full && 'webkit' || '' }}
+      # A preflight first proves that the token reaches this commit's Preview; if not, nothing else runs.
+      - name: Browser tests against the Preview
+        if: steps.changed.outputs.skip != 'true'
+        env:
+          BASE_URL: ${{ env.PREVIEW_URL }}
+          FOLIO_EXPECTED_SHA: ${{ github.sha }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+          SUITE: ${{ inputs.full && 'test:e2e' || 'test:smoke' }}
+          # The full run adds Safari's engine (WebKit) for the critical path.
+          FOLIO_WEBKIT: ${{ inputs.full && '1' || '' }}
+        run: pnpm $SUITE ${FOLIO_WEBKIT:+--project=webkit}
+      # Screenshots and errors only: no traces are recorded while the token is in use, and errors never print it.
+      - name: Keep the report of a failed run
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with: { name: preview-browser-report, path: playwright-report/, retention-days: 14, if-no-files-found: ignore }

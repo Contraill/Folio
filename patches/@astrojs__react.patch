@@ -1,0 +1,21 @@
+diff --git a/dist/client.js b/dist/client.js
+index 72802149b2e9f4473e34992d1a206b104b436ca9..026ed9ac66e162e1a4db575b788dc2e001cbea37 100644
+--- a/dist/client.js
++++ b/dist/client.js
+@@ -77,7 +77,15 @@ export default (element) => (Component, props, { default: children, ...slotted }
+ 	] : undefined;
+ 	const renderOptions = {
+ 		identifierPrefix: element.getAttribute("prefix"),
+-		formState
++		formState,
++		// Leaving a page before React has hydrated its island unmounts a root that is still dehydrated (see
++		// `astro:unmount` below). React reports that as recoverable error 424, although the island is simply gone.
++		// Every other recoverable error, and 424 on an island still in the page, is reported as React would.
++		onRecoverableError(error) {
++			if (!element.isConnected && /#424\b|early update/.test(String(error?.message))) return;
++			if (typeof reportError === "function") reportError(error);
++			else console.error(error);
++		}
+ 	};
+ 	for (const [key, value] of Object.entries(slotted)) {
+ 		props[key] = createElement(StaticHtml, {

@@ -1,0 +1,14 @@
+---
+import Cv from '@/components/Cv';
+import { messages } from '@/i18n/messages';
+import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
+
+const locale = Astro.locals.locale;
+const t = messages[locale];
+---
+<Base title="CV">
+  <Cv client:load locale={locale} t={t} />
+</Base>

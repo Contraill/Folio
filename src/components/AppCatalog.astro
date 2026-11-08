@@ -1,0 +1,34 @@
+---
+import type { AppPage } from '@/content/load';
+import { messages } from '@/i18n/messages';
+import { Arrow } from './kit';
+
+/* The games or lab apps of this build, as cards that lead to their own page. */
+type Props = { kind: 'play' | 'lab'; apps: AppPage[]; heading: string; note: string; empty: string; locale: 'en' | 'tr' };
+const { kind, apps, heading, note, empty, locale } = Astro.props;
+const inputs = messages[locale].inputs as Record<string, string>;
+---
+<section class="slab pad apps" aria-labelledby={`${kind}-apps-h`}>
+  <div class="apps-head">
+    <h2 id={`${kind}-apps-h`} class="apps-h2" data-reveal>{heading}</h2>
+    <p class="small" data-reveal style="--i: 1">{note}</p>
+  </div>
+  {apps.length === 0 && <p class="apps-empty" data-reveal style="--i: 1">{empty}</p>}
+  <ul class="app-grid">
+    {apps.map((app, i) => (
+      <li data-reveal style={`--i: ${i + 1}`}>
+        <a class="app-card" href={`/${app.kind}/${app.id}`} data-tilt="3">
+          <span class="app-thumb" style={`--ar: ${app.aspect.replace(':', ' / ')}`} aria-hidden="true">
+            <span class="app-mark">{app.name.slice(0, 2)}</span>
+          </span>
+          <span class="app-text">
+            <b class="app-name">{app.name}</b>
+            <span class="app-sum">{app.summary}</span>
+            {app.inputs.length > 0 && <span class="app-inputs">{app.inputs.map((input) => <span class="chip">{inputs[input]}</span>)}</span>}
+          </span>
+          <span class="circle app-go" aria-hidden="true"><Arrow size={16} /></span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

@@ -1,69 +1,77 @@
 # Folio
 
-Personal website of İzzet Can Öztozlu, live at [oztozlu.dev](https://oztozlu.dev).
+The personal site of İzzet Can Öztozlu, at [oztozlu.dev](https://oztozlu.dev): projects read from GitHub, games and interactive experiments that run in the page, and a CV, in English and Turkish, with four colour skins.
 
-For now it is a single coming-soon page set at dawn. A big "Coming soon." stands on the horizon in chunky block letters, and the letters aren't glued down: visitors can grab one and throw it, and it falls, bounces and walks back to its spot. Typing a letter makes the matching letters hop, and the page answers back if you keep playing long enough. The full portfolio will replace this page later.
+[![Production](https://github.com/Contraill/Folio/actions/workflows/production.yml/badge.svg)](https://github.com/Contraill/Folio/actions/workflows/production.yml)
 
-The page is plain HTML, CSS and a little vanilla JavaScript. It has no build step, framework or runtime dependencies.
+## How it works
 
-## Structure
+```mermaid
+flowchart LR
+  repos["The owner's public<br/>GitHub repositories"] -- "read at build" --> actions["GitHub Actions<br/>check, build, test"]
+  apps["Game and lab<br/>repositories"] --> controller["Folio controller<br/>checks and publishes builds"]
+  controller -- "catalogue and builds" --> actions
+  actions -- "deploy" --> worker["Cloudflare Worker<br/>static pages, English or Turkish"]
+  worker --> visitor["oztozlu.dev"]
+```
+
+- Every page is static, built ahead of time with [Astro](https://astro.build), with React for the interactive parts. One Cloudflare Worker serves the build and picks English or Turkish for each visitor; there is no database and no server-side rendering.
+- Every public repository of the owner is a project, with no file or tag needed in the repository. Pinned repositories lead the home page. A sync rebuilds the site when GitHub changes, and skips the build when nothing did.
+- Games (`/play`) and experiments (`/lab`) are built in their own repositories, from public templates, and served by Folio itself.
+
+## Running it
+
+Requires Node 26 (`.node-version`) and pnpm 12.
+
+```sh
+pnpm install
+pnpm dev        # development server
+pnpm build      # GitHub data, static build, route list
+pnpm preview    # the build behind the language Worker, at http://localhost:4321
+pnpm check      # types and Astro diagnostics
+pnpm test       # unit tests
+pnpm test:e2e   # browser tests against the local build
+```
+
+Without a `GITHUB_TOKEN`, the build uses the recorded GitHub data and two stand-in apps in `tests/fixtures`, so it works offline.
+
+## Layout
 
 ```text
-Folio/
-├── public/                 # Everything served to visitors
-│   ├── index.html          # Page markup, metadata, language pre-selection
-│   ├── styles.css          # Dawn sky, block-letter headline, layout
-│   ├── script.js           # Letter physics and interactions, TR/EN switching
-│   └── fonts/              # Bricolage Grotesque variable font (latin + latin-ext), SIL OFL 1.1
-├── wrangler.jsonc          # Cloudflare Workers Static Assets config
-└── README.md
+src/
+  pages/        Routes, each built in English and Turkish ([...locale])
+  layouts/      Page shell
+  components/   Astro components and React islands
+  content/      Page copy and project write-ups, their schemas, and the rules that pick projects from GitHub
+  lib/          Motion, notched panels, client state, routing, the language Worker's logic
+  i18n/         Language negotiation and interface strings
+  styles/       Design system and the four skins
+  worker.ts     The language Worker
+scripts/        GitHub data before the build, route list and /_build.json after it, release and post-deploy checks
+public/         Fonts, images, the CV PDFs
+tests/          Browser tests, the recorded GitHub data and stand-in apps
+.github/        CI, Preview and Production workflows
+docs/           Technical documentation
 ```
 
-### Notes
+## Documentation
 
-- **Letters.** `script.js` splits the headline into letters and gives each one a tiny physics body: gravity, a bounce on the horizon, and a spring that pulls it back home. Mouse, touch and pen all use Pointer Events. The animation loop runs only while a letter is moving and stops once everything is back in place.
-- **Accessibility.** Screen readers get the headline as one plain sentence; the separate letters are hidden from them. Keyboard users can trigger the same hops and replies by typing.
-- **Languages.** The page is available in English and Turkish on the same URL. A small inline script in `<head>` picks the language before first paint: a saved manual choice (`localStorage` key `lang`) wins, then the first of `tr`/`en` found in `navigator.languages`, otherwise English. All strings live in `public/script.js`. The static HTML is English, which is also what visitors without JavaScript and crawlers see.
-- **Reduced motion.** With `prefers-reduced-motion: reduce`, letters stay put: there is no entrance, physics or text fade. The page is designed to read well as a still image.
+- [Architecture](docs/architecture.md): how the parts work together, and the limits accepted on purpose
+- [Content model](docs/content-model.md): where everything the site says comes from
+- [Deployment](docs/deployment.md): workflows, secrets, tests, releasing and rolling back
 
-## Local development
+Games, experiments and separate sites are made from three public templates, each with its own README: [folio-play-template](https://github.com/Contraill/folio-play-template), [folio-lab-template](https://github.com/Contraill/folio-lab-template) and [folio-site-template](https://github.com/Contraill/folio-site-template). The controller that publishes them is private.
 
-Any static file server works:
+## Contributing
 
-```sh
-python3 -m http.server 8787 -d public
-# open http://localhost:8787
-```
+This is a personal site, so it doesn't take new features, but bug reports and fixes are welcome. Pull requests into `main` run the CI checks; runs for outside contributors wait for the owner's approval.
 
-To run it in the actual Workers runtime instead:
+Please report a security problem privately, through *Security → Report a vulnerability* on this repository, not in an issue.
 
-```sh
-npx wrangler dev
-```
+## Licence
 
-Check the Wrangler config without deploying:
+The code is under the [MIT licence](LICENSE).
 
-```sh
-npx wrangler deploy --dry-run
-```
+The licence doesn't cover the site's content, which remains all rights reserved: the portrait (`public/assets/portrait.webp`), the CV (`public/cv/`), the project images (`public/assets/`), the copy and write-ups (`src/content/pages/`, `src/content/projects/`), and the İC monogram, favicon and icons. Please don't reuse them as your own.
 
-## Hosting: Cloudflare Workers Static Assets
-
-The site is a Cloudflare Worker named `folio` that only serves static assets (this is not Cloudflare Pages). `wrangler.jsonc` sets:
-
-- `assets.directory: "./public"`: every file in `public/` is served as-is, and `/` serves `public/index.html`.
-- No Worker script, routes, account ID or secrets.
-- Observability: persisted invocation logs at a sampling rate of 1, query strings redacted, traces off, issue detection on (`observability.issues` needs Wrangler 4.134.0 or newer).
-
-The custom domain `oztozlu.dev` is attached to the Worker in the Cloudflare dashboard, not in `wrangler.jsonc`, so deployments leave it alone.
-
-## Deployment
-
-Cloudflare Workers Builds is connected to this repository:
-
-- Production branch: `main`
-- Build command: none
-- Deploy command: `npx wrangler deploy`
-- Preview builds: disabled
-
-Every push to `main` triggers a build that runs `npx wrangler deploy` and publishes `public/` to the `folio` Worker. There is no manual deploy step. Build logs are in the Cloudflare dashboard under Workers & Pages → folio → Deployments.
+Third-party parts keep their own licences: the fonts Archivo, Geist, Geist Mono and Instrument Serif are self-hosted under the SIL Open Font License (`public/fonts/OFL.txt`), and the libraries in `package.json` under theirs (MIT, ISC and Apache-2.0).

@@ -1,26 +1,41 @@
 {
+  // The Worker that serves oztozlu.dev: the static build in ./dist plus a small language Worker (src/worker.ts).
+  // Deploys come from GitHub Actions: Previews from develop, production from main. See docs/deployment.md.
   "name": "folio",
   "compatibility_date": "2026-10-31",
-  // Static site only: no Worker script, every request is served from ./public.
-  // The custom domain oztozlu.dev is attached in the Cloudflare dashboard, so no routes here.
+  "main": "src/worker.ts",
   "assets": {
-    "directory": "./public"
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "none",
+    // Pages and anything unknown go through the Worker, which picks the language and sets the headers; static
+    // files are served directly with public/_headers. Listing the exceptions keeps /about/index.html and /__tr/*
+    // from slipping past the Worker.
+    "run_worker_first": ["/*", "!/_astro/*", "!/fonts/*", "!/assets/*", "!/icons/*", "!/cv/*.pdf", "!/favicon.ico", "!/apple-touch-icon.png", "!/_build.json", "!/sitemap.xml", "!/robots.txt"]
+  },
+  // Production is reached through its custom domain only. Preview hostnames are a separate setting.
+  "workers_dev": false,
+  "preview_urls": true,
+  // Previews do not inherit production settings.
+  "previews": {
+    // Off: a cache keyed on the address alone would mix the two languages.
+    "cache": { "enabled": false },
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "redact_query_string": true,
+      "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
+      "traces": { "enabled": true, "head_sampling_rate": 1, "persist": true },
+      "issues": { "enabled": true }
+    }
   },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
     "redact_query_string": true,
-    "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "invocation_logs": true,
-      "persist": true
-    },
-    "traces": {
-      "enabled": false
-    },
-    "issues": {
-      "enabled": true
-    }
+    "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
+    "traces": { "enabled": true, "head_sampling_rate": 1, "persist": true },
+    "issues": { "enabled": true }
   }
 }

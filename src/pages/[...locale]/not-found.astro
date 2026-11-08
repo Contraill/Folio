@@ -1,0 +1,26 @@
+---
+import { ArrowRight } from 'lucide-react';
+import { DizzyMochi } from '@/components/mochi';
+import { getContent } from '@/content/load';
+import { messages } from '@/i18n/messages';
+import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
+
+const t = messages[Astro.locals.locale];
+const { pages } = await getContent(Astro.locals);
+---
+<Base title={t.notFound} noindex>
+  <section class="slab pad four" aria-labelledby="nf-h">
+    <p class="wordmark" aria-hidden="true">404</p>
+    <div class="mid">
+      <div class="oledmini"><DizzyMochi client:load label={pages.mochi.shortLabel} /></div>
+      <h1 id="nf-h" class="display" style="font-size: clamp(28px, 3vw, 40px)">{t.notFound}</h1>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center">
+        <a class="btn btn-1" href="/">{t.goHome}<span class="ic"><ArrowRight size={16} aria-hidden="true" /></span></a>
+        <a class="btn btn-2" href="/projects">{t.seeProjects}</a>
+      </div>
+    </div>
+  </section>
+</Base>

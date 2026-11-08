@@ -1,0 +1,44 @@
+name: CI
+
+# Required for merging into main: types, a real build with live GitHub data, unit tests and checks on its output,
+# and the whole browser suite against it in Chromium and Firefox.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    # A fixed image rather than ubuntu-latest, which is moving to 26.04: change it on purpose, with a test run.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1; pnpm's version is packageManager in package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version-file: .node-version, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_TRIGGER: ci
+          # CI holds no secrets (a pull request may come from a fork): the recorded catalog and stand-in apps.
+          FOLIO_CATALOG: fixture
+        run: pnpm build
+      - name: Unit tests and checks on the build output
+        run: pnpm test
+      - run: pnpm exec playwright install --with-deps chromium firefox
+      - name: Browser suite
+        run: pnpm test:e2e
+      - name: Keep the report of a failed run
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with: { name: ci-browser-report, path: playwright-report/, retention-days: 14, if-no-files-found: ignore }

@@ -1,0 +1,19 @@
+---
+import AppCatalog from '@/components/AppCatalog.astro';
+import PlayStage from '@/components/PlayStage';
+import { getContent } from '@/content/load';
+import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
+
+const { pages, apps } = await getContent(Astro.locals);
+const games = apps.filter((a) => a.kind === 'play');
+const c = pages.play;
+---
+<Base title={c.title}>
+  <div class="play">
+    <PlayStage client:load c={c} />
+    <AppCatalog kind="play" apps={games} heading={c.catalogH} note={c.catalogNote} empty={c.empty} locale={Astro.locals.locale} />
+  </div>
+</Base>

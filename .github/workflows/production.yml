@@ -1,0 +1,81 @@
+name: Production
+
+# The only way to production. Merges into main, every six hours (fresh GitHub data on approved code) and the manual
+# Refresh all run here, one at a time. GitHub may delay or skip scheduled runs; a failed build keeps the live version.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      sync:
+        description: 'A sync started by the Folio controller, which deploys only if GitHub data or the catalog changed'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One deploy at a time; a waiting older run is dropped when a newer one arrives.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # A fixed image rather than ubuntu-latest, which is moving to 26.04: change it on purpose, with a test run.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    # Production secrets exist only in this environment, which only main may use; the condition says the same in code,
+    # so a manual run started from another branch does nothing.
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      # main as it is now, not the commit that queued this run.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { ref: main }
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1; pnpm's version is packageManager in package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version-file: .node-version, cache: pnpm }
+      # The schedule and syncs deploy only if something changed since the live build; Refresh always deploys.
+      - name: Has anything changed?
+        id: changed
+        if: github.event_name == 'schedule' || inputs.sync
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_CATALOG_TOKEN: ${{ secrets.FOLIO_CATALOG_TOKEN }}
+        run: node scripts/fetch-github.ts && node scripts/changed.ts https://oztozlu.dev/_build.json
+      - if: steps.changed.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.changed.outputs.skip != 'true'
+        run: pnpm check
+      - name: Build
+        if: steps.changed.outputs.skip != 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FOLIO_CATALOG_TOKEN: ${{ secrets.FOLIO_CATALOG_TOKEN }}
+          FOLIO_TRIGGER: ${{ github.event_name == 'schedule' && 'cron' || github.event_name == 'workflow_dispatch' && 'manual' || 'push' }}
+        run: pnpm build
+      - name: Unit tests and checks on the build output
+        if: steps.changed.outputs.skip != 'true'
+        run: pnpm test
+      - name: Is this still the newest main?
+        if: steps.changed.outputs.skip != 'true'
+        id: fresh
+        run: |
+          built=$(git rev-parse HEAD)
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$built" = "$head" ]; then echo "deploy=true" >> "$GITHUB_OUTPUT"; else
+            echo "::notice::main moved from ${built:0:7} to ${head:0:7} during this run; its own run deploys it."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Deploy
+        if: steps.changed.outputs.skip != 'true' && (steps.fresh.outputs.deploy == 'true')
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler deploy
+      - name: Production serves this build
+        if: steps.changed.outputs.skip != 'true' && (steps.fresh.outputs.deploy == 'true')
+        run: node scripts/check-live.ts https://oztozlu.dev dist/_build.json

@@ -1,0 +1,75 @@
+---
+import { ArrowRight } from 'lucide-react';
+import Mochi from '@/components/mochi';
+import { getContent } from '@/content/load';
+import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
+
+const { pages: content, projects } = await getContent(Astro.locals);
+const c = content.about;
+const languages = new Set(projects.map((p) => p.lang).filter(Boolean)).size;
+const stars = projects.reduce((sum, p) => sum + p.stars, 0);
+const nameOf = (id: string) => projects.find((p) => p.id === id)?.name;
+---
+<Base title={c.title}>
+  <div class="about">
+    <section class="slab pad ab-intro" aria-labelledby="ab-h">
+      <div class="ab-text">
+        <p class="eyebrow" data-reveal>{c.eyebrow}</p>
+        <h1 id="ab-h" class="ab-h1" data-reveal style="--i: 1">{c.h1a}<em>{c.h1em}</em>{c.h1b}</h1>
+        <p class="ab-lede" data-reveal style="--i: 2">{c.lede}</p>
+      </div>
+      <div class="ab-collage" data-reveal style="--i: 2">
+        <figure class="portrait"><img src="/assets/portrait.webp" width="880" height="1100" alt={c.portrait} loading="eager" decoding="async" /></figure>
+        <div class="ab-pet"><Mochi client:visible c={content.mochi} compact /></div>
+      </div>
+    </section>
+
+    <section class="slab pad ab-patterns" aria-labelledby="pat-h">
+      <h2 id="pat-h" class="ab-h2" data-reveal>{c.patternsH}</h2>
+      <ol>
+        {c.patterns.map(([title, text, id], i) => (
+          <li data-reveal style={`--i: ${i}`}>
+            <span class="pn-num">{['i', 'ii', 'iii'][i]}</span>
+            <b>{title}</b><p>{text}</p>
+            {nameOf(id) && <a class="link-u more" href={`/projects/${id}`}>{nameOf(id)} →</a>}
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="slab pad path" aria-labelledby="path-h">
+      <div class="stick">
+        <p class="eyebrow">{c.path}</p>
+        <h2 id="path-h" class="ab-h2" style="margin-top: 16px">{c.pathH}</h2>
+        <p class="small" style="margin-top: 16px; max-width: 32ch">{c.pathNote}</p>
+      </div>
+      <ol class="tl">
+        {c.timeline.map(([when, title, text, id], i) => (
+          <li class={i === c.timeline.length - 1 ? 'last' : ''} data-reveal style={`--i: ${i % 3}`}>
+            <span class="when tnum">{when}</span>
+            <div><b>{title}</b><p>{text}</p>{nameOf(id) && <a class="more link-u" href={`/projects/${id}`}>{nameOf(id)} →</a>}</div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="slab pad ctastat" aria-label={c.next}>
+      <div data-reveal>
+        <p class="eyebrow">{c.formal}</p>
+        <p class="ab-h2" style="margin-top: 16px; max-width: 22ch">{c.formalLead} <span class="ab-mute">{c.formalTail}</span></p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px">
+          <a class="btn btn-1" href="/cv">{c.readCv}<span class="ic"><ArrowRight size={16} aria-hidden="true" /></span></a>
+          <a class="btn btn-2" href="/now">{c.now}</a>
+        </div>
+      </div>
+      <ul class="ab-stats tnum" aria-label={c.totals} data-reveal style="--i: 1">
+        <li><b>{projects.length}</b><span>{c.repos}</span></li>
+        <li><b>{languages}</b><span>{c.languages}</span></li>
+        <li><b>{stars}</b><span>{c.stars}</span></li>
+      </ul>
+    </section>
+  </div>
+</Base>
