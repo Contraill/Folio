@@ -17,7 +17,8 @@ export default function Hero({ projects, c, stage, mochi, locale }: { projects: 
   const holdTimer = useRef(0);
   const mobile = useMedia('(max-width: 760px)');
   useEffect(() => { if (reducedMotion()) setPaused(true); }, []);
-  const n = projects.length, k = i % n, p = projects[k];
+  // Pins decide what is here: none, one or three. Nothing is invented to fill the stage.
+  const n = projects.length, k = n ? i % n : 0, p = projects[k] as Project | undefined;
   const idle = paused || hover || holding;
   useEffect(() => {
     if (idle || n < 2) return;
@@ -61,19 +62,21 @@ export default function Hero({ projects, c, stage, mochi, locale }: { projects: 
         </div>
       </div>
 
-      <div className="dock hero-tag" data-cut>
+      {n > 0 && <div className="dock hero-tag" data-cut>
         <div className="bar">
           <span className="eyebrow plain" style={{ color: 'var(--soft)' }}>{c.featured}</span>
           <span className="pager tnum" aria-live={paused ? 'polite' : 'off'}>{pad(k + 1)} / {pad(n)}
             <i className="prog" key={k + (idle ? 'p' : 'r')} style={{ animationDuration: DURATION + 'ms', animationPlayState: idle ? 'paused' : 'running' }} aria-hidden="true" />
           </span>
-          <button type="button" className="circle sm" onClick={() => step(-1)} aria-label={c.prev} data-magnet><ChevronLeft size={17} aria-hidden="true" /></button>
-          <button type="button" className="circle sm" onClick={() => step(1)} aria-label={c.next} data-magnet><ChevronRight size={17} aria-hidden="true" /></button>
-          <button type="button" className="circle sm" onClick={() => setPaused((x) => !x)} aria-label={paused ? c.play : c.pause} data-magnet>{paused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}</button>
+          {n > 1 && <>
+            <button type="button" className="circle sm" onClick={() => step(-1)} aria-label={c.prev} data-magnet><ChevronLeft size={17} aria-hidden="true" /></button>
+            <button type="button" className="circle sm" onClick={() => step(1)} aria-label={c.next} data-magnet><ChevronRight size={17} aria-hidden="true" /></button>
+            <button type="button" className="circle sm" onClick={() => setPaused((x) => !x)} aria-label={paused ? c.play : c.pause} data-magnet>{paused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}</button>
+          </>}
         </div>
-      </div>
+      </div>}
 
-      <div className="dock hero-card" data-cut>
+      {p && <div className="dock hero-card" data-cut>
         <a className="in" href={`/projects/${p.id}`}>
           <div style={{ minWidth: 0 }} key={p.id} className="swap">
             <span className="eyebrow plain">{p.lang} · {p.since}{p.stars ? ` · ★ ${p.stars}` : ''}</span>
@@ -82,7 +85,7 @@ export default function Hero({ projects, c, stage, mochi, locale }: { projects: 
           </div>
           <Go solid />
         </a>
-      </div>
+      </div>}
     </Cut>
   );
 }

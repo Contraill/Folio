@@ -255,10 +255,6 @@ h2.h2 { font-size: clamp(32px, 4.4vw, 64px); }
 .collage button { display: block; width: 100%; padding: 0; border: 0; cursor: zoom-in; border-radius: var(--r-card); overflow: hidden; background: var(--slab-2); box-shadow: 0 24px 60px rgba(0,0,0,.28), 0 0 0 1px var(--line); }
 .collage img { width: 100%; height: auto; filter: var(--img-filter); }
 .collage figcaption { font-family: var(--fl); font-size: 12px; color: var(--mute); margin-top: 10px; }
-.pq { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; }
-.pq .quote { background: var(--accent); color: var(--accent-ink); display: flex; flex-direction: column; justify-content: space-between; gap: 30px; min-height: 340px; }
-.pq .quote p { font-size: clamp(22px, 2.3vw, 32px); line-height: 1.25; letter-spacing: -.01em; margin: 0; font-weight: 500; }
-.pq .quote .small { color: inherit; opacity: .7; }
 .todo { background-image: repeating-linear-gradient(-45deg, transparent 0 10px, rgba(128,128,128,.12) 10px 20px); }
 .nextp { display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; }
 .nextp .ov { position: relative; min-height: 320px; overflow: hidden; display: block; }
@@ -295,19 +291,15 @@ h2.h2 { font-size: clamp(32px, 4.4vw, 64px); }
 .swrow button[aria-pressed='true'] { background: var(--slab-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); }
 
 /* ============ extras ============ */
-.uses-tbl { width: 100%; border-collapse: collapse; }
-.uses-tbl th[scope='rowgroup'] { text-align: left; padding: 34px 0 12px; font-family: var(--fl); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); font-weight: 500; border-bottom: 1px solid var(--line-2); }
-.uses-tbl td { padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 16px; }
-.uses-tbl td:last-child { color: var(--mute); text-align: right; font-size: 14.5px; }
 .nowp { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .nowp .img { position: relative; min-height: 460px; overflow: hidden; }
 .nowp .dark { background: var(--accent); color: var(--accent-ink); display: flex; flex-direction: column; justify-content: space-between; gap: 28px; }
 .nowp .dark .small, .nowp .dark .eyebrow { color: inherit; opacity: .7; }
 .pushes { list-style: none; margin: 0; padding: 0; }
-.pushes li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--accent-ink) 16%, transparent); font-size: 15px; }
-.pushes span { font-family: var(--fl); font-size: 12px; opacity: .7; }
-.letters { display: flex; justify-content: center; gap: clamp(4px, 1vw, 14px); padding: 40px 0; flex-wrap: wrap; user-select: none; }
-.letters button { font-family: var(--fd); font-stretch: var(--fd-w); font-weight: 800; font-size: clamp(64px, 12vw, 190px); line-height: .9; border: 0; background: transparent; color: var(--ink); cursor: grab; padding: 0; touch-action: none; transition: transform .5s cubic-bezier(.3,1.6,.4,1), color .2s ease; }
+.pushes li { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--accent-ink) 16%, transparent); font-size: 15px; }
+.letters { display: flex; justify-content: center; gap: 0 clamp(28px, 5vw, 72px); padding: 40px 0; flex-wrap: wrap; user-select: none; }
+.letters-word { display: inline-flex; gap: clamp(2px, .6vw, 10px); }
+.letters button { font-family: var(--fd); font-stretch: var(--fd-w); font-weight: 800; font-size: clamp(44px, 10.5vw, 160px); line-height: .9; border: 0; background: transparent; color: var(--ink); cursor: grab; padding: 0; touch-action: none; transition: transform .5s cubic-bezier(.3,1.6,.4,1), color .2s ease; }
 .letters button:active { cursor: grabbing; }
 .letters button.drag { transition: none; color: var(--signal); }
 .four { position: relative; display: grid; place-items: center; min-height: 520px; text-align: center; overflow: hidden; }
@@ -354,7 +346,7 @@ h2.h2 { font-size: clamp(32px, 4.4vw, 64px); }
   .shead { flex-direction: column; align-items: flex-start; } .shead .side { align-items: flex-start; text-align: left; }
   .stairs { grid-template-columns: 1fr; } .stairs > :nth-child(n) { margin-top: 0 !important; }
   .scard { aspect-ratio: 4 / 3; }
-  .statement, .bio, .path, .ctastat, .md, .pq, .nextp, .pair, .nowp, .foot-grid, .phead { grid-template-columns: 1fr; }
+  .statement, .bio, .path, .ctastat, .md, .nextp, .pair, .nowp, .foot-grid, .phead { grid-template-columns: 1fr; }
   .pet-wrap { justify-self: center; margin-bottom: 0; transform: rotate(2deg); }
   .trow { grid-template-columns: 1fr; } .trow .tnarrow { grid-column: auto; }
   .tcard { min-height: 340px; }
@@ -384,7 +376,38 @@ h2.h2 { font-size: clamp(32px, 4.4vw, 64px); }
   .tl li > div { grid-column: 2; }
   .cvbar { position: relative; top: auto; right: auto; justify-content: flex-start; padding: 0 0 18px; }
   .wgrid { grid-template-columns: 1fr; } .w.s2, .w.s4 { grid-column: auto; } .w.t2 { grid-row: auto; } .radio2 { grid-template-columns: 1fr; }
-  .uses-tbl td:last-child { display: block; text-align: left; padding-top: 0; } .uses-tbl td { display: block; border: 0; padding: 12px 0 2px; } .uses-tbl tr { display: block; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
   .four { min-height: 420px; } .four .oledmini { width: 200px; }
   .legal { flex-direction: column; }
 }
+
+/* Typographic cover (Cover.tsx): for a project with no image of its own. The tint comes from the project's name, mixed
+   into the skin's own surface so it stays quiet in every skin. */
+.typo { position: absolute; inset: 0; container-type: size; display: grid; grid-template-rows: auto 1fr auto; gap: 8px; padding: clamp(14px, 6cqi, 30px); color: var(--ink);
+  background:
+    radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 1.5px) 0 0 / 18px 18px,
+    linear-gradient(155deg, color-mix(in oklab, var(--slab-2) 80%, hsl(var(--h) 70% 52%)) 0%, var(--slab-2) 62%, color-mix(in oklab, var(--slab-2) 90%, hsl(calc(var(--h) + 40) 60% 45%)) 100%); }
+.typo-path { font-size: clamp(10.5px, 3.4cqi, 13px); color: var(--mute); letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.typo-name { align-self: end; font-family: var(--fd); font-stretch: var(--fd-w); font-weight: var(--fd-wt); text-transform: uppercase; line-height: .88; letter-spacing: -.012em;
+  font-size: min(19cqi, 30cqh, calc(100cqi / var(--n, 8) * 1.12)); text-wrap: balance; overflow-wrap: normal; }
+.typo-langs { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: clamp(10.5px, 3.2cqi, 12.5px); color: var(--soft); }
+.typo-langs span::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; background: hsl(var(--h) 65% 55%); vertical-align: 1px; }
+.typo-langs span:nth-child(2)::before { background: hsl(calc(var(--h) + 40) 60% 50%); }
+.typo-langs span:nth-child(n+3)::before { background: var(--mute); }
+/* On the hero stage the text on the left covers part of it: the name sits on the right half, as the other stages do. */
+.typo-stage { padding: 12% 6% 12% 52%; }
+.typo-stage .typo-name { font-size: min(9cqi, 22cqh, calc(46cqi / var(--n, 8) * 1.12)); }
+@media (max-width: 760px) { .typo-stage { padding: 18% 8% 46% 8%; } .typo-stage .typo-name { font-size: min(14cqi, 18cqh, calc(84cqi / var(--n, 8) * 1.12)); } }
+
+/* Privacy: a short document, one statement per line of the list. */
+.pv-list { margin: 36px 0 0; display: grid; gap: 0; max-width: 980px; }
+.pv-list > div { display: grid; grid-template-columns: minmax(0, 15em) minmax(0, 1fr); gap: 8px 32px; padding: 20px 0; border-top: 1px solid var(--line); }
+.pv-list dt { font-weight: 600; }
+.pv-list dd { margin: 0; color: var(--soft); line-height: 1.6; max-width: 68ch; }
+@media (max-width: 760px) { .pv-list > div { grid-template-columns: minmax(0, 1fr); } }
+.portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 30%; }
+.now-lede { margin: 14px 0 0; max-width: 42ch; opacity: .8; }
+.pushes .push-what { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pushes .push-msg { color: inherit; opacity: .72; font-size: 13.5px; text-decoration: none; overflow-wrap: anywhere; }
+.pushes .push-msg:hover, .pushes .push-msg:focus-visible { opacity: 1; text-decoration: underline; }
+.pushes time { font-family: var(--fl); font-size: 12px; opacity: .7; white-space: nowrap; }
+.apps-empty { margin: 0; color: var(--mute); }

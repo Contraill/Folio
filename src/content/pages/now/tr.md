@@ -1,10 +1,10 @@
 ---
 visibility: unlisted
 title: Şimdi
-updated: '2026-11-03'
-eyebrow: "/now · Güncelleme: {d}"
+eyebrow: /now
 h1: Şimdi
-focus: Bu ayın odağı buraya gelecek.
-draft: bu ay üzerinde çalıştığın şeyi bir iki satırla yaz
-pushes: Son push’lar, GitHub’dan
+lede: Herkese açık repolarımda en son neyin değiştiği; her derlemede GitHub’dan okunuyor.
+commits: Her reponun varsayılan dalındaki son commit
+synced: "GitHub verisi okunma zamanı: {t}"
+empty: Henüz gösterilecek herkese açık bir commit yok.
 ---

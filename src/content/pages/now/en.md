@@ -1,10 +1,10 @@
 ---
 visibility: unlisted
 title: Now
-updated: '2026-11-03'
-eyebrow: /now · Updated {d}
+eyebrow: /now
 h1: Now
-focus: This month’s focus goes here.
-draft: one or two lines about what you are working on this month
-pushes: Latest pushes, from GitHub
+lede: What changed last in my public repositories, read from GitHub with every build.
+commits: Latest commit on each repository’s default branch
+synced: "GitHub data read {t}"
+empty: No public commits to show yet.
 ---

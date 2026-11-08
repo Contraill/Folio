@@ -44,8 +44,4 @@ case:
             w: 1086
             h: 730
           - GitHub’daki huepr reposu
-    - title: Ne öğrendim
-      todo: true
-      paras:
-        - "[Native Messaging ya da kontrol etmediğin siteleri temalamak konusunda seni ne şaşırttı?]"
 ---

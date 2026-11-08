@@ -5,7 +5,7 @@ import { expect, test } from './access';
    Rendering differs between machines, so the screens stay out of Git and out of CI. Motion is reduced; live canvases
    and photos are masked (their boxes still count), since Chromium sometimes rasters a scaled photo at lower quality
    first. GitHub figures are stable only with the recorded snapshot (a local build). */
-const PAGES = ['/', '/projects', '/projects/helios', '/about', '/cv', '/lab', '/play', '/uses', '/now', '/?lang=tr', '/about?lang=tr'];
+const PAGES = ['/', '/projects', '/projects/helios', '/about', '/cv', '/lab', '/play', '/now', '/?lang=tr', '/about?lang=tr'];
 const name = (path: string) => (path.replace(/^\/(\?|$)/, '/home$1').replace(/\?lang=/, '-').replaceAll('/', '-').slice(1) || 'home');
 
 for (const [device, viewport] of [['desktop', { width: 1440, height: 900 }], ['phone', { width: 390, height: 844 }]] as const) {

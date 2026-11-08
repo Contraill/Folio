@@ -1,6 +1,7 @@
 ---
 name: Mochi
 repo: mochi
+repoId: 1430944449
 lang: C++
 date: '2026-10-23'
 since: Oct 2026
@@ -16,9 +17,7 @@ topics:
   - oled
   - desk-companion
 area: hardware
-listed: true
 order: 6
-featured: 2
 case:
   lede: A small animated face on a 128×64 OLED that notices when you touch it, pet it or pick it up.
   stack: ESP32-C3 SuperMini · Arduino (C++) · U8g2 · ArduinoJson · LittleFS · Python + Pillow tooling · pytest · Playwright
@@ -60,8 +59,4 @@ case:
           - Accelerometer over I²C.
         - - LiPo + TP4056
           - Single cell with charger board and a divider for battery measurement.
-    - title: What I learned
-      todo: true
-      paras:
-        - "[A firmware lesson worth sharing, for example the HTML parser bug that hid part of the web panel.]"
 ---

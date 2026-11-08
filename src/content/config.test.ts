@@ -21,7 +21,7 @@ test('pages and the internal prefix always pass the language Worker', () => {
   const rules: string[] = config.assets.run_worker_first;
   assert.equal(rules[0], '/*');
   const skipped = rules.filter((r) => r.startsWith('!')).map((r) => new RegExp(`^${r.slice(1).replace(/[.]/g, '\\.').replace(/\*/g, '.*')}$`));
-  for (const path of ['/', '/about', '/about/index.html', '/cv', '/cv/', '/cv/index.html', '/__tr/about', '/__tr/cv/index.html', '/search-index.json', '/uses'])
+  for (const path of ['/', '/about', '/about/index.html', '/cv', '/cv/', '/cv/index.html', '/__tr/about', '/__tr/cv/index.html', '/search-index.json', '/now', '/uses'])
     assert.ok(!skipped.some((re) => re.test(path)), `${path} must reach the Worker`);
   for (const path of ['/_astro/x.js', '/cv/en.pdf', '/fonts/geist.woff2', '/_build.json']) assert.ok(skipped.some((re) => re.test(path)), `${path} is a static file`);
 });

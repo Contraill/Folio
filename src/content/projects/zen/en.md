@@ -1,6 +1,7 @@
 ---
 name: zen-polarity
 repo: zen-polarity
+repoId: 1368761689
 lang: Shell
 date: '2026-09-13'
 since: Sep 2026
@@ -18,5 +19,4 @@ topics:
   - kde-plasma
   - theme
 area: theming
-listed: false
 ---

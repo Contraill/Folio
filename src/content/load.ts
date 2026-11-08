@@ -1,11 +1,13 @@
 /* Everything a page renders, gathered once per language at build: page copy from src/content/pages, projects from
    the GitHub snapshot (.folio/github.json, written by scripts/fetch-github.ts) merged with src/content/projects.
-   Folio's own files are checked here and any error stops the build. */
+   Folio's own files are checked here and any error stops the build, a missing Turkish version included: every page
+   group and every project written in Folio needs both languages. Only what GitHub supplies (a repository's
+   description) may be English-only, and the page says so next to that text. */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import type { Locale } from '../i18n/locale';
-import { discover, localize, type Discovery, type ManualProject, type Snapshot } from './discover';
+import { type Activity, discover, localize, type Discovery, type ManualProject, type Snapshot } from './discover';
 import { type Case, type Img, PAGE_GROUPS, PageBodies, type Pages, type Project, ProjectEntry, ProjectTranslation } from './schema';
 
 /** A game or lab app in one language: it runs at its own address and Folio frames it. */
@@ -15,11 +17,10 @@ export type AppPage = {
 };
 
 export type Content = {
-  pages: Pages; projects: Project[]; featured: Project[]; selected: Project[]; cases: Record<string, Case>; apps: AppPage[];
-  /** Projects whose text has no Turkish version yet, by id. */
+  pages: Pages; projects: Project[]; hero: Project[]; selected: Project[]; cases: Record<string, Case>; apps: AppPage[];
+  activity: Activity[]; fetchedAt: string;
+  /** Projects whose description has no Turkish version (only repositories Folio has nothing written about), by id. */
   untranslated: Set<string>;
-  /** Page groups shown in English because their Turkish file is missing. */
-  fallbackGroups: Set<string>;
 };
 
 const SELF = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'Folio';
@@ -38,14 +39,18 @@ let discovery: Promise<Discovery> | undefined;
 /** The projects and apps this build shows, decided once for both languages. */
 export const getDiscovery = () => (discovery ??= (async () => {
   const manual: ManualProject[] = [...byLang(await getCollection('projects'))].map(([id, files]) => {
-    if (!files.en) throw new Error(`src/content/projects/${id}: en.md is required`);
-    return { id, en: ProjectEntry.parse(files.en), tr: files.tr === undefined ? undefined : ProjectTranslation.parse(files.tr) };
+    if (!files.en || !files.tr) throw new Error(`src/content/projects/${id}: en.md and tr.md are both required`);
+    const en = ProjectEntry.parse(files.en), tr = ProjectTranslation.parse(files.tr);
+    if (!tr.desc) throw new Error(`src/content/projects/${id}/tr.md: desc is required`);
+    if (en.case && !tr.case) throw new Error(`src/content/projects/${id}/tr.md: the case study needs its Turkish version`);
+    return { id, en, tr };
   });
   const found = discover(snapshot(), manual, SELF);
   for (const w of found.warnings) console.warn(`[folio] ${w}`);
   // Counts for /_build.json (scripts/postbuild.ts).
   const apps = (kind: string) => found.apps.filter((a) => a.kind === kind).length;
-  writeFileSync('.folio/discovery.json', JSON.stringify({ projects: found.projects.length, play: apps('play'), lab: apps('lab') }));
+  const written = found.projects.filter((p) => p.en.case).length;
+  writeFileSync('.folio/discovery.json', JSON.stringify({ projects: found.projects.length, written, play: apps('play'), lab: apps('lab') }));
   return found;
 })());
 
@@ -61,14 +66,12 @@ const localImage = (url: string) => {
 const cache = new Map<Locale, Promise<Content>>();
 const load = async (locale: Locale): Promise<Content> => {
   const groups = byLang(await getCollection('pages'));
-  const fallbackGroups = new Set<string>();
   const copy = Object.fromEntries(PAGE_GROUPS.map((group) => {
     const files = groups.get(group);
-    if (!files?.en) throw new Error(`src/content/pages/${group}: en.md is required`);
+    if (!files?.en || !files.tr) throw new Error(`src/content/pages/${group}: en.md and tr.md are both required`);
     // Checked against its schema, then used as written so key order and text stay exactly as in the file.
-    for (const lang of ['en', 'tr'] as const) if (files[lang] !== undefined) PageBodies[group].parse(files[lang]);
-    if (locale === 'tr' && files.tr === undefined) fallbackGroups.add(group);
-    return [group, (locale === 'tr' && files.tr) || files.en];
+    for (const lang of ['en', 'tr'] as const) PageBodies[group].parse(files[lang]);
+    return [group, files[locale]!];
   })) as Record<string, Record<string, unknown>>;
   const { shared, ...rest } = copy;
   const pages = { ...shared, ...rest } as Pages;
@@ -90,7 +93,7 @@ const load = async (locale: Locale): Promise<Content> => {
     repoUrl: a.repo, lang: a.language, stars: a.stars, updated: a.updated.slice(0, 10),
     translated: locale === 'en' || !!a.summary.tr,
   }));
-  return { pages, projects, featured: pick(found.featured), selected: pick(found.selected), cases, apps, untranslated, fallbackGroups };
+  return { pages, projects, hero: pick(found.hero), selected: pick(found.selected), cases, apps, activity: found.activity, fetchedAt: snapshot().fetchedAt, untranslated };
 };
 
 /** This page's content, in its language. */

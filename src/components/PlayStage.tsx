@@ -156,7 +156,7 @@ function ToyBox({ paused, api, label }: { paused: boolean; api: RefObject<{ shak
   );
 }
 
-export default function PlayStage({ c, ready = false }: { c: Pages['play']; ready?: boolean }) {
+export default function PlayStage({ c }: { c: Pages['play'] }) {
   const [paused, setPaused] = useState(false);
   useEffect(() => { if (reducedMotion()) setPaused(true); }, []);
   const api = useRef<{ shake: () => void } | null>(null);
@@ -165,11 +165,10 @@ export default function PlayStage({ c, ready = false }: { c: Pages['play']; read
       <div className="cut-fill" suppressHydrationWarning>
         <p className="play-word" aria-hidden="true">Play</p>
         <ToyBox paused={paused} api={api} label={c.canvas} />
-        {!ready && <div className={'tape' + (paused ? ' stop' : '')} aria-hidden="true"><div className="tape-track">{[0, 1].map((k) => <span key={k}>{c.tape}</span>)}</div></div>}
       </div>
       <div className="dock play-note" data-cut>
         <div className="pn">
-          <p className="eyebrow"><span className={ready ? 'live-dot' : 'wip-dot'} /> {c.status}</p>
+          <p className="eyebrow"><span className="live-dot" /> {c.status}</p>
           <h1 className="play-h1">{c.h1}</h1>
           <p className="small">{c.note}</p>
           <div className="pn-btns">

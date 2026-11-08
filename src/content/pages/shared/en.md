@@ -1,5 +1,4 @@
 ---
-toWrite: to write
 stage:
   planets:
     Mercury: Mercury

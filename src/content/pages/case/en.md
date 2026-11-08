@@ -12,10 +12,22 @@ started: Started
 stars: Stars
 noStars: None yet
 topics: Topics
-lesson: The honest lesson from building {n} goes here.
-fromReadme: From the README
 about: About this project
-noWriteUp: The longer write-up for this one isn’t done yet. The repo has the details.
+noWriteUp: A detailed project write-up is not available yet.
+noDesc: The repository has no description yet.
+englishOnly: ""
+languages: Languages
+lastPush: Last push
+type: Type
+types:
+  project: Project
+  profile: Profile README
+  template: Template
+  fork: Fork
+  game: Game
+  lab: Lab app
+archived: Archived
+openApp: "Open in {s}"
 screens:
   - Screens
   - "& states"

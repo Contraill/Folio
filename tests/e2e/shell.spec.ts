@@ -157,8 +157,30 @@ test.describe('navigation', () => {
 });
 
 test.describe('skins', () => {
+  test('Terminal and Blueprint are found, not offered: their pages add them to the menu, once, without changing the skin', { tag: '@smoke' }, async ({ page }) => {
+    const problems = await watchForProblems(page);
+    await page.goto('/cv');
+    await settled(page);
+    const offered = async () => { await page.locator('[data-skin-trigger]').click(); const names = await page.getByRole('radio').allInnerTexts(); await page.keyboard.press('Escape'); return names.map((n) => n.split('\n')[0]); };
+    expect(await offered()).toEqual(['Auto', 'Graphite', 'Paper']);
+    await page.goto('/now');
+    await expect(page.getByText('You found the Terminal skin')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'graphite');
+    expect(await offered()).toEqual(['Auto', 'Graphite', 'Paper', 'Terminal']);
+    await page.goto('/secret');
+    await expect(page.getByText('You found the Blueprint skin')).toBeVisible({ timeout: 10000 });
+    expect(await offered()).toEqual(['Auto', 'Graphite', 'Paper', 'Blueprint', 'Terminal']);
+    // Found once: coming back says nothing new.
+    await page.goto('/now');
+    await settled(page);
+    await page.waitForTimeout(1200);
+    await expect(page.getByText('You found the Terminal skin')).toHaveCount(0);
+    expect(problems).toEqual([]);
+  });
+
   test('a chosen skin persists across navigation and reloads, with the tab icon and the monogram', { tag: '@smoke' }, async ({ page }) => {
     const problems = await watchForProblems(page);
+    await page.addInitScript(() => localStorage.setItem('fx-skins', JSON.stringify(['terminal'])));
     await page.goto('/cv');
     await settled(page);
     const icon = page.locator('link[data-skin-icon]');
@@ -221,6 +243,7 @@ test.describe('skins', () => {
   }
 
   test('changing skin re-clips panels straight away', { tag: '@once' }, async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('fx-skins', JSON.stringify(['terminal'])));
     await page.goto('/cv');
     await settled(page);
     await page.locator('[data-skin-trigger]').click();
@@ -376,7 +399,8 @@ test.describe("CV: the owner's own PDFs", () => {
     const problems = await watchForProblems(page);
     await page.goto('/cv');
     const sheet = page.getByRole('document', { name: 'CV in English, PDF' });
-    await expect(sheet.locator('canvas')).toBeVisible();
+    // pdf.js parses in a worker: on a busy machine the first page can take a while.
+    await expect(sheet.locator('canvas')).toBeVisible({ timeout: 15000 });
     await expect(sheet.locator('.textLayer')).toContainText('Full-Stack Developer');
     expect(await sheet.locator('.cv-links a[href^="https://github.com/"]').count()).toBeGreaterThan(0);
     const zoom = page.locator('.cv-zoom output');

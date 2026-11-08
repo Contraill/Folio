@@ -17,4 +17,5 @@ language: Dil
 updated: Güncellendi
 stars: Yıldız
 noStars: Henüz yok
+englishOnly: Bu açıklama yalnızca İngilizce yazılmış.
 ---

@@ -42,8 +42,4 @@ case:
           - I²C üzerinden ivmeölçer.
         - - LiPo + TP4056
           - Şarj kartı ve pil ölçümü için bölücüyle tek hücre.
-    - title: Ne öğrendim
-      todo: true
-      paras:
-        - "[Paylaşmaya değer bir firmware dersi, örneğin web panelinin bir kısmını gizleyen HTML ayrıştırıcı hatası.]"
 ---

@@ -15,17 +15,17 @@ export const getStaticPaths = localePaths;
 
 const locale = Astro.locals.locale;
 const t = messages[locale];
-const { pages: content, featured, selected } = await getContent(Astro.locals);
+const { pages: content, hero, selected } = await getContent(Astro.locals);
 const c = content.home;
 const areas = areasFor(locale);
 const depth = [0.04, 0.09, 0.02, 0.12];
 const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A', '#3ec7ff', 52, 64, 34], ['Y', '#7a5cff', 70, 72, 30], ['', '#20c997', 84, 80, 16], ['', '#ff7ac0', 8, 84, 14], ['', '#f3f3f1', 61, 86, 12]] as const;
 ---
 <Base>
-  <Hero client:load projects={featured} c={c} stage={content.stage} mochi={content.mochi} locale={locale} />
+  <Hero client:load projects={hero} c={c} stage={content.stage} mochi={content.mochi} locale={locale} />
 
   <div class="slab">
-    <section class="pad" aria-labelledby="sel-h" style="padding-top: 112px">
+    {selected.length > 0 && <section class="pad" aria-labelledby="sel-h" style="padding-top: 112px">
       <div class="shead">
         <h2 id="sel-h" class="display stair" data-reveal style="--indent: 1.4em"><span>{c.selected[0]}</span><span>{c.selected[1]}</span></h2>
         <div class="side" data-reveal style="--i: 1">
@@ -47,7 +47,7 @@ const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A'
           </div>
         ))}
       </div>
-    </section>
+    </section>}
 
     <section class="pad statement" aria-label={c.approachLabel}>
       <div>
@@ -61,7 +61,7 @@ const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A'
   <section class="trow" aria-label={c.moreLabel}>
     <a class="slab pad tcard lab-t" href="/lab" data-reveal>
       <div>
-        <p class="eyebrow"><span class="wip-dot"></span> {c.labStatus}</p>
+        <p class="eyebrow"><span class="live-dot"></span> {c.labStatus}</p>
         <h3 class="lab-title">ai lab<span class="caret" aria-hidden="true">_</span></h3>
         <p class="small" style="max-width: 38ch">{c.labTeaser}</p>
       </div>
@@ -75,7 +75,7 @@ const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A'
     </a>
     <a class="slab pad tcard play-t" href="/play" data-reveal style="--i: 1">
       <div>
-        <p class="eyebrow"><span class="wip-dot"></span> {c.playStatus}</p>
+        <p class="eyebrow"><span class="live-dot"></span> {c.playStatus}</p>
         <h3 class="play-title">Play</h3>
         <p class="small" style="max-width: 38ch">{c.playTeaser}</p>
       </div>

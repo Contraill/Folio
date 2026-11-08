@@ -1,6 +1,7 @@
 ---
 name: CampusEats
 repo: CampusEats
+repoId: 1263361824
 lang: JavaScript
 date: '2026-06-08'
 since: Jun 2026
@@ -18,7 +19,5 @@ topics:
   - socket-io
   - sqlite
 area: web
-listed: true
 order: 4
-selected: 1
 ---

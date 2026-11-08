@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { NOT_FOUND, respond, routeKey, type Routes } from './language-worker.ts';
 
-const routes: Routes = { '/': { tr: true, unlisted: false }, '/about': { tr: true, unlisted: false }, '/uses': { tr: true, unlisted: true }, '/only-en': { tr: false, unlisted: false }, '/search-index.json': { tr: true, unlisted: false } };
+const routes: Routes = { '/': { tr: true, unlisted: false }, '/about': { tr: true, unlisted: false }, '/now': { tr: true, unlisted: true }, '/only-en': { tr: false, unlisted: false }, '/search-index.json': { tr: true, unlisted: false } };
 const files: Record<string, [string, string]> = {
   '/': ['home en', 'text/html'], '/__tr': ['home tr', 'text/html'], '/about': ['about en', 'text/html'], '/__tr/about': ['about tr', 'text/html'],
-  '/uses': ['uses en', 'text/html'], '/__tr/uses': ['uses tr', 'text/html'], '/only-en': ['only en', 'text/html'],
+  '/now': ['now en', 'text/html'], '/__tr/now': ['now tr', 'text/html'], '/only-en': ['only en', 'text/html'],
   [NOT_FOUND]: ['missing en', 'text/html'], [`/__tr${NOT_FOUND}`]: ['missing tr', 'text/html'], '/search-index.json': ['{"en":1}', 'application/json'], '/__tr/search-index.json': ['{"tr":1}', 'application/json'],
 };
 const asked: string[] = [];
@@ -45,7 +45,7 @@ test('responses carry the language, privacy and security headers', async () => {
 });
 
 test('unlisted pages say noindex in both languages', async () => {
-  for (const headers of [{}, { cookie: 'lang=tr' }] as Record<string, string>[]) assert.equal((await get('/uses', headers)).headers.get('x-robots-tag'), 'noindex');
+  for (const headers of [{}, { cookie: 'lang=tr' }] as Record<string, string>[]) assert.equal((await get('/now', headers)).headers.get('x-robots-tag'), 'noindex');
 });
 
 test('a page without its Turkish file is served in English', async () => {

@@ -95,7 +95,7 @@ function Field({ paused, api, label }: { paused: boolean; api: RefObject<Api | n
   );
 }
 
-export default function LabStage({ c, ready = false }: { c: Pages['lab']; ready?: boolean }) {
+export default function LabStage({ c }: { c: Pages['lab'] }) {
   const [paused, setPaused] = useState(false);
   useEffect(() => { if (reducedMotion()) setPaused(true); }, []);
   const api = useRef<Api | null>(null);
@@ -103,7 +103,7 @@ export default function LabStage({ c, ready = false }: { c: Pages['lab']; ready?
     <Cut as="section" className="lab-stage" label={c.label}>
       <div className="cut-fill" suppressHydrationWarning><Field paused={paused} api={api} label={c.canvas} /></div>
       <div className="lab-intro">
-        <p className="lab-kicker" data-reveal suppressHydrationWarning><span className={ready ? 'live-dot' : 'wip-dot'} /> {c.kicker}</p>
+        <p className="lab-kicker" data-reveal suppressHydrationWarning><span className="live-dot" /> {c.kicker}</p>
         <h1 className="lab-h1" data-reveal suppressHydrationWarning style={{ '--i': 1 } as CSSProperties}>ai lab<span className="caret" aria-hidden="true">_</span></h1>
         <p className="lab-lede" data-reveal suppressHydrationWarning style={{ '--i': 2 } as CSSProperties}>{c.lede}</p>
       </div>

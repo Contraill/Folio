@@ -4,8 +4,9 @@ import type { Project } from '@/content/schema';
 import { Img } from './kit';
 import { PetCanvas } from './mochi';
 import { ThemeDemo } from './stage';
+import { Typo } from './Typo';
 
-/** Project cover: an image, or a small live preview for the projects that have one. Static unless hydrated. */
+/** Project cover: an image, a small live preview for the projects that have one, or the typographic cover. */
 export function Cover({ p, variant = 'card', eager = false, c, altSuffix }: { p: Project; variant?: 'hero' | 'card'; eager?: boolean; c: Pages['stage']; altSuffix: string }) {
   const im = variant === 'hero' ? (p.hero ?? p.img) : p.img;
   if (p.kind === 'pixel') return (
@@ -15,7 +16,7 @@ export function Cover({ p, variant = 'card', eager = false, c, altSuffix }: { p:
     </div>
   );
   if (p.id === 'huepr') return <div className="cov" style={{ position: 'absolute', inset: 0 }}><ThemeDemo still c={c} /></div>;
-  return im ? <Img im={im} alt={altSuffix.replace('{n}', p.name)} pos={p.pos} contain={p.contain} eager={eager} /> : null;
+  return im ? <Img im={im} alt={altSuffix.replace('{n}', p.name)} pos={p.pos} contain={p.contain} eager={eager} /> : <div className="cov" style={{ position: 'absolute', inset: 0 }}><Typo p={p} /></div>;
 }
 
 export default Cover;

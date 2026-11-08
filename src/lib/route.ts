@@ -2,7 +2,7 @@
 export const MENU = ['projects', 'lab', 'play', 'about', 'cv'] as const;
 export type MenuItem = (typeof MENU)[number];
 
-const ORDER = ['home', 'projects', 'project', 'lab', 'experiment', 'play', 'game', 'about', 'cv', 'uses', 'now', 'secret', 'missing'];
+const ORDER = ['home', 'projects', 'project', 'lab', 'experiment', 'play', 'game', 'about', 'cv', 'privacy', 'now', 'secret', 'missing'];
 /** Pages under a menu section: a project, a lab app, a game. */
 const CHILD: Record<string, string> = { projects: 'project', lab: 'experiment', play: 'game' };
 const PARENT = Object.fromEntries(Object.entries(CHILD).map(([parent, child]) => [child, parent]));

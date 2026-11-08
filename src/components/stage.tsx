@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import type { Pages } from '@/content/schema';
+import { Typo } from './Typo';
 import type { Project } from '@/content/schema';
 import { reducedMotion } from '@/lib/motion';
 import { Img, useLoop } from './kit';
@@ -178,5 +179,5 @@ export function Showcase({ p, active = true, focus, eager = false, c, mochi, loc
   if (p.id === 'huepr') return <ThemeDemo active={active} focus={focus} c={c} />;
   if (p.kind === 'pixel') return (<><div className="kit-bg" style={{ '--t1': '#8a5a3c', '--t2': '#2f3d5c' } as CSSProperties} /><div className="stage-pet" style={{ left: `${focus.x * 100}%`, top: `${focus.y * 100}%` }}><MochiDevice c={mochi} /></div></>);
   const im = p.hero ?? p.img;
-  return im ? <div className="istage"><Img im={im} alt={p.name} pos={p.pos} eager={eager} /></div> : null;
+  return im ? <div className="istage"><Img im={im} alt={p.name} pos={p.pos} eager={eager} /></div> : <Typo p={p} stage />;
 }

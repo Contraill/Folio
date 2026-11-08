@@ -1,6 +1,6 @@
 ---
 import { ArrowUp, Copy, Mail } from 'lucide-react';
-import { EMAIL, GH } from '@/content/site';
+import { EMAIL, GH, LINKEDIN } from '@/content/site';
 import { LOCALES } from '@/i18n/locale';
 import { messages } from '@/i18n/messages';
 import { MENU } from '@/lib/route';
@@ -25,11 +25,11 @@ const names = { en: 'English', tr: 'Türkçe' };
     </div>
     <div class="foot-cols">
       <div><p class="eyebrow plain">{t.pagesLabel}</p><ul>{pages.map((r) => <li><a class="link-u" href={r === 'home' ? '/' : `/${r}`}>{t.nav[r]}</a></li>)}</ul></div>
-      <div><p class="eyebrow plain">{t.elsewhere}</p><ul><li><a class="link-u" href={GH} target="_blank" rel="noreferrer">GitHub ↗</a></li><li><a class="link-u" href={`mailto:${EMAIL}`}>{t.email}</a></li><li><a class="link-u" href="https://oztozlu.dev" target="_blank" rel="noreferrer" translate="no">oztozlu.dev ↗</a></li></ul></div>
+      <div><p class="eyebrow plain">{t.elsewhere}</p><ul><li><a class="link-u" href={GH} target="_blank" rel="noreferrer">GitHub ↗</a></li><li><a class="link-u" href={`mailto:${EMAIL}`}>{t.email}</a></li><li><a class="link-u" href={LINKEDIN} target="_blank" rel="noreferrer">LinkedIn ↗</a></li></ul></div>
     </div>
   </div>
   <div class="legal">
-    <span>© {year} · oztozlu.dev</span>
+    <span>© {year} · oztozlu.dev · <a class="link-u" href="/privacy">{t.privacy}</a></span>
     <span>{t.skinWord} · <span data-skin-label>Graphite</span></span>
     <span class="lang-links" role="group" aria-label={t.language}>
       {LOCALES.map((l) => <a href={`?lang=${l}`} hreflang={l} lang={l} data-set-lang={l} data-astro-reload aria-current={l === locale ? 'true' : undefined}>{names[l]}</a>)}

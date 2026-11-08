@@ -4,7 +4,7 @@ eyebrow: Projeler
 lines:
   - İşlerin çoğu
   - herkese açık.
-note: Buradaki her repo GitHub’da herkese açık. Üstlerindeki yazıları elle ekliyorum.
+note: GitHub’daki herkese açık her repo burada, kendiliğinden listeleniyor. Bazılarının elle yazılmış daha uzun bir anlatımı var.
 totals: Toplamlar
 repos: proje
 languages: dil
@@ -19,7 +19,7 @@ indexView: Liste görünümü
 count: "{n} proje"
 countOne: 1 proje
 countIn: ", {area}"
-empty: Bu alanda henüz public proje yok.
+empty: Bu alanda henüz herkese açık proje yok.
 no: №
 project: Proje
 area: Alan

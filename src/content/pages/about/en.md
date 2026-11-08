@@ -5,9 +5,7 @@ h1a: "Hi, I’m İzzet Can. I build things that sit "
 h1em: between software and hardware.
 h1b: ""
 lede: 3D web apps on real data, Linux theming tools, services for the home network and tiny devices with a personality. Most of what I make ends up public on GitHub, with the hard parts written down.
-draft: "one sentence in your own voice: what you enjoy most, or what you are looking for next"
-portraitLabel: Portrait placeholder
-portraitDraft: "portrait, 4 : 5"
+portrait: İzzet Can Öztozlu, seated at a café table in the evening
 patternsH: What the repos say about how I work
 patterns:
   - - Numbers should be sourced
@@ -21,7 +19,7 @@ patterns:
     - mochi
 path: Path
 pathH: From the first website to the latest push
-pathNote: Dates come from GitHub. The repos are there if you want to check the work.
+pathNote: Dates come from the repositories and the CV. The repos are there if you want to check the work.
 timeline:
   - - Fall 2023
     - First website
@@ -45,13 +43,12 @@ timeline:
     - helios
 formal: Formal version
 formalLead: Need it on one page?
-formalTail: The CV prints in English or Turkish.
+formalTail: The CV is a one-page PDF, in English or Turkish.
 readCv: Read the CV
-uses: What I Use
 now: What I’m On Now
 next: Next steps
 totals: Totals
-repos: projects
+repos: public repos
 languages: languages
 stars: stars
 ---

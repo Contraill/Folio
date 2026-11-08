@@ -30,8 +30,8 @@
 /* Corners follow each skin's identity: Blueprint is crisp, Terminal is square. These used fixed radii. */
 [data-skin='blueprint'] .cut { --r: 8px; --ri: 8px; }
 [data-skin='terminal'] .cut { --r: 0px; --ri: 0px; }
-[data-skin='blueprint'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .draft, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button) { border-radius: var(--r-sm) !important; }
-[data-skin='terminal'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .draft, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button, .rn, .wip-dot, .eyebrow::before, .tl li::before) { border-radius: 0 !important; }
+[data-skin='blueprint'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button) { border-radius: var(--r-sm) !important; }
+[data-skin='terminal'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button, .rn, .eyebrow::before, .tl li::before) { border-radius: 0 !important; }
 
 /* Page transitions keep their choreography with a shorter tail, so the page is usable sooner. */
 ::view-transition-new(page) { animation-duration: 620ms; animation-delay: 100ms; }
@@ -70,13 +70,8 @@ html.intro .mark .i-dot { animation: dot-in 700ms var(--e-spring) 850ms both; }
 .lang-links a[aria-current] { text-decoration: underline; text-underline-offset: 3px; }
 
 /* The portrait's size rule for its monogram was also inflating the pen icon in its note. */
-.portrait .draft svg { width: 13px; opacity: 1; }
 
 /* Placeholder notes stay quiet but readable. */
-.draft { opacity: 1; }
-.draft-k { opacity: 1; }
-.q-ghost, .quote .q-ghost { opacity: .75; }
-.nowp .dark > div:nth-child(2) > p { opacity: .75 !important; }
 
 /* Server-rendered pages must read fine before and without JavaScript. */
 html:not(.js) [data-reveal], html:not(.js) .lines .ln > span { opacity: 1 !important; transform: none !important; clip-path: none !important; }
@@ -96,10 +91,6 @@ html.js .cut:not([data-cut-ready]) > .cut-fill { opacity: 0; }
   .tl p { display: block; overflow: visible; }
 
   /* Notes keep their label on its own line, so the text gets the full width. */
-  .draft { display: flex; flex-wrap: wrap; column-gap: 7px; row-gap: 2px; }
-  .draft-t { flex-basis: 100%; }
-  .portrait .draft { display: inline-flex; flex-wrap: nowrap; }
-  .portrait .draft-t { flex-basis: auto; }
 
   /* Hero, huepr stage: the wallpaper picker sat partly under the card below it. */
   .td:not(.still) .td-win { top: 58px; }
@@ -108,8 +99,6 @@ html.js .cut:not([data-cut-ready]) > .cut-fill { opacity: 0; }
   /* Turkish headline: its longest word has to fit the same width. */
   html[lang='tr'] .hero .hl { font-size: clamp(32px, 10.4vw, 60px); }
   /* About: the portrait's note clears the overlapping device. */
-  .portrait figcaption { left: auto; top: 10px; bottom: auto; }
-  .portrait .draft-t { white-space: nowrap; }
 
   /* CV: the print button matches the toolbar, and the heading clears it. */
   .cv-pdf { height: 38px; padding: 0; background: transparent; }
@@ -126,7 +115,8 @@ html.js .cut:not([data-cut-ready]) > .cut-fill { opacity: 0; }
 }
 
 /* A Turkish page showing English text because its translation isn't written yet. */
-.fallback-note { margin: 0 0 var(--G); padding: 10px 16px; border-radius: var(--r-sm); background: var(--slab); box-shadow: inset 0 0 0 1px var(--line); color: var(--mute); font-size: 14px; }
+/* Next to a repository description that GitHub has only in English, on a Turkish page. */
+.en-note { margin: 0; padding: 6px 12px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px var(--line); color: var(--mute); font-size: 13px; width: fit-content; }
 
 /* CV: the owner's PDF, drawn by the site on a desk in the current skin; a card to open or download it otherwise. */
 .cv-viewer { position: relative; z-index: 2; margin-top: 28px; }

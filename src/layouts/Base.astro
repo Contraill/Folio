@@ -3,7 +3,6 @@ import { ClientRouter } from 'astro:transitions';
 import Footer from '@/components/Footer.astro';
 import Toasts from '@/components/Toasts';
 import Topbar from '@/components/Topbar';
-import { getContent } from '@/content/load';
 import { messages } from '@/i18n/messages';
 import { PREPAINT } from '@/lib/prepaint';
 import '@/styles/reset.css';
@@ -31,7 +30,6 @@ const fullTitle = title ? `${title} · İzzet Can` : t.title;
 
 // One clean address per page, the same in both languages: the language Worker picks the version per visitor.
 const canonical = new URL(Astro.locals.path, Astro.site);
-const fallback = locale === 'tr' && (Astro.locals.fallback || (await getContent(Astro.locals)).fallbackGroups.size > 0);
 
 const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PREPAINT));
 Astro.csp?.insertScriptHash(`sha256-${btoa(String.fromCharCode(...new Uint8Array(digest)))}`);
@@ -66,7 +64,7 @@ Astro.csp?.insertScriptHash(`sha256-${btoa(String.fromCharCode(...new Uint8Array
     <a class="skip" href="#main">{t.skip}</a>
     <div class="frame" id="top">
       <Topbar client:load transition:persist="topbar" transition:persist-props t={t} path={Astro.locals.path} repo={repo} locale={locale} />
-      <main id="main" tabindex="-1" data-repo={repo}>{fallback && <p class="fallback-note">{t.fallbackNote}</p>}<slot /></main>
+      <main id="main" tabindex="-1" data-repo={repo}><slot /></main>
       <Footer />
     </div>
     <div id="overlays" transition:persist="overlays"><Toasts client:idle /></div>

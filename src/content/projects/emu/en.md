@@ -1,6 +1,7 @@
 ---
 name: EMU Event Reporting
 repo: EMU-Activity-and-Event-Reporting
+repoId: 1123706600
 lang: PHP
 date: '2025-12-27'
 since: Dec 2025
@@ -18,5 +19,4 @@ topics:
   - jspdf
   - sdg
 area: web
-listed: false
 ---

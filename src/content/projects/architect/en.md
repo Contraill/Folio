@@ -1,6 +1,7 @@
 ---
 name: Architect Office
 repo: Architect-Office-MGMT-System
+repoId: 1128379514
 lang: Java
 date: '2026-01-05'
 since: Jan 2026
@@ -18,5 +19,4 @@ topics:
   - mysql
   - flatlaf
 area: desktop-apps
-listed: false
 ---

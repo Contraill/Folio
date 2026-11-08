@@ -1,4 +1,5 @@
-/* Before the build: reads the owner's repositories and profile pins from GitHub into .folio/github.json.
+/* Before the build: reads the owner's public repositories (with their languages and the last commit on the default
+   branch) and profile pins from GitHub into .folio/github.json.
    It uses only GITHUB_TOKEN, which in GitHub Actions is the job's own short-lived token. Private repositories and
    pins are dropped before anything is written, Folio's own repository too, and the log carries counts only.
    Without a token: in CI the build stops; on a developer machine the recorded snapshot in tests/fixtures is used,
@@ -37,10 +38,11 @@ const QUERY = `query($owner: String!, $after: String) {
     repositories(first: 100, after: $after, ownerAffiliations: OWNER, orderBy: { field: PUSHED_AT, direction: DESC }) {
       pageInfo { hasNextPage endCursor }
       nodes {
-        name isPrivate description homepageUrl pushedAt createdAt stargazerCount
-        primaryLanguage { name } openGraphImageUrl usesCustomOpenGraphImage
+        databaseId name isPrivate isTemplate isFork isArchived description homepageUrl pushedAt createdAt stargazerCount
+        primaryLanguage { name } languages(first: 6, orderBy: { field: SIZE, direction: DESC }) { nodes { name } }
+        openGraphImageUrl usesCustomOpenGraphImage
         repositoryTopics(first: 20) { nodes { topic { name } } }
-        folioYaml: object(expression: "HEAD:.github/folio.yaml") { ... on Blob { text } }
+        defaultBranchRef { target { ... on Commit { messageHeadline committedDate url } } }
       }
     }
   }
@@ -76,5 +78,4 @@ const apps = ((await catalog.json()) as { apps: unknown[] }).apps;
 if (!Array.isArray(apps)) throw new Error('The app catalog has no list of apps');
 const snapshot: Snapshot = { fetchedAt: new Date().toISOString(), source: 'live', owner: OWNER, repos, pins, apps };
 writeFileSync(OUT, JSON.stringify(snapshot, null, 2) + '\n');
-const tagged = (t: string) => repos.filter((r) => r.topics.includes(t)).length;
-console.log(`GitHub: ${repos.length} public repositories, ${snapshot.pins.length} pins, ${tagged('folio')} with the folio topic; catalog: ${apps.length} apps.`);
+console.log(`GitHub: ${repos.length} public repositories, ${snapshot.pins.length} pins; catalog: ${apps.length} apps.`);

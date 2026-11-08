@@ -4,7 +4,7 @@ eyebrow: Projects
 lines:
   - Work, mostly
   - in public.
-note: Every repo here is public on GitHub. The write-ups on top are added by hand.
+note: Every public repository on GitHub is here, found automatically. Some have a longer write-up, added by hand.
 totals: Totals
 repos: projects
 languages: languages

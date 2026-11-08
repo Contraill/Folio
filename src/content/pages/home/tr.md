@@ -27,8 +27,8 @@ tail: Küçücük ekranlar için firmware, kaynağı belli veriyle çalışan we
 moreLabel: Bu sitede daha fazlası
 more: Daha fazla
 morePages: Diğer sayfalar
-labStatus: Devam ediyor
-labTeaser: Tezgâh kuruluyor. Deneyler gerçek olduklarında buraya gelecek.
-playStatus: Yapım aşamasında
-playTeaser: Küçük tarayıcı oyunları atölyede. Şimdilik bir oyuncak kutusu var.
+labStatus: Defter açık
+labTeaser: Öğrenen sistemlerle deneyler; her biri sayfanın içinde çalışır.
+playStatus: Oynamaya açık
+playTeaser: Küçük tarayıcı oyunları ve savurabileceğin bir oyuncak kutusu.
 ---

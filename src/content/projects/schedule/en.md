@@ -1,6 +1,7 @@
 ---
 name: Syntax Schedule
 repo: Syntax-Schedule
+repoId: 1065271102
 lang: HTML
 date: '2025-09-27'
 since: Sep 2025
@@ -17,5 +18,4 @@ topics:
   - css
   - print
 area: web
-listed: false
 ---

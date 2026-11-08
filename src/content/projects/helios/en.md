@@ -1,6 +1,7 @@
 ---
 name: Helios
 repo: Helios
+repoId: 1303726001
 lang: TypeScript
 date: '2026-07-17'
 since: Jul 2026
@@ -23,9 +24,7 @@ topics:
   - webgl
   - nasa-api
 area: web
-listed: true
 order: 1
-featured: 0
 case:
   lede: "Planetary science at human scale: your weight on Mars, the length of a day on Venus, the time sunlight needs to reach Neptune."
   stack: Next.js 16 · React 19 · TypeScript · Three.js / React Three Fiber · Zustand · Tailwind v4 · Zod · Vitest · Playwright
@@ -81,8 +80,4 @@ case:
             w: 1685
             h: 1036
           - Earth in Explore with time controls
-    - title: What I learned
-      todo: true
-      paras:
-        - "[What was the hardest decision, and what would you do differently next time?]"
 ---

@@ -5,9 +5,7 @@ h1a: "Merhaba, ben İzzet Can. "
 h1em: Yazılımla donanımın arasında
 h1b: " duran şeyler yapıyorum."
 lede: Gerçek veriyle çalışan 3D web uygulamaları, Linux tema araçları, ev ağı servisleri ve kişiliği olan küçük cihazlar. Yaptıklarımın çoğu GitHub’da herkese açık, zor kısımları da yazılı.
-draft: "kendi sesinle bir cümle: en çok neyden keyif alıyorsun ya da sırada ne arıyorsun"
-portraitLabel: Portre için yer tutucu
-portraitDraft: "portre, 4 : 5"
+portrait: İzzet Can Öztozlu, akşam bir kafede masada otururken
 patternsH: Repolar nasıl çalıştığımı anlatıyor
 patterns:
   - - Sayıların kaynağı olmalı
@@ -21,7 +19,7 @@ patterns:
     - mochi
 path: Yol
 pathH: İlk web sitesinden son push’a
-pathNote: Tarihler GitHub’dan geliyor. İşleri kontrol etmek istersen repolar orada.
+pathNote: Tarihler repolardan ve CV’den geliyor. İşleri kontrol etmek istersen repolar orada.
 timeline:
   - - Güz 2023
     - İlk web sitesi
@@ -45,13 +43,12 @@ timeline:
     - helios
 formal: Resmî sürüm
 formalLead: Tek sayfada mı lazım?
-formalTail: CV İngilizce ya da Türkçe yazdırılabiliyor.
+formalTail: CV, İngilizce ya da Türkçe tek sayfalık bir PDF.
 readCv: CV’yi Oku
-uses: Kullandıklarım
 now: Şu An Ne Yapıyorum
 next: Sonraki adımlar
 totals: Toplamlar
-repos: proje
+repos: açık repo
 languages: dil
 stars: yıldız
 ---

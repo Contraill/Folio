@@ -12,10 +12,22 @@ started: Başlangıç
 stars: Yıldız
 noStars: Henüz yok
 topics: Konular
-lesson: "{n} yaparken çıkardığım dürüst ders buraya gelecek."
-fromReadme: README’den
 about: Bu proje hakkında
-noWriteUp: Bu projenin uzun yazısı henüz hazır değil. Ayrıntılar repoda.
+noWriteUp: Bu projenin detaylı anlatımı henüz hazırlanmadı.
+noDesc: Reponun henüz bir açıklaması yok.
+englishOnly: Bu açıklama GitHub’dan geliyor ve şimdilik yalnızca İngilizce.
+languages: Diller
+lastPush: Son push
+type: Tür
+types:
+  project: Proje
+  profile: Profil README’si
+  template: Şablon
+  fork: Fork
+  game: Oyun
+  lab: Lab uygulaması
+archived: Arşivlendi
+openApp: "{s} bölümünde aç"
 screens:
   - Ekranlar
   - ve durumlar

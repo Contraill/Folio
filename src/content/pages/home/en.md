@@ -27,8 +27,8 @@ tail: Firmware for tiny screens, web apps on sourced data, Linux desktops that f
 moreLabel: More on this site
 more: More
 morePages: More pages
-labStatus: In progress
-labTeaser: The bench is being set up. Experiments land here once they are real.
-playStatus: Under construction
-playTeaser: Small browser games are in the workshop. For now there is a toy box.
+labStatus: Notebook open
+labTeaser: Experiments with learning systems, each running in the page.
+playStatus: Open for play
+playTeaser: Small browser games, and a toy box to throw around.
 ---

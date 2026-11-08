@@ -4,6 +4,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { Routes } from '../src/lib/language-worker.ts';
+import { dataHash } from './data-hash.ts';
 import type { Snapshot } from '../src/content/discover.ts';
 
 const DIST = 'dist';
@@ -34,6 +35,7 @@ const build = {
   builtAt: new Date().toISOString(),
   trigger: process.env.FOLIO_TRIGGER ?? 'local',
   github: { source: github.source, fetchedAt: github.fetchedAt },
+  data: dataHash(github),
   counts: JSON.parse(readFileSync('.folio/discovery.json', 'utf8')),
 };
 writeFileSync(join(DIST, '_build.json'), JSON.stringify(build, null, 2) + '\n');

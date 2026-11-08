@@ -1,6 +1,7 @@
 ---
 name: Nothing KDE Theme
 repo: Nothing-Kde-Theme
+repoId: 1372704241
 lang: QML
 date: '2026-09-16'
 since: Sep 2026
@@ -22,7 +23,5 @@ topics:
   - kvantum
   - aurorae
 area: theming
-listed: true
 order: 2
-selected: 3
 ---

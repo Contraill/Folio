@@ -32,20 +32,24 @@ test('copy never describes a device or an input method', () => {
   for (const text of texts(pages)) assert.doesNotMatch(text, words, text);
 });
 
-test('uses, now and secret are the unlisted pages, in both languages', () => {
+test('now and secret are the unlisted pages, in both languages', () => {
   const unlisted = (lang: 'en' | 'tr') => PAGE_GROUPS.filter((g) => pages[g][lang].visibility === 'unlisted');
-  assert.deepEqual(unlisted('en'), ['uses', 'now', 'secret']);
+  assert.deepEqual(unlisted('en'), ['now', 'secret']);
   assert.deepEqual(unlisted('tr'), unlisted('en'));
 });
 
-test('projects written in Folio fit their schema, and their images exist', () => {
-  assert.equal(projects.filter((p) => p.en.listed).length, 7, 'the seven projects listed before GitHub topics');
-  for (const key of ['order', 'featured', 'selected'] as const) {
-    const ranks = projects.flatMap((p) => (p.en[key] === undefined ? [] : [p.en[key]]));
-    assert.equal(new Set(ranks).size, ranks.length, `${key} ranks are unique`);
-  }
+test('no placeholder is left in the copy: no brackets to fill in, no to-do notes', () => {
+  const placeholder = /^\[.*\]$|\b(todo|tbd|lorem|placeholder|goes here)\b|buraya gelecek/i;
+  for (const text of [...texts(pages), ...texts(projects)]) assert.doesNotMatch(text, placeholder, text);
+});
+
+test('projects written in Folio fit their schema, link their repository by id, and their images exist', () => {
+  const recorded = JSON.parse(readFileSync(new URL('../../tests/fixtures/github.json', import.meta.url), 'utf8')) as { repos: { id: number; name: string }[] };
+  const orders = projects.flatMap((p) => (p.en.order === undefined ? [] : [p.en.order]));
+  assert.equal(new Set(orders).size, orders.length, 'order ranks are unique');
   for (const p of projects) {
     for (const im of [p.en.img, p.en.hero, ...(p.en.case?.sections.flatMap((s) => s.gal?.map(([g]) => g) ?? []) ?? [])]) if (im) assert.ok(inPublic(im.src), `${p.id}: ${im.src}`);
-    if (p.en.listed) assert.notEqual(p.tr.desc, undefined, `${p.id} has Turkish text`);
+    assert.ok(p.tr.desc, `${p.id} has Turkish text`);
+    if (p.en.repo) assert.equal(recorded.repos.find((r) => r.id === p.en.repoId)?.name, p.en.repo, `${p.id}: repoId matches ${p.en.repo}`);
   }
 });

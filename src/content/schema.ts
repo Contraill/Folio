@@ -1,5 +1,5 @@
-/* Shapes of the content in src/content/ and of `.github/folio.yaml` in project repositories. Folio's own files
-   are checked at build and an error stops it; a repository's folio.yaml that doesn't fit only drops that card.
+/* Shapes of the content in src/content/ and of the controller's catalog. Folio's own files are checked at build and
+   an error stops it; a catalog entry that doesn't fit only drops that app.
    Relative imports only: the GitHub step and the unit tests load this file in Node. */
 import { z } from 'astro/zod';
 import { DOMAIN_SLUG } from './site.ts';
@@ -20,7 +20,6 @@ export const CaseSection = z.object({
   paras: z.array(z.string()).optional(),
   list: z.array(pair).optional(),
   gal: z.array(z.tuple([Img, z.string()])).optional(),
-  todo: z.boolean().optional(),
 }).strict();
 export const Case = z.object({ lede: z.string(), stack: z.string(), facts: z.array(pair).optional(), sections: z.array(CaseSection) }).strict();
 
@@ -32,27 +31,17 @@ const ProjectFields = z.object({
   home: z.url().optional(), desc: z.string(), topics: z.array(z.string()),
 }).strict();
 
-/* A project written in Folio (src/content/projects/<id>/en.md). `repo` links it to its GitHub repository; without
-   one it is a project that isn't on GitHub. `listed` shows it even before its repository has the `folio` topic. */
+/* A project written in Folio (src/content/projects/<id>/en.md). `repoId` (the repository's numeric id, which
+   survives renames) or `repo` (its name) links it to its GitHub repository; without either it is a project that
+   isn't on GitHub. `order` puts it ahead of the projects sorted by last push. */
 export const ProjectEntry = ProjectFields.extend({
   area: z.enum(DOMAIN_SLUG as [string, ...string[]]),
-  listed: z.boolean().default(false),
+  repoId: z.number().int().positive().optional(),
   order: z.number().int().optional(),
-  featured: z.number().int().optional(),
-  selected: z.number().int().optional(),
   case: Case.optional(),
 }).strict();
 /* Turkish only holds what is translated, laid over the English. */
 export const ProjectTranslation = z.object({ name: z.string().optional(), desc: z.string().optional(), since: z.string().optional(), case: Case.optional() }).strict();
-
-/* `.github/folio.yaml` in a project, game or lab repository. English text comes from the repository itself. */
-const Localized = z.object({ en: z.string().optional(), tr: z.string().optional() }).strict();
-export const FolioYaml = z.object({
-  title: Localized.optional(),
-  summary: Localized.optional(),
-  order: z.number().int().optional(),
-  area: z.enum(DOMAIN_SLUG as [string, ...string[]]).optional(),
-}).strict();
 
 /* A game or lab app as the Folio controller lists it after deploying it (catalog.json): only apps that are public. */
 const INPUTS = ['keyboard', 'touch', 'mouse', 'gamepad'] as const;
@@ -76,7 +65,6 @@ export type CatalogApp = z.infer<typeof CatalogApp>;
 /* Page copy, one entry per group (src/content/pages/<group>/{en,tr}.md). */
 export const PageBodies = {
   shared: z.object({
-    toWrite: z.string(),
     stage: z.object({
       planets: z.object(text('Mercury Venus Earth Mars Jupiter Saturn Uranus Neptune')).strict(),
       ...text('orbit days oneYear years orreryLabel site wallpaper injected chooseWall wallItem vars'),
@@ -92,20 +80,20 @@ export const PageBodies = {
     lines: pair,
   }).strict(),
   case: z.object({
-    ...text('projects breadcrumb previous next live repo specs language area started stars noStars topics lesson fromReadme about noWriteUp screensGroup show enlarge enlargeScreen enlarged screenshot nextProject readNext allProjects'),
-    screens: pair,
+    ...text('projects breadcrumb previous next live repo specs language area started stars noStars topics about noWriteUp noDesc englishOnly languages lastPush type archived openApp screensGroup show enlarge enlargeScreen enlarged screenshot nextProject readNext allProjects'),
+    screens: pair, types: z.object(text('project profile template fork game lab')).strict(),
   }).strict(),
-  lab: z.object({ ...text('title label kicker lede kickerReady ledeReady catalogH catalogNote canvas controls drop surface pause resume notebook now nextLabel rule nowText nextText ruleText foot planH planned'), plan: z.array(pair) }).strict(),
-  play: z.object({ ...text('title label status h1 note statusReady h1Ready noteReady catalogH catalogNote canvas shake pause resume tape rulesH'), rules: z.array(pair) }).strict(),
-  apps: z.object(text('breadcrumb play lab start newTab repo fullscreen exitFullscreen loading slow noEmbed frameLabel hostNote inputs language updated stars noStars')).strict(),
+  lab: z.object({ ...text('title label kicker lede empty catalogH catalogNote canvas controls drop surface pause resume notebook now nextLabel rule nowText nextText ruleText foot planH planned'), plan: z.array(pair) }).strict(),
+  play: z.object({ ...text('title label status h1 note empty catalogH catalogNote canvas shake pause resume rulesH'), rules: z.array(pair) }).strict(),
+  apps: z.object(text('breadcrumb play lab start newTab repo fullscreen exitFullscreen loading slow noEmbed frameLabel hostNote inputs language updated stars noStars englishOnly')).strict(),
   about: z.object({
-    ...text('title eyebrow h1a h1em h1b lede draft portraitLabel portraitDraft patternsH path pathH pathNote formal formalLead formalTail readCv uses now next totals repos languages stars'),
+    ...text('title eyebrow h1a h1em h1b lede portrait patternsH path pathH pathNote formal formalLead formalTail readCv now next totals repos languages stars'),
     patterns: z.array(z.tuple([z.string(), z.string(), z.string()])),
     timeline: z.array(z.tuple([z.string(), z.string(), z.string(), z.string()])),
   }).strict(),
-  uses: z.object({ ...visibility, ...text('title eyebrow note'), h1: pair, groups: z.array(z.tuple([z.string(), z.array(pair)])) }).strict(),
-  now: z.object({ ...visibility, ...text('title eyebrow h1 focus draft pushes'), updated: day }).strict(),
-  secret: z.object({ ...visibility, ...text('title h1 note letter open') }).strict(),
+  now: z.object({ ...visibility, ...text('title eyebrow h1 lede commits synced empty') }).strict(),
+  secret: z.object({ ...visibility, ...text('title h1 note word letter open') }).strict(),
+  privacy: z.object({ ...text('title eyebrow h1 lede updated'), sections: z.array(pair) }).strict(),
 };
 export type PageGroup = keyof typeof PageBodies;
 export const PAGE_GROUPS = Object.keys(PageBodies) as PageGroup[];
@@ -115,9 +103,17 @@ export type Img = z.infer<typeof Img>;
 export type CaseSection = z.infer<typeof CaseSection>;
 export type Case = z.infer<typeof Case>;
 export type Kind = z.infer<typeof ProjectFields>['kind'];
-export type Project = Omit<z.infer<typeof ProjectFields>, never> & { id: string; d: number };
+/** What a repository is: the profile README, a template, a fork, a game or lab app in the catalog, or a project. */
+export type RepoKind = 'project' | 'profile' | 'template' | 'fork' | 'game' | 'lab';
+export type Project = z.infer<typeof ProjectFields> & {
+  id: string; d: number; type: RepoKind;
+  /** Whether Folio has a written case study for it. */
+  written: boolean;
+  langs: string[]; archived: boolean;
+  /** The game's or lab app's page in Folio. */
+  app?: string;
+};
 export type ProjectEntry = z.infer<typeof ProjectEntry>;
 export type ProjectTranslation = z.infer<typeof ProjectTranslation>;
-export type FolioYaml = z.infer<typeof FolioYaml>;
 /* What pages receive: the shared group spread at the top, as the components expect. */
 export type Pages = Group<'shared'> & { [K in Exclude<PageGroup, 'shared'>]: Group<K> };

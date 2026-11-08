@@ -5,7 +5,7 @@ import { frames, settled, transitionEnded, watchForProblems } from './helpers';
 /* Every page and its own interactions, in a browser. Layout and motion run in Chromium and Firefox; app logic that
    doesn't depend on the engine is tagged @once. */
 
-const ROUTES = ['/', '/projects', '/projects/helios', '/projects/mochi', '/projects/huepr', '/projects/orbis', '/projects/bct', '/lab', '/play', '/about', '/cv', '/uses', '/now', '/secret'];
+const ROUTES = ['/', '/projects', '/projects/helios', '/projects/mochi', '/projects/huepr', '/projects/orbis', '/projects/bct', '/lab', '/play', '/about', '/cv', '/privacy', '/now', '/secret'];
 
 test.describe('every page', () => {
   for (const route of ROUTES) {
@@ -142,8 +142,9 @@ test.describe('projects', () => {
     const problems = await watchForProblems(page);
     await page.goto('/projects');
     await settled(page);
+    // Every public repository of this build is a project.
     const total = await page.locator('.gcard').count();
-    expect(total).toBe(7);
+    expect(total).toBe((await (await page.request.get('/_build.json')).json()).counts.projects);
     // Filtering and going back stay on the page: the router must never start a navigation.
     await page.evaluate(() => {
       const w = window as never as { marker: Element; navigations: number };
@@ -156,7 +157,7 @@ test.describe('projects', () => {
     await expect(page.locator('.gcard')).toHaveCount(1);
     expect(await page.evaluate(() => (window as never as { marker: Element }).marker === document.querySelector('main'))).toBe(true);
     await page.goBack();
-    await expect(page.locator('.gcard')).toHaveCount(7);
+    await expect(page.locator('.gcard')).toHaveCount(total);
     await expect(page).toHaveURL(/\/projects$/);
     expect(await page.evaluate(() => (window as never as { navigations: number }).navigations)).toBe(0);
     expect(await page.evaluate(() => (window as never as { marker: Element }).marker === document.querySelector('main'))).toBe(true);
@@ -405,8 +406,9 @@ test.describe('games and lab apps', () => {
       await page.goto(`/${kind}`);
       await expect(page.locator('main h1')).toBeVisible();
       await expect(page.locator('.app-card')).toHaveCount(counts[kind]);
-      // Until there is one, the stage still says the section is being built.
-      await expect(page.locator('main .wip-dot')).toHaveCount(counts[kind] ? 0 : 1);
+      // With none yet, the catalogue says so in one line; nothing says the section is unfinished.
+      await expect(page.locator('.apps-empty')).toHaveCount(counts[kind] ? 0 : 1);
+      await expect(page.locator('main .wip-dot, main .tape')).toHaveCount(0);
       for (const href of await page.locator('.app-card').evaluateAll((cards) => cards.map((c) => c.getAttribute('href')))) {
         expect((await request.get(href!)).status(), href!).toBe(200);
       }

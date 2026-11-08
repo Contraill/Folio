@@ -1,6 +1,7 @@
 ---
 name: Breast Cancer Tracker
 repo: Breast-Cancer-Tracker
+repoId: 1027125922
 lang: Vue
 date: '2025-07-27'
 since: Summer 2025
@@ -19,7 +20,5 @@ topics:
   - firestore
   - internship-project
 area: web
-listed: true
 order: 5
-selected: 2
 ---

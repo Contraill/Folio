@@ -8,7 +8,7 @@ import { copyText } from '@/lib/copy';
 import { reducedMotion } from '@/lib/motion';
 import { overlays, useReturnFocus } from '@/lib/overlay';
 import { currentMenuItem, MENU } from '@/lib/route';
-import { setContactOpen, setSearchOpen, setSkin, SKIN_KEYS, useStore, type SkinKey } from '@/lib/store';
+import { offeredSkins, setContactOpen, setSearchOpen, setSkin, useStore, type SkinKey } from '@/lib/store';
 import { EMAIL, GH } from '@/content/site';
 import { Arrow, Seg } from './kit';
 
@@ -68,6 +68,7 @@ export function Swatch({ skin, size = 28 }: { skin: SkinKey; size?: number }) {
 
 function SkinList({ t }: { t: Messages }) {
   const skin = useStore((s) => s.skin);
+  const unlocked = useStore((s) => s.unlocked);
   const effective = useStore((s) => s.effective);
   const pick = (key: SkinKey, e: MouseEvent<HTMLButtonElement>) => {
     const origin = document.querySelector('[data-skin-trigger]')?.getBoundingClientRect();
@@ -77,7 +78,7 @@ function SkinList({ t }: { t: Messages }) {
   };
   return (
     <div role="radiogroup" aria-label={t.skinWord}>
-      {SKIN_KEYS.map((key) => (
+      {offeredSkins(unlocked).map((key) => (
         <button key={key} type="button" role="radio" aria-checked={skin === key} className="skin-opt" onClick={(e) => pick(key, e)}>
           <Swatch skin={key} />
           <span className="so-txt">

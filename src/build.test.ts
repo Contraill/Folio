@@ -9,7 +9,7 @@ const dist = new URL('../dist/', import.meta.url).pathname;
 const skip = !existsSync(join(dist, '_build.json')) && 'run after a build';
 const files = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(join(dir, e.name)) : [join(dir, e.name)]));
 const read = (path: string) => readFileSync(join(dist, path), 'utf8');
-const UNLISTED = ['/uses', '/now', '/secret'];
+const UNLISTED = ['/now', '/secret'];
 
 test('no public file carries the route list or links to the internal prefix', { skip }, () => {
   const routes = JSON.parse(readFileSync(new URL('../.folio/routes.json', import.meta.url), 'utf8'));
@@ -24,9 +24,10 @@ test('no public file carries the route list or links to the internal prefix', { 
 
 test('/_build.json says which build is live and nothing more', { skip }, () => {
   const build = JSON.parse(read('_build.json'));
-  assert.deepEqual(Object.keys(build), ['sha', 'builtAt', 'trigger', 'github', 'counts']);
+  assert.deepEqual(Object.keys(build), ['sha', 'builtAt', 'trigger', 'github', 'data', 'counts']);
   assert.match(build.sha, /^[0-9a-f]{40}$/);
-  assert.deepEqual(Object.keys(build.counts), ['projects', 'play', 'lab']);
+  assert.match(build.data, /^[0-9a-f]{64}$/, 'a hash of the published data, nothing readable');
+  assert.deepEqual(Object.keys(build.counts), ['projects', 'written', 'play', 'lab']);
 });
 
 test('unlisted pages stay out of the sitemap and the site search, and say noindex in both languages', { skip }, () => {

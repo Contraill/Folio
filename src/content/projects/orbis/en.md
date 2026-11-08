@@ -1,6 +1,7 @@
 ---
 name: Orbis
 repo: Orbis
+repoId: 1406926081
 lang: Python
 date: '2026-10-06'
 since: Oct 2026
@@ -22,7 +23,5 @@ topics:
   - docker
   - raspberry-pi
 area: self-hosted
-listed: true
 order: 3
-selected: 0
 ---

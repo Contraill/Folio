@@ -1,6 +1,7 @@
 ---
 name: Nodesk
 repo: Nodesk
+repoId: 1436861716
 lang: Python
 date: '2026-10-28'
 since: Oct 2026
@@ -19,5 +20,4 @@ topics:
   - openwrt
   - tailscale
 area: self-hosted
-listed: false
 ---

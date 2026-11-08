@@ -4,16 +4,16 @@ import { messages } from '@/i18n/messages';
 import { Arrow } from './kit';
 
 /* The games or lab apps of this build, as cards that lead to their own page. */
-type Props = { apps: AppPage[]; heading: string; note: string; locale: 'en' | 'tr' };
-const { apps, heading, note, locale } = Astro.props;
+type Props = { kind: 'play' | 'lab'; apps: AppPage[]; heading: string; note: string; empty: string; locale: 'en' | 'tr' };
+const { kind, apps, heading, note, empty, locale } = Astro.props;
 const inputs = messages[locale].inputs as Record<string, string>;
-const kind = apps[0]?.kind;
 ---
 <section class="slab pad apps" aria-labelledby={`${kind}-apps-h`}>
   <div class="apps-head">
     <h2 id={`${kind}-apps-h`} class="apps-h2" data-reveal>{heading}</h2>
     <p class="small" data-reveal style="--i: 1">{note}</p>
   </div>
+  {apps.length === 0 && <p class="apps-empty" data-reveal style="--i: 1">{empty}</p>}
   <ul class="app-grid">
     {apps.map((app, i) => (
       <li data-reveal style={`--i: ${i + 1}`}>

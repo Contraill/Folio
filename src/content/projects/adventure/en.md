@@ -1,6 +1,7 @@
 ---
 name: Programming Adventure
 repo: Programming-Adventure
+repoId: 1431258818
 lang: HTML
 date: '2023-10-15'
 since: Fall 2023
@@ -19,5 +20,4 @@ topics:
   - javascript
   - static-site
 area: web
-listed: false
 ---

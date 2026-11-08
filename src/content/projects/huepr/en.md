@@ -1,6 +1,7 @@
 ---
 name: huepr
 repo: huepr
+repoId: 1185310379
 lang: JavaScript
 date: '2026-03-18'
 since: Mar 2026
@@ -25,9 +26,7 @@ topics:
   - native-messaging
   - theming
 area: theming
-listed: true
 order: 0
-featured: 1
 case:
   lede: Change the Hyprland wallpaper and the websites you use change with it.
   stack: WebExtension (Manifest V2) · JavaScript · Python Native Messaging host · Shell installer · web-ext
@@ -71,8 +70,4 @@ case:
             w: 1086
             h: 730
           - The huepr repository on GitHub
-    - title: What I learned
-      todo: true
-      paras:
-        - "[What surprised you about Native Messaging or about theming sites you don’t control?]"
 ---

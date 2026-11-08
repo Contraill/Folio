@@ -1,0 +1,20 @@
+---
+import { getContent } from '@/content/load';
+import Base from '@/layouts/Base.astro';
+import { localePaths } from '@/lib/locales';
+
+export const getStaticPaths = localePaths;
+
+const c = (await getContent(Astro.locals)).pages.privacy;
+---
+<Base title={c.title}>
+  <article class="slab pad privacy" aria-labelledby="pv-h">
+    <p class="eyebrow">{c.eyebrow}</p>
+    <h1 id="pv-h" class="display" style="font-size: clamp(36px, 4.4vw, 64px); margin-top: 16px">{c.h1}</h1>
+    <p class="lede" style="margin-top: 18px; max-width: 54ch">{c.lede}</p>
+    <dl class="pv-list">
+      {c.sections.map(([title, text]) => <div><dt>{title}</dt><dd>{text}</dd></div>)}
+    </dl>
+    <p class="small" style="margin-top: 28px">{c.updated}</p>
+  </article>
+</Base>

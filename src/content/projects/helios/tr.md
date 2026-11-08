@@ -56,8 +56,4 @@ case:
             w: 1685
             h: 1036
           - Zaman kontrolleriyle keşif görünümünde Dünya
-    - title: Ne öğrendim
-      todo: true
-      paras:
-        - "[En zor karar neydi, bir dahakine neyi farklı yapardın?]"
 ---

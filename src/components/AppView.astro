@@ -9,7 +9,6 @@ import { Arrow } from './kit';
 /* One game or lab app: what it is, the app itself in a frame, and where else to run it. */
 type Props = { app: AppPage; c: Pages['apps']; locale: 'en' | 'tr' };
 const { app, c, locale } = Astro.props;
-if (!app.translated) Astro.locals.fallback = true;
 const inputs = messages[locale].inputs as Record<string, string>;
 const fill = (text: string) => text.replace('{n}', app.name).replace('{host}', app.host);
 const section = app.kind === 'play' ? c.play : c.lab;
@@ -24,7 +23,7 @@ const facts = [[c.inputs, app.inputs.map((i) => inputs[i]).join(' · ')], [c.lan
     </div>
     <div class="app-intro">
       <h1 id="app-h" class="display app-h1" data-reveal="fade" style={`--w: ${longest}`}>{app.name}</h1>
-      <p class="two-tone app-lede" data-reveal style="--i: 1">{app.summary}</p>
+      <div data-reveal style="--i: 1"><p class="two-tone app-lede" lang={app.translated ? undefined : 'en'}>{app.summary}</p>{!app.translated && <p class="en-note" style="margin-top: 10px">{c.englishOnly}</p>}</div>
     </div>
     <AppFrame client:load name={app.name} url={app.url} host={app.host} embed={app.embed} aspect={app.aspect} locale={locale}
       c={{ start: c.start, newTab: c.newTab, fullscreen: c.fullscreen, exitFullscreen: c.exitFullscreen, loading: c.loading, slow: c.slow, noEmbed: c.noEmbed, frameLabel: c.frameLabel }} />

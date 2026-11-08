@@ -6,7 +6,7 @@ import { expect, test } from './access';
 /* What the deployed Worker and its static files answer, over HTTP. No browser engine is involved, so these run once.
    Each check first proves it got Folio's own answer (status, type, page), so an Access page can never pass for one. */
 const remote = process.env.BASE_URL?.startsWith('https://') ? process.env.BASE_URL : undefined;
-const UNLISTED = ['/uses', '/now', '/secret'];
+const UNLISTED = ['/now', '/secret'];
 const TR = { cookie: 'lang=tr' };
 
 /** A comma-separated header (Cache-Control, Vary, X-Robots-Tag) as a set of lower-case directives. */
@@ -120,7 +120,7 @@ test.describe('indexing', { tag: '@once' }, () => {
       // Pages may link to them (About does); the top bar and the footer never do.
       const menus = [/<header class="topbar">[\s\S]*?<\/header>/, /<footer[\s\S]*?<\/footer>/].map((re) => re.exec(text)?.[0] ?? '');
       expect(menus.every(Boolean), `${path} has its top bar and footer`).toBe(true);
-      for (const menu of menus) expect(menu, path).not.toMatch(/href="\/(uses|now|secret)"/);
+      for (const menu of menus) expect(menu, path).not.toMatch(/href="\/(now|secret)"/);
       if (UNLISTED.includes(path)) continue;
       expect(text, path).not.toContain('name="robots"');
       // Cloudflare marks every response from a Preview address noindex; the site itself only marks its own.
@@ -128,16 +128,18 @@ test.describe('indexing', { tag: '@once' }, () => {
     }
   });
 
-  test('unknown pages and unpublished projects answer 404 in the visitor language and stay out of indexes', { tag: '@smoke' }, async ({ request }) => {
-    for (const path of ['/does-not-exist', '/projects/does-not-exist', '/projects/nodesk', '/admin', '/About']) {
+  test('unknown pages, removed pages and private repositories answer 404 in the visitor language and stay out of indexes', { tag: '@smoke' }, async ({ request }) => {
+    // /uses was removed for good: a real 404, no redirect. Folio's own repository is private, so it is never a project.
+    for (const path of ['/does-not-exist', '/projects/does-not-exist', '/projects/folio', '/uses', '/uses/', '/admin', '/About']) {
       const response = await request.get(path);
       await page(response, 404);
       expect(directives(response.headers()['x-robots-tag']), path).toContain('noindex');
     }
     const turkish = await request.get('/does-not-exist', { headers: TR });
     expect(await page(turkish, 404)).toContain('<html lang="tr"');
-    expect(await page(await request.get('/projects'))).not.toContain('Nodesk');
-    expect(await (await request.get('/search-index.json')).text()).not.toContain('Nodesk');
+    expect(await page(await request.get('/projects'))).not.toContain('href="/projects/folio"');
+    expect(await (await request.get('/search-index.json')).text()).not.toContain('/projects/folio"');
+    expect(await (await request.get('/sitemap.xml')).text()).not.toContain('/uses');
   });
 });
 
@@ -173,8 +175,8 @@ test.describe('security and caching', { tag: '@once' }, () => {
     expect(directives(build.headers()['cache-control'])).toContain('no-store');
     const note = await build.json();
     expect(note.sha).toMatch(/^[0-9a-f]{40}$/);
-    expect(note.counts).toEqual({ projects: expect.any(Number), play: expect.any(Number), lab: expect.any(Number) });
-    expect(JSON.stringify(note), 'no route list in public').not.toMatch(/unlisted|\/uses|\/secret/);
+    expect(note.counts).toEqual({ projects: expect.any(Number), written: expect.any(Number), play: expect.any(Number), lab: expect.any(Number) });
+    expect(JSON.stringify(note), 'no route list in public').not.toMatch(/unlisted|\/now|\/secret/);
 
     for (const lang of ['en', 'tr']) {
       const response = await request.get(`/cv/${lang}.pdf`);

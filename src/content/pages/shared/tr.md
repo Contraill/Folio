@@ -1,5 +1,4 @@
 ---
-toWrite: yazılacak
 stage:
   planets:
     Mercury: Merkür
