@@ -20,6 +20,19 @@ stage:
   chooseWall: Duvar kâğıdı seç
   wallItem: "Duvar kâğıdı: {n}"
   vars: Tema değişkenleri
+  nothing:
+    label: "Nothing KDE: temaladığı masaüstünün çalışan bir minyatürü"
+    island: ada, açık
+    open: Adayı aç
+    close: Adayı kapat
+    "on": Açık
+    "off": Kapalı
+    sound: Ses
+    brightness: Parlaklık
+    profiles: Güç profili
+    saver: Tasarruf
+    balanced: Dengeli
+    performance: Performans
 mochi:
   label: Mochi, animasyonlu piksel bir yüz. Dürt ve Sev düğmeleri onu tepki verdirir.
   shortLabel: Mochi, animasyonlu piksel bir yüz

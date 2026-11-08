@@ -31,4 +31,11 @@ labStatus: Notebook open
 labTeaser: Experiments with learning systems, each running in the page.
 playStatus: Open for play
 playTeaser: Small browser games, and a toy box to throw around.
+cards:
+  orbis:
+    room: Watch Together
+  campuseats:
+    stages: [Pending, Preparing, Ready, Served]
+  bct:
+    sections: [Personal details, HRT & menopause, BRCA genes, Family history, Allergies, Smoking & alcohol]
 ---

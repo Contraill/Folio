@@ -436,3 +436,88 @@ body { overflow-x: clip; }
   .app-box { aspect-ratio: auto; height: min(78svh, 720px); max-height: none; }
   .app-bar { justify-content: stretch; } .app-bar > * { flex: 1; justify-content: center; }
 }
+
+/* Nothing KDE's hero (NothingStage.tsx): the theme's black glass, its dot-matrix clock and island, whatever Folio's
+   skin. The scene is laid out in its own units (--u) and placed at the stage's focus. */
+.nk { position: absolute; inset: 0; overflow: hidden; background: #050506; color: #f4f4f2; --acc: #2f9bff; --u: calc(min(1vw, 1.6vh) * var(--ns, 1));
+  font-family: var(--fb); filter: brightness(var(--light, 1)); transition: filter .3s ease; }
+.nk-wall { position: absolute; inset: 0; background: radial-gradient(120% 90% at 70% 30%, #1a1a1d 0%, #070708 60%), #050506; }
+.nk-wall::after { content: ''; position: absolute; inset: 0; opacity: .18; background-image: radial-gradient(rgba(255,255,255,.35) .6px, transparent .8px); background-size: 3px 3px; mix-blend-mode: overlay; }
+.nk-wall i { position: absolute; border-radius: 999px; background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.02) 60%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); backdrop-filter: blur(2px); }
+.nk-wall .g1 { width: calc(var(--u) * 15); height: calc(var(--u) * 34); left: calc(var(--fx) - var(--u) * 20); top: 8%; }
+.nk-wall .g2 { width: calc(var(--u) * 24); height: calc(var(--u) * 24); left: calc(var(--fx) - var(--u) * 6); top: calc(var(--fy) - var(--u) * 6); border-radius: 50%; }
+.nk-wall .g3 { width: calc(var(--u) * 15); height: calc(var(--u) * 30); left: calc(var(--fx) + var(--u) * 10); top: 46%; }
+.nk-scene { position: absolute; inset: 0; }
+.nk-island-wrap { position: absolute; top: calc(var(--fy) - var(--u) * 12); left: var(--fx); transform: translateX(-50%); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .8); }
+.nk-island { display: flex; align-items: center; gap: calc(var(--u) * 1.6); height: calc(var(--u) * 3.6); min-height: 30px; padding: 0 calc(var(--u) * 1.6); border: 0; border-radius: 999px; background: rgba(12,12,14,.92); color: #f4f4f2; box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 10px 30px rgba(0,0,0,.5); font: 600 max(12px, calc(var(--u) * 1.3)) var(--fl); transition: box-shadow .2s ease, transform .2s ease; }
+.nk-island:hover, .nk-island.open { box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 10px 30px rgba(0,0,0,.5); }
+.nk-island:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+.nk-ws { display: flex; gap: 4px; align-items: center; } .nk-ws b { width: 18px; height: 6px; border-radius: 3px; background: var(--acc); } .nk-ws i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.3); }
+.nk-time { min-width: 5ch; display: inline-flex; justify-content: center; }
+.nk-vol { width: calc(var(--u) * 7); height: 6px; border-radius: 3px; background: rgba(255,255,255,.18); align-self: center; overflow: hidden; } .nk-vol span { display: block; height: 100%; background: #f4f4f2; }
+.nk-tray { display: flex; gap: 5px; } .nk-tray i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.22); } .nk-tray i.on { background: var(--acc); }
+.nk-cc { width: min(calc(var(--u) * 34), 92vw); padding: calc(var(--u) * 1.6); border-radius: calc(var(--u) * 2.4); background: rgba(14,14,16,.94); box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 30px 70px rgba(0,0,0,.6); display: grid; gap: calc(var(--u) * 1.1); font-size: max(12px, calc(var(--u) * 1.2)); }
+.nk-cc[hidden] { display: none; }
+.nk-cc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .06em; font: 500 11px var(--fl); }
+.nk-cc-head .nk-dots { --d: 4px; }
+.nk-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * .8); }
+.nk-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; border: 0; border-radius: 16px; background: rgba(255,255,255,.07); color: #f4f4f2; text-align: left; }
+.nk-tile span { font-size: 11px; opacity: .65; } .nk-tile[aria-pressed='true'] { background: #f4f4f2; color: #0b0b0c; }
+.nk-tile:focus-visible, .nk-profiles button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.nk-slide { display: grid; gap: 4px; font-size: 11px; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .05em; }
+.nk-slide input { width: 100%; accent-color: #f4f4f2; }
+.nk-profiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.nk-profiles button { padding: 8px 4px; border: 0; border-radius: 12px; background: rgba(255,255,255,.07); color: rgba(255,255,255,.8); font-size: 11px; }
+.nk-profiles button[aria-pressed='true'] { background: #f4f4f2; color: #0b0b0c; }
+.nk-dots { --d: calc(var(--u) * .95); display: inline-flex; gap: calc(var(--d) * 1.2); align-items: center; }
+.nk-digit { display: grid; grid-template-columns: repeat(5, var(--d)); grid-auto-rows: var(--d); gap: calc(var(--d) * .28); }
+.nk-digit i { border-radius: 50%; } .nk-digit i.on { background: #f4f4f2; }
+.nk-colon { display: grid; gap: calc(var(--d) * 1.6); } .nk-colon i { width: var(--d); height: var(--d); border-radius: 50%; background: var(--acc); }
+.nk.is-live .nk-clock .nk-colon i { animation: nk-blink 2s steps(1) infinite; }
+@keyframes nk-blink { 50% { opacity: .25; } }
+.nk-clock { position: absolute; left: calc(var(--fx) - var(--u) * 21); top: calc(var(--fy) - var(--u) * 3); }
+.nk-date { position: absolute; left: calc(var(--fx) + var(--u) * 13); top: calc(var(--fy) + var(--u) * 3); width: calc(var(--u) * 12); aspect-ratio: 1; border-radius: calc(var(--u) * 2); background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; padding: calc(var(--u) * 1.2); }
+.nk-date span { color: var(--acc); font: 500 max(12px, calc(var(--u) * 1.5)) Georgia, 'Times New Roman', serif; text-transform: capitalize; }
+.nk-date b { align-self: center; font: 400 calc(var(--u) * 6) Georgia, 'Times New Roman', serif; line-height: 1; }
+.nk-dock { position: absolute; left: calc(var(--fx) - var(--u) * 10); top: calc(var(--fy) + var(--u) * 16); transform: translateX(-50%); display: flex; gap: calc(var(--u) * 1); padding: calc(var(--u) * .8) calc(var(--u) * 1.4); border-radius: 999px; background: rgba(12,12,14,.8); box-shadow: 0 0 0 1px rgba(255,255,255,.08); }
+.nk-dock i { width: calc(var(--u) * 2.4); height: calc(var(--u) * 2.4); border-radius: calc(var(--u) * .7); background: linear-gradient(160deg, rgba(255,255,255,.28), rgba(255,255,255,.08)); }
+.nk-dock i:first-child { background: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); border-radius: 4px; }
+@media (max-width: 760px) {
+  .nk { --u: calc(min(2.2vw, 1.3vh) * var(--ns, 1)); }
+  .nk-clock { left: var(--fx); transform: translateX(-50%); top: calc(var(--fy) + var(--u) * 1); }
+  .nk-date, .nk-dock { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .nk, .nk-island { transition: none; } }
+
+/* Selected Work's own layers (SelectedCard.astro): quiet over the screenshot, moving once while the card is pointed
+   at or focused. The glass follows the skin; nothing loops. */
+.sc-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.sc-layer > * { position: absolute; left: 14px; }
+.scard:is(:hover, :focus-visible) .sc-layer > * { --on: 1; }
+/* Orbis: who's watching, a resume bar, a Watch Together room. */
+.sc-profiles { top: 14px; display: flex; }
+.sc-profiles i { width: 26px; height: 26px; margin-right: -6px; border-radius: 50%; box-shadow: 0 0 0 2px var(--slab); opacity: calc(.55 + var(--on, 0) * .45); transform: translateY(calc((1 - var(--on, 0)) * 4px)); transition: opacity .35s ease calc(var(--k) * 70ms), transform .45s var(--e-out) calc(var(--k) * 70ms); }
+.sc-profiles i:nth-child(1) { background: #e8505b; } .sc-profiles i:nth-child(2) { background: #3fa7ff; } .sc-profiles i:nth-child(3) { background: #ffc73a; }
+.sc-player { left: 14px; right: 14px; bottom: 86px; display: grid; gap: 8px; }
+.sc-resume { height: 4px; border-radius: 2px; background: rgba(255,255,255,.28); overflow: hidden; }
+.sc-resume i { display: block; height: 100%; width: calc(34% + var(--on, 0) * 38%); background: #e8505b; transition: width 1.4s var(--e-out); }
+.sc-room { justify-self: start; padding: 5px 10px; border-radius: var(--r-pill); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line); backdrop-filter: blur(10px); font: 500 11.5px var(--fl); color: var(--ink); opacity: var(--on, 0); transform: translateY(calc((1 - var(--on, 0)) * 6px)); transition: opacity .3s ease .2s, transform .4s var(--e-out) .2s; }
+.sc-room em { font-style: normal; letter-spacing: .18em; color: var(--mute); }
+/* CampusEats: a table's QR code and its order moving from pending to served. */
+.sc-qr { top: 14px; display: grid; grid-template-columns: repeat(7, 5px); gap: 1px; padding: 6px; border-radius: 6px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+.sc-qr i { width: 5px; height: 5px; } .sc-qr i.on { background: #111; }
+.sc-ticket { top: 70px; display: grid; gap: 4px; }
+.sc-ticket span { justify-self: start; padding: 4px 10px; border-radius: var(--r-pill); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line); backdrop-filter: blur(10px); font: 500 11.5px var(--fl); color: var(--mute); opacity: calc(.0 + var(--on, 0)); transform: translateX(calc((1 - var(--on, 0)) * -8px)); transition: opacity .3s ease calc(var(--k) * 120ms), transform .4s var(--e-out) calc(var(--k) * 120ms); }
+.scard:is(:hover, :focus-visible) .sc-ticket span { animation: sc-stage 2.4s steps(1) both; animation-delay: calc(var(--k) * 450ms); }
+@keyframes sc-stage { 0% { color: var(--ink); box-shadow: inset 0 0 0 1px var(--signal); } 100% { color: var(--mute); } }
+.scard:is(:hover, :focus-visible) .sc-ticket span:last-child { animation: sc-served .3s ease both; animation-delay: 1.35s; }
+@keyframes sc-served { to { color: var(--accent-ink); background: var(--accent); box-shadow: none; } }
+/* Breast Cancer Tracker: the questionnaire's sections, completed one after another. */
+.sc-steps { top: 14px; display: grid; gap: 5px; padding: 10px 12px; border-radius: 12px; background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line); backdrop-filter: blur(10px); font: 500 11.5px var(--fl); color: var(--soft); opacity: calc(.0 + var(--on, 0)); transition: opacity .3s ease; }
+.sc-steps span { display: flex; align-items: center; gap: 8px; }
+.sc-steps i { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--mute); transition: background-color .2s ease calc(.25s + var(--k) * 160ms), box-shadow .2s ease calc(.25s + var(--k) * 160ms); }
+.scard:is(:hover, :focus-visible) .sc-steps i { background: #e8679a; box-shadow: inset 0 0 0 1.5px #e8679a; }
+@media (prefers-reduced-motion: reduce) {
+  .sc-layer *, .sc-layer *::before { transition: none !important; animation: none !important; }
+}
+@media (max-width: 760px) { .sc-player { bottom: 78px; } }

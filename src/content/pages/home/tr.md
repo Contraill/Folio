@@ -31,4 +31,11 @@ labStatus: Defter açık
 labTeaser: Öğrenen sistemlerle deneyler; her biri sayfanın içinde çalışır.
 playStatus: Oynamaya açık
 playTeaser: Küçük tarayıcı oyunları ve savurabileceğin bir oyuncak kutusu.
+cards:
+  orbis:
+    room: Birlikte İzle
+  campuseats:
+    stages: [Bekliyor, Hazırlanıyor, Hazır, Servis edildi]
+  bct:
+    sections: [Kişisel bilgiler, HRT ve menopoz, BRCA genleri, Aile öyküsü, Alerjiler, Sigara ve alkol]
 ---

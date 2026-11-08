@@ -20,6 +20,19 @@ stage:
   chooseWall: Choose a wallpaper
   wallItem: "Wallpaper: {n}"
   vars: Theme variables
+  nothing:
+    label: "Nothing KDE: a working miniature of the desktop it themes"
+    island: the island, opened
+    open: Open the island
+    close: Close the island
+    "on": "On"
+    "off": "Off"
+    sound: Sound
+    brightness: Brightness
+    profiles: Power profile
+    saver: Saver
+    balanced: Balanced
+    performance: Performance
 mochi:
   label: Mochi, an animated pixel face. The Poke and Pet buttons make it react.
   shortLabel: Mochi, an animated pixel face

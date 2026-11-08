@@ -1,0 +1,38 @@
+---
+import type { Pages, Project } from '@/content/schema';
+import Cover from './Cover';
+import { Go } from './kit';
+
+/* A card in Selected Work. Orbis, CampusEats and Breast Cancer Tracker keep a layer of their own over their real
+   screenshot, taken from what each one does (the README is the source): Orbis's profiles, resume bar and Watch
+   Together code, CampusEats's order moving from pending to served, the tracker's questionnaire sections. It moves
+   only while the card is pointed at or focused, once, and not at all with reduced motion: CSS only, no script.
+   Any other project gets the plain card; the layers stay here for when one of these is pinned again. */
+type Props = { p: Project; j: number; depth: number; area: string; c: Pages['home']['cards']; stage: Pages['stage'] };
+const { p, j, depth, area, c, stage } = Astro.props;
+---
+<div data-depth={depth}>
+  <a class:list={['scard', `sc-${p.id}`]} href={`/projects/${p.id}`} data-tilt="6" data-reveal="mask" style={`--i: ${j}`}>
+    <span class="scard-media" data-media><Cover p={p} c={stage} altSuffix="" /></span>
+    {p.id === 'orbis' && (
+      <span class="sc-layer" aria-hidden="true">
+        <span class="sc-profiles">{[0, 1, 2].map((k) => <i style={`--k: ${k}`} />)}</span>
+        <span class="sc-player"><span class="sc-resume"><i /></span><span class="sc-room">{c.orbis.room} <em>••••••</em></span></span>
+      </span>
+    )}
+    {p.id === 'campuseats' && (
+      <span class="sc-layer" aria-hidden="true">
+        <span class="sc-qr">{Array.from({ length: 49 }, (_, k) => <i class={[0, 1, 2, 7, 9, 14, 15, 16, 4, 5, 6, 11, 13, 18, 19, 20, 28, 29, 30, 35, 37, 42, 43, 44, 24, 26, 32, 39, 47].includes(k) ? 'on' : ''} />)}</span>
+        <span class="sc-ticket">{c.campuseats.stages.map((s, k) => <span style={`--k: ${k}`}>{s}</span>)}</span>
+      </span>
+    )}
+    {p.id === 'bct' && (
+      <span class="sc-layer" aria-hidden="true">
+        <span class="sc-steps">{c.bct.sections.map((s, k) => <span style={`--k: ${k}`}><i />{s}</span>)}</span>
+      </span>
+    )}
+    <span class="go"><Go glass /></span>
+    <span class="info glass"><span><b>{p.name}</b><span>{area} · {p.since}</span></span></span>
+    <span class="sr">{p.desc}</span>
+  </a>
+</div>

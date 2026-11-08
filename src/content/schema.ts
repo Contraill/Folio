@@ -69,12 +69,18 @@ export const PageBodies = {
     stage: z.object({
       planets: z.object(text('Mercury Venus Earth Mars Jupiter Saturn Uranus Neptune')).strict(),
       ...text('orbit days oneYear years orreryLabel site wallpaper injected chooseWall wallItem vars'),
+      nothing: z.object(text('label island open close on off sound brightness profiles saver balanced performance')).strict(),
     }).strict(),
     mochi: z.object({ ...text('label shortLabel poke pet'), moods: z.object(text('idle waking poked petted love happy dizzy sleep')).strict() }).strict(),
   }).strict(),
   home: z.object({
     ...text('heroLabel eyebrow line1 line2 lede allProjects about featured prev next pause play selectedNote allShort approach approachLabel lead tail moreLabel more morePages labStatus labTeaser playStatus playTeaser'),
     hints: z.record(z.string(), z.string()), selected: pair,
+    cards: z.object({
+      orbis: z.object({ room: z.string() }).strict(),
+      campuseats: z.object({ stages: z.array(z.string()).length(4) }).strict(),
+      bct: z.object({ sections: z.array(z.string()).length(6) }).strict(),
+    }).strict(),
   }).strict(),
   projects: z.object({
     ...text('title eyebrow note totals repos languages stars all filter view gallery galleryView index indexView count countOne countIn empty no project area language lastPush starsHead'),

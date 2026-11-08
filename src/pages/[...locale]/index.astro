@@ -1,6 +1,6 @@
 ---
 import { ArrowRight } from 'lucide-react';
-import Cover from '@/components/Cover';
+import SelectedCard from '@/components/SelectedCard.astro';
 import Hero from '@/components/Hero';
 import { Go } from '@/components/kit';
 import Mochi from '@/components/mochi';
@@ -35,16 +35,7 @@ const pieces = [['P', '#ff5a36', 18, 62, 34], ['L', '#ffd23f', 34, 70, 30], ['A'
       </div>
       <div class="stairs">
         {selected.map((p, j) => (
-          <div class="stair-slot">
-            <div data-depth={depth[j]}>
-              <a class="scard" href={`/projects/${p.id}`}  data-tilt="6" data-reveal="mask" style={`--i: ${j}`}>
-                <span class="scard-media" data-media><Cover p={p} c={content.stage} altSuffix="" /></span>
-                <span class="go"><Go glass /></span>
-                <span class="info glass"><span><b>{p.name}</b><span>{areas[p.d]} · {p.since}</span></span></span>
-                <span class="sr">{p.desc}</span>
-              </a>
-            </div>
-          </div>
+          <div class="stair-slot"><SelectedCard p={p} j={j} depth={depth[j]} area={areas[p.d]} c={c.cards} stage={content.stage} /></div>
         ))}
       </div>
     </section>}
