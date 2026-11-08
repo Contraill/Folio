@@ -1,5 +1,4 @@
-/* Every intentional deviation from the approved prototype lives here, loaded last.
-   tokens, site, motion and pages.css are otherwise unchanged from it. */
+/* Adjustments to the base styles (tokens, site, motion and pages.css), kept in one place and loaded last. */
 
 /* Footer wordmark: sized in CSS so it is right from first paint and without JavaScript.
    --wm-k is font-size / width for "İZZET CAN" at each skin's font stretch. */

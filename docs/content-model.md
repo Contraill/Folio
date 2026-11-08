@@ -20,13 +20,13 @@ No placeholders: a unit test refuses copy with fill-in brackets or to-do notes. 
 
 ## Projects
 
-Every **public** repository of the owner is a project, found by the GitHub step (`scripts/fetch-github.ts`) with no topic, flag or file in the repository. Never a private one, never Folio's own. A repository that is deleted or made private leaves at the next build (see *Keeping up with GitHub* in [architecture.md](architecture.md)).
+Every **public** repository of the owner is a project, found by the GitHub step (`scripts/fetch-github.ts`) with no topic, flag or file in the repository. Never a private one, never Folio's own, and never the profile README repository (named after the owner), which is not a project; the footer links to the GitHub profile instead. A repository that is deleted or made private leaves at the next build (see *Keeping up with GitHub* in [architecture.md](architecture.md#keeping-up-with-github)).
 
 | What | Where it comes from |
 | --- | --- |
 | Shown or not | Public on GitHub |
-| Kind | The profile README (named after the owner), a template, a fork, a game or lab app in the controller's catalogue, or a project; shown on its page |
-| Order on `/projects` | `order` in a Folio entry first, then the newest push; templates and the profile last |
+| Kind | A template, a fork, a game or lab app in the controller's catalogue, or a project; shown on its page |
+| Order on `/projects` | `order` in a Folio entry first, then the newest push; templates last |
 | Home page | The profile pins, in pin order: the first three lead the hero, the next three are the selected work. Fewer pins, fewer cards; none are invented or repeated |
 | Text | A Folio entry if there is one; otherwise the repository's description |
 | Image | A Folio entry's images; otherwise the repository's own uploaded social preview; otherwise a typographic cover made from the repository's name and languages (GitHub's generated card is never used) |
@@ -41,7 +41,7 @@ Every **public** repository of the owner is a project, found by the GitHub step 
 - `en.md`: `name`, `repo`, `repoId`, `lang`, `date`, `since`, `stars`, `kind` (`img`, `browser`, `pixel`), `desc`, `topics`, `area` (`web`, `theming`, `self-hosted`, `hardware`, `desktop-apps`; `other` is for repositories Folio has nothing written about), optional `img`, `hero`, `pos`, `contain`, `home`, `tint`, `order` and `case` (the case study: lede, stack, facts and sections).
 - `tr.md`: `desc` always, and `case` whenever English has one; `name` and `since` when they differ.
 
-A repository without an entry still gets a complete page from GitHub alone: name, description, languages, topics, start date, last push, stars, links, and the sentence *A detailed project write-up is not available yet* / *Bu projenin detaylı anlatımı henüz hazırlanmadı.* On a Turkish page its English description is shown with a one-line note beside it. Adding an entry later needs no change in the repository itself.
+A repository without an entry still gets a complete page from GitHub alone: name, description, languages, topics, start date, last push, stars and links, with one line saying so (*Everything on this page comes from the repository on GitHub.* / *Bu sayfadaki her şey GitHub’daki repodan geliyor.*). On a Turkish page its English description is shown with a one-line note beside it. A project with an entry says nothing of the kind: its page is complete as written. Adding an entry later needs no change in the repository itself.
 
 ### Showcases
 
@@ -53,7 +53,7 @@ The latest commit on the default branch of each public repository (at most eight
 
 ## Games and lab apps
 
-Games and lab apps are repositories made from `folio-play-template` or `folio-lab-template`, published by the Folio controller and listed from its catalogue (`/catalog.json` on the controller's Worker). What a card shows (title and summary in both languages, order, whether Folio frames the app, its aspect and inputs) is in the `site.yaml` at the repository's root, documented in each template's README. The repository is a project too, whose page links to the app.
+`/play` is for games and `/lab` for interactive experiments of any kind: simulations, algorithms, prototypes. Both are repositories made from `folio-play-template` or `folio-lab-template`, published by the Folio controller and listed from its catalogue (`/catalog.json` on the controller's Worker). What a card shows (title and summary in both languages, order, whether Folio frames the app, its aspect and inputs) is in the `site.yaml` at the repository's root, documented in each template's README. The repository is a project too, whose page links to the app.
 
 Each catalogue entry names its build by SHA-256; the build is downloaded at build time and kept only if it matches. An entry that doesn't fit the schema, or whose build doesn't match, is left out with a warning; if the catalogue can't be read, the build fails. Locally and in tests, `tests/fixtures/catalog.json` and `tests/fixtures/builds/` (two stand-in apps whose sources are in `tests/fixtures/apps/`) stand in for them.
 
