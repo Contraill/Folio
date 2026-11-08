@@ -80,7 +80,7 @@ jobs:
           SUITE: ${{ inputs.full && 'test:e2e' || 'test:smoke' }}
           # The full run adds Safari's engine (WebKit) for the critical path.
           FOLIO_WEBKIT: ${{ inputs.full && '1' || '' }}
-        run: pnpm $SUITE
+        run: pnpm $SUITE ${FOLIO_WEBKIT:+--project=webkit}
       # Screenshots and errors only: no traces are recorded while the token is in use, and errors never print it.
       - name: Keep the report of a failed run
         if: failure()

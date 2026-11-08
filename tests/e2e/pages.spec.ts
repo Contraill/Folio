@@ -82,10 +82,18 @@ test.describe('home', () => {
     await expect(page.locator('.hero-card h2')).toHaveText('huepr');
     await page.getByRole('button', { name: 'Wallpaper: Bloom' }).click();
     await expect(page.locator('.tv-head b')).toHaveText('Bloom');
+    // The third pin is Nothing KDE: its island opens into the control centre, and a volume change takes the clock's place.
     await page.getByRole('button', { name: 'Next project' }).click();
-    await expect(page.locator('.hero-card h2')).toHaveText('Mochi');
-    await page.locator('.layer.on').getByRole('button', { name: 'Poke' }).click();
-    await expect(page.locator('.layer.on .mood')).toContainText('poked');
+    await expect(page.locator('.hero-card h2')).toHaveText('Nothing KDE Theme');
+    const island = page.locator('.layer.on .nk-island');
+    await island.click();
+    await expect(island).toHaveAttribute('aria-expanded', 'true');
+    await page.locator('.layer.on').getByRole('button', { name: 'Bluetooth' }).click();
+    await expect(page.locator('.layer.on').getByRole('button', { name: 'Bluetooth' })).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('.layer.on .nk-slide input').first().fill('20');
+    await expect(page.locator('.layer.on .nk-vol')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(island).toHaveAttribute('aria-expanded', 'false');
     await page.getByRole('button', { name: 'Pause the slideshow and animations' }).click();
     await expect(page.locator('.hero')).toHaveClass(/is-paused/);
     await expect(page.getByRole('button', { name: 'Play the slideshow and animations' })).toBeVisible();
@@ -173,6 +181,7 @@ test.describe('projects', () => {
   test('returning from a project restores the filter it was opened from', async ({ page }) => {
     await page.goto('/projects');
     await settled(page);
+    const total = await page.locator('.gcard').count();
     await page.locator('.filters a', { hasText: 'Hardware' }).click();
     await expect(page.locator('.gcard')).toHaveCount(1);
     await page.locator('.gcard').click();
@@ -184,7 +193,7 @@ test.describe('projects', () => {
     await expect(page.locator('.crumbs')).toHaveCount(0);
     await page.goBack();
     await expect(page).toHaveURL(/\/projects$/);
-    await expect(page.locator('.gcard')).toHaveCount(7);
+    await expect(page.locator('.gcard')).toHaveCount(total);
     await page.goForward();
     await expect(page).toHaveURL(/\?area=hardware$/);
     await expect(page.locator('.gcard')).toHaveCount(1);
@@ -193,10 +202,11 @@ test.describe('projects', () => {
   test('the index view is remembered', { tag: '@once' }, async ({ page }) => {
     await page.goto('/projects');
     await settled(page);
+    const total = await page.locator('.gcard').count();
     await page.getByRole('button', { name: 'Index view' }).click();
-    await expect(page.locator('.ix tbody tr')).toHaveCount(7);
+    await expect(page.locator('.ix tbody tr')).toHaveCount(total);
     await page.reload();
-    await expect(page.locator('.ix tbody tr')).toHaveCount(7);
+    await expect(page.locator('.ix tbody tr')).toHaveCount(total);
   });
 });
 
@@ -236,9 +246,13 @@ test.describe('case studies', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dir', 'back');
   });
 
-  test('projects without a write-up still make sense', { tag: '@once' }, async ({ page }) => {
+  test('projects without a write-up still make sense, and say a longer one is still to come', { tag: '@once' }, async ({ page }) => {
     await page.goto('/projects/orbis');
-    await expect(page.locator('main')).toContainText('From the README');
+    await expect(page.locator('main h1')).toContainText('Orbis');
+    await expect(page.locator('main')).toContainText('A detailed project write-up is not available yet.');
+    await expect(page.locator('main a', { hasText: 'Repository' })).toHaveAttribute('href', /github\.com\/Contraill\/Orbis/i);
+    await page.goto('/projects/orbis?lang=tr');
+    await expect(page.locator('main')).toContainText('Bu projenin detaylı anlatımı henüz hazırlanmadı.');
   });
 });
 
@@ -266,10 +280,13 @@ test.describe('lab and play', () => {
     await context.close();
   });
 
-  test('finding the secret page unlocks the star', { tag: '@once' }, async ({ page }) => {
+  test('finding the secret page unlocks the star; its letters spell the old sign in the page language', { tag: '@once' }, async ({ page }) => {
     await page.goto('/secret');
     await expect.poll(() => page.evaluate(() => localStorage.getItem('fx-secret'))).toBe('true');
-    await expect(page.locator('.letters button')).toHaveCount(5);
+    await expect(page.locator('.letters-word')).toHaveCount(2);
+    expect((await page.locator('.letters button').allInnerTexts()).join('')).toBe('COMINGSOON');
+    await page.goto('/secret?lang=tr');
+    expect((await page.locator('.letters button').allInnerTexts()).join('')).toBe('ÇOKYAKINDA');
   });
 });
 
@@ -384,12 +401,16 @@ test.describe('shell details', () => {
     await context.close();
   });
 
-  test('the portrait note stays inside the frame', async ({ browser, baseURL }) => {
+  test('the portrait fills its frame, with a description, and no placeholder is left on About', async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     await page.goto('/about');
-    const frame = (await page.locator('.portrait').boundingBox())!, note = (await page.locator('.portrait .draft-t').boundingBox())!;
-    expect(note.x + note.width).toBeLessThanOrEqual(frame.x + frame.width);
+    const img = page.locator('.portrait img');
+    await expect(img).toHaveAttribute('alt', /İzzet Can Öztozlu/);
+    await expect.poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    const frame = (await page.locator('.portrait').boundingBox())!, box = (await img.boundingBox())!;
+    expect(Math.round(box.width)).toBe(Math.round(frame.width));
+    await expect(page.locator('.draft')).toHaveCount(0);
     await context.close();
   });
 });

@@ -368,7 +368,7 @@ test.describe('language', () => {
       ['/?lang=tr', 'h1', 'Tepki veren'],
       ['/about?lang=tr', 'main h1', 'Merhaba, ben İzzet Can'],
       ['/projects/helios?lang=tr', 'main', 'İnsan ölçeğinde gezegen bilimi'],
-      ['/lab?lang=tr', 'main', 'burada neler olacak'],
+      ['/lab?lang=tr', 'main', 'her deneyde olanlar'],
     ]) {
       await page.goto(path);
       await expect(page.locator(locator).first()).toContainText(text);
