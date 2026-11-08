@@ -24,7 +24,7 @@ async function page(response: APIResponse, status = 200) {
 }
 
 test.describe('Cloudflare Access on the Preview', { tag: '@once' }, () => {
-  test.skip(!remote, 'needs a deployed Preview');
+  test.skip(!remote || new URL(remote).hostname === 'oztozlu.dev', 'needs a deployed Preview (production is open)');
   const paths = ['/', '/projects', '/projects/helios', '/cv', '/search-index.json', '/_build.json', '/cv/en.pdf', '/fonts/archivo.woff2', '/icons/graphite.svg', '/does-not-exist'];
 
   for (const [name, headers] of [

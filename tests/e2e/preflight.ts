@@ -1,14 +1,17 @@
-/* Against a deployed Preview, before any test: proves that the Access service token reaches Folio itself, not an
-   Access page, and, when FOLIO_EXPECTED_SHA is set (CI), that the Preview serves that commit. If either fails,
-   no test runs and this one error says why. It never prints the token, only what is wrong with its shape. */
+/* Against a deployed site, before any test: proves that it answers with Folio itself and, when FOLIO_EXPECTED_SHA is
+   set (CI), that it serves that commit. The Preview sits behind Access, so there it also proves that the service
+   token gets through; production (oztozlu.dev) is open and needs none. If anything fails, no test runs and this one
+   error says why. It never prints the token, only what is wrong with its shape. */
 export default async function preflight() {
   const base = process.env.BASE_URL;
   if (!base?.startsWith('https://')) return;
-  const fail = (why: string): never => { throw new Error(`Preview preflight failed for ${base}: ${why} No tests were run.`); };
+  const fail = (why: string): never => { throw new Error(`Preflight failed for ${base}: ${why} No tests were run.`); };
+  const production = new URL(base).hostname === 'oztozlu.dev';
   const id = process.env.CF_ACCESS_CLIENT_ID ?? '';
   const secret = process.env.CF_ACCESS_CLIENT_SECRET ?? '';
-  if (!id || !secret) fail('CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET are not set, and the Preview sits behind Cloudflare Access.');
-  const get = (path: string) => fetch(new URL(path, base), { headers: { 'cf-access-client-id': id, 'cf-access-client-secret': secret }, redirect: 'manual' });
+  if (!production && (!id || !secret)) fail('CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET are not set, and the Preview sits behind Cloudflare Access.');
+  const headers: Record<string, string> = production ? {} : { 'cf-access-client-id': id, 'cf-access-client-secret': secret };
+  const get = (path: string) => fetch(new URL(path, base), { headers, redirect: 'manual' });
 
   const home = await get('/');
   const location = home.headers.get('location') ?? '';
@@ -27,7 +30,7 @@ export default async function preflight() {
     if (live === expected) return;
     await new Promise((resolve) => setTimeout(resolve, 5000));
   }
-  fail(`the Preview serves build ${live.slice(0, 7) || '(none)'}, not ${expected.slice(0, 7)}.`);
+  fail(`the site serves build ${live.slice(0, 7) || '(none)'}, not ${expected.slice(0, 7)}.`);
 }
 
 /** What can be said about the token without revealing it. */
