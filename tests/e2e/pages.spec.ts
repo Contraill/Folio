@@ -457,7 +457,9 @@ test.describe('games and lab apps', () => {
     await expect(frame).toHaveAttribute('title', `${app.name}, running in this page`);
     const src = new URL((await frame.getAttribute('src'))!, page.url());
     expect([src.origin, src.pathname, src.searchParams.get('folio'), src.searchParams.get('lang'), src.searchParams.get('skin')]).toEqual([new URL(page.url()).origin, `/play/${app.id}/app/`, '1', 'en', 'graphite']);
-    expect((await frame.getAttribute('sandbox'))!.split(' ').sort()).toEqual(['allow-downloads', 'allow-pointer-lock', 'allow-popups', 'allow-popups-to-escape-sandbox', 'allow-same-origin', 'allow-scripts']);
+    // What an app needs and nothing more: no popups, no top navigation, no forms.
+    expect((await frame.getAttribute('sandbox'))!.split(' ').sort()).toEqual(['allow-downloads', 'allow-pointer-lock', 'allow-same-origin', 'allow-scripts']);
+    expect(await frame.getAttribute('allow')).toBe('fullscreen; gamepad; autoplay');
     const out = page.frameLocator('.app-box iframe').locator('#out');
     await expect(out).toHaveText(`running play:${app.id} lang=en skin=graphite visits=1`);
 

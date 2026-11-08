@@ -31,7 +31,7 @@
 [data-skin='blueprint'] .cut { --r: 8px; --ri: 8px; }
 [data-skin='terminal'] .cut { --r: 0px; --ri: 0px; }
 [data-skin='blueprint'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button) { border-radius: var(--r-sm) !important; }
-[data-skin='terminal'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button, .rn, .eyebrow::before, .tl li::before) { border-radius: 0 !important; }
+[data-skin='terminal'] :is(.browser, .oled, .oledmini, .td-win, .td-vars, .td-pick button, .td-pick .td-cap, .thumbs button, .peek, .skin-pop, .skin-opt, .ov-palette, .ov-lightbox, .ov-lightbox img, .kbd, .lab-tools, .lab-tools .chip-btn, .contact-row, .pet-row button, .pet-dev canvas, .oled canvas, .oledmini canvas, .collage button, .eyebrow::before, .tl li::before) { border-radius: 0 !important; }
 
 /* Page transitions keep their choreography with a shorter tail, so the page is usable sooner. */
 ::view-transition-new(page) { animation-duration: 620ms; animation-delay: 100ms; }
@@ -68,10 +68,6 @@ html.intro .mark .i-dot { animation: dot-in 700ms var(--e-spring) 850ms both; }
 .lang-links a { transition: color var(--t-s) ease; }
 .lang-links a:hover, .lang-links a[aria-current] { color: var(--ink); }
 .lang-links a[aria-current] { text-decoration: underline; text-underline-offset: 3px; }
-
-/* The portrait's size rule for its monogram was also inflating the pen icon in its note. */
-
-/* Placeholder notes stay quiet but readable. */
 
 /* Server-rendered pages must read fine before and without JavaScript. */
 html:not(.js) [data-reveal], html:not(.js) .lines .ln > span { opacity: 1 !important; transform: none !important; clip-path: none !important; }

@@ -149,14 +149,6 @@
 .nb .st { font-size: 11px; color: var(--mute); padding-top: 1px; }
 .nb .st.now { color: var(--signal); }
 .nb-foot { margin: 12px 0 0; font-size: 11px; color: var(--mute); }
-.lab-h2 { font-family: var(--fl); font-weight: 400; font-size: clamp(26px, 2.6vw, 38px); letter-spacing: -.03em; margin: 0 0 28px; }
-.plan { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line-2); }
-.plan li { position: relative; padding: 24px 24px 28px 0; display: flex; flex-direction: column; gap: 8px; }
-.plan li + li { padding-left: 24px; border-left: 1px solid var(--line); }
-.plan .pi { font-family: var(--fl); font-size: 12px; color: var(--mute); }
-.plan b { font-size: 18px; font-weight: 600; }
-.plan p { margin: 0; color: var(--mute); font-size: 15px; line-height: 1.5; }
-.plan .tag { align-self: flex-start; margin-top: 6px; font-family: var(--fl); font-size: 11px; padding: 3px 9px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--soft); }
 
 /* ---------- play page ---------- */
 .play { display: flex; flex-direction: column; gap: 12px; }
@@ -171,13 +163,6 @@
 .pn { background: var(--slab); border-radius: var(--r-card); padding: 24px 26px 24px; display: flex; flex-direction: column; gap: 12px; }
 .play-h1 { margin: 2px 0 0; font-family: var(--fd); font-stretch: 62%; font-weight: 900; text-transform: uppercase; font-size: clamp(38px, 3.6vw, 56px); line-height: .9; letter-spacing: -.005em; }
 .pn-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-.play-h2 { margin: 0 0 26px; font-family: var(--fd); font-stretch: 62%; font-weight: 900; text-transform: uppercase; font-size: clamp(32px, 3.4vw, 52px); line-height: .9; }
-.play-rules ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.play-rules li { background: var(--slab-2); border-radius: var(--r-card); padding: 22px; display: flex; flex-direction: column; gap: 8px; transition: transform 500ms var(--e-spring); }
-.play-rules li:hover { transform: translateY(-4px) rotate(-.6deg); }
-.play-rules .rn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #141414; font-family: var(--fd); font-stretch: 62%; font-weight: 900; font-size: 22px; margin-bottom: 8px; }
-.play-rules b { font-size: 18px; font-weight: 600; }
-.play-rules p { margin: 0; color: var(--mute); font-size: 15px; }
 
 /* ---------- about (calm, personal) ---------- */
 .about { display: flex; flex-direction: column; gap: 12px; }
@@ -215,7 +200,6 @@
 .ab-stats li { display: flex; flex-direction: column; gap: 4px; }
 .ab-stats b { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(56px, 6vw, 92px); line-height: .9; letter-spacing: -.02em; }
 .ab-stats span { font-size: 13px; color: var(--mute); }
-.todo { background-image: repeating-linear-gradient(-45deg, transparent 0 10px, rgba(128,128,128,.12) 10px 20px); }
 
 /* ---------- cv ---------- */
 .cv-head { position: relative; z-index: 2; max-width: 420px; }
@@ -235,8 +219,6 @@
 @media (max-width: 1100px) {
   .gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lab-note { width: min(360px, 48%); }
-  .plan, .ab-patterns ol, .play-rules ol { grid-template-columns: minmax(0, 1fr); }
-  .plan li + li { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
 }
 @media (max-width: 760px) {
   .pj-head { grid-template-columns: minmax(0, 1fr); padding: 26px 8px 8px; gap: 18px; }
@@ -286,9 +268,7 @@ body { overflow-x: clip; }
 .skin-opt[aria-checked='true'] { box-shadow: inset 0 0 0 1px hsl(var(--border)); }
 .tool .sw { box-shadow: inset 0 0 0 1px rgba(128,128,128,.45); }
 
-/* =====================================================================
-   Placeholders: editor's notes, not broken boxes
-   ===================================================================== */
+/* The About portrait. */
 .portrait { position: relative; margin: 0; aspect-ratio: 4 / 5; border-radius: var(--r-card); overflow: hidden; display: grid; place-items: center; color: var(--mute);
   background: radial-gradient(80% 60% at 30% 20%, color-mix(in srgb, var(--ink) 9%, transparent), transparent 70%), linear-gradient(160deg, var(--slab-2), var(--slab-3)); box-shadow: inset 0 0 0 1px var(--line); }
 
@@ -300,15 +280,6 @@ body { overflow-x: clip; }
   .pad { padding: 22px 18px; }
   main, .frame { gap: 8px; }
 
-  /* home: selected work as 1 big + 2 small + 1 wide, not four tall cards */
-  .stairs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .stairs > .stair-slot:nth-child(1), .stairs > .stair-slot:nth-child(4) { grid-column: span 2; }
-  .stairs > .stair-slot:nth-child(1) .scard { aspect-ratio: 4 / 3.2; }
-  .stairs > .stair-slot:nth-child(2) .scard, .stairs > .stair-slot:nth-child(3) .scard { aspect-ratio: 3 / 4; }
-  .stairs > .stair-slot:nth-child(4) .scard { aspect-ratio: 16 / 9; }
-  .stairs > .stair-slot:nth-child(2) .info, .stairs > .stair-slot:nth-child(3) .info { left: 6px; right: 6px; bottom: 6px; padding: 9px 10px; }
-  .stairs > .stair-slot:nth-child(2) .info b, .stairs > .stair-slot:nth-child(3) .info b { font-size: 13.5px; }
-  .stairs > .stair-slot:nth-child(2) .go, .stairs > .stair-slot:nth-child(3) .go { display: none; }
   .shead { margin-bottom: 22px; gap: 14px; }
   .statement { gap: 18px; padding-top: 34px; }
   .pet-wrap { width: min(100%, 340px); margin: 0 auto; justify-self: center; transform: none; }
@@ -372,9 +343,6 @@ body { overflow-x: clip; }
 
   /* play: shorter stage, rules as a tight list */
   .play-stage .cut-fill { height: 420px; }
-  .play-rules li { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 12px; padding: 16px; }
-  .play-rules .rn { width: 34px; height: 34px; font-size: 18px; margin: 0; }
-  .play-rules p { width: 100%; }
 }
 /* hero card keeps one size for every slide, so the notch around it never jumps */
 .hero-card .in { height: 172px; min-height: 0; align-items: end; box-sizing: border-box; }
@@ -422,7 +390,8 @@ body { overflow-x: clip; }
 .app-poster:hover .app-start { transform: scale(1.03); }
 .app-poster:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
 .app-note { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); margin: 0; padding: 8px 14px; border-radius: var(--r-pill); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line); font-size: 13.5px; color: var(--soft); max-width: calc(100% - 32px); text-align: center; }
-.app-bar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.app-bar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px 16px; }
+.app-newtab { display: inline-flex; align-items: center; gap: 4px; font-size: 13.5px; color: var(--mute); }
 .app-meta { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px 40px; align-items: start; }
 .app-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0; margin: 0; }
 .app-facts div { border-top: 1px solid var(--line); padding: 12px 0; }
@@ -434,7 +403,7 @@ body { overflow-x: clip; }
   .app-h1 { font-size: min(clamp(48px, 8.4vw, 132px), calc(100cqi / var(--w, 8) * 1.18)); }
   /* A phone gets a tall frame: games letterbox themselves, lab apps stack their panels. */
   .app-box { aspect-ratio: auto; height: min(78svh, 720px); max-height: none; }
-  .app-bar { justify-content: stretch; } .app-bar > * { flex: 1; justify-content: center; }
+  .app-bar { justify-content: space-between; } .app-bar > .btn { flex: 1; justify-content: center; }
 }
 
 /* Nothing KDE's hero (NothingStage.tsx): the theme's black glass, its dot-matrix clock and island, whatever Folio's
@@ -521,3 +490,28 @@ body { overflow-x: clip; }
   .sc-layer *, .sc-layer *::before { transition: none !important; animation: none !important; }
 }
 @media (max-width: 760px) { .sc-player { bottom: 78px; } }
+
+/* Selected work: the profile's pins four to six. Three cards: a large one on the left and two stacked beside it; two
+   cards side by side; one card wide. The first card fills the height of the two beside it. */
+.stairs { display: grid; gap: 14px; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-auto-rows: auto; }
+.stair-slot, .stair-slot > div { min-width: 0; }
+.stairs > .stair-slot:first-child:nth-last-child(3) { grid-row: span 2; }
+.stairs > .stair-slot:first-child:nth-last-child(3) > div, .stairs > .stair-slot:first-child:nth-last-child(3) .scard { height: 100%; }
+.stairs > .stair-slot:first-child:nth-last-child(3) .scard { aspect-ratio: auto; min-height: 420px; }
+.stairs > .stair-slot:nth-child(n + 2) .scard { aspect-ratio: 16 / 10.5; }
+.stairs:has(> .stair-slot:first-child:nth-last-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stairs:has(> .stair-slot:first-child:nth-last-child(2)) .scard { aspect-ratio: 4 / 3.4; }
+.stairs:has(> .stair-slot:only-child) { grid-template-columns: minmax(0, 1fr); }
+.stairs > .stair-slot:only-child .scard { aspect-ratio: 21 / 9; }
+@media (max-width: 1100px) {
+  .stairs, .stairs:has(> .stair-slot:first-child:nth-last-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stairs > .stair-slot:first-child:nth-last-child(3) { grid-row: auto; grid-column: span 2; }
+  .stairs > .stair-slot:first-child:nth-last-child(3) .scard { height: auto; min-height: 0; aspect-ratio: 16 / 9; }
+  .stairs > .stair-slot:nth-child(n + 2) .scard, .stairs:has(> .stair-slot:first-child:nth-last-child(2)) .scard { aspect-ratio: 4 / 3.4; }
+  .stairs > .stair-slot:only-child .scard { aspect-ratio: 16 / 9; }
+}
+@media (max-width: 760px) {
+  .stairs, .stairs:has(> .stair-slot:first-child:nth-last-child(2)) { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .stairs > .stair-slot:first-child:nth-last-child(3) { grid-column: auto; }
+  .stairs > .stair-slot .scard, .stairs > .stair-slot:first-child:nth-last-child(3) .scard, .stairs:has(> .stair-slot:first-child:nth-last-child(2)) .scard { aspect-ratio: 4 / 3.3; }
+}

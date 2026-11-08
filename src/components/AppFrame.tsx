@@ -10,8 +10,9 @@ type Props = { name: string; path: string; embed: boolean; aspect: string; local
    opens it in its own tab, also without JavaScript. The app is this site's own files at /<kind>/<id>/app/, told the
    visitor's language and skin in its address (`?folio=1&lang=…&skin=…`). Being the same origin, its storage is the
    site's: saved games and lab runs survive in the frame and in a tab alike. The sandbox keeps it to what an app
-   needs (no top navigation, no forms); with the same origin it is not a security boundary, which is why only the
-   owner's own repositories, built and checked by the controller, are ever served here. */
+   needs (scripts, its storage, pointer lock, downloads for exported files; no popups, top navigation or forms), but
+   with the same origin it is not a security boundary, and an app opened in its own tab has no sandbox at all: only
+   the owner's own repositories, built and checked by the controller, are ever served here. */
 export default function AppFrame({ name, path, embed, aspect, locale, poster, c }: Props) {
   const skin = useStore((s) => s.effective);
   const shell = useRef<HTMLDivElement>(null);
@@ -57,8 +58,8 @@ export default function AppFrame({ name, path, embed, aspect, locale, poster, c 
             </span>
           </a>
         ) : (
-          <iframe ref={frame} src={src()} title={fill(c.frameLabel)} allow="fullscreen; gamepad; autoplay; clipboard-write"
-            sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-downloads allow-popups allow-popups-to-escape-sandbox"
+          <iframe ref={frame} src={src()} title={fill(c.frameLabel)} allow="fullscreen; gamepad; autoplay"
+            sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-downloads"
             referrerPolicy="strict-origin-when-cross-origin"
             onLoad={() => { setState('running'); frame.current?.focus(); }} />
         )}
@@ -70,7 +71,8 @@ export default function AppFrame({ name, path, embed, aspect, locale, poster, c 
             {full ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />} {full ? c.exitFullscreen : c.fullscreen}
           </button>
         )}
-        <a className="btn btn-2 btn-sm" href={path} target="_blank" rel="noreferrer">{c.newTab} <Arrow size={15} /></a>
+        {/* Available, not offered first: the app is meant to be used here. */}
+        <a className="app-newtab link-u" href={path} target="_blank" rel="noreferrer">{c.newTab} <Arrow size={13} /></a>
       </div>
     </div>
   );
