@@ -1,4 +1,4 @@
 ---
 since: Güz 2023
-desc: Güz 2023’te dönem projesi olarak elle yazılmış HTML/CSS/JS kişisel blog. Her şey burada başladı.
+desc: "2023’te bir ders için Not Defteri’nde elle yazılan ilk web sitesi, olduğu gibi duruyor; yanında ondan bu yana açılan her herkese açık repoyu canlı bir zaman çizelgesinde gösteren 2026 yeniden tasarımı var."
 ---

@@ -12,7 +12,7 @@ img:
   w: 700
   h: 989
 pos: 50% 0%
-desc: Print-ready weekly course schedule in pure HTML and CSS, optimized for A4 and color-coded.
+desc: "Three print-ready A4 weekly timetables in plain HTML and CSS, for IT, physiotherapy and psychosocial studies. Each lesson is one block placed on a day-and-hour grid."
 topics:
   - html
   - css

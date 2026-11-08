@@ -13,7 +13,7 @@ img:
   h: 562
 pos: 50% 0%
 home: https://contraill.github.io/Programming-Adventure/
-desc: Hand-written HTML/CSS/JS personal blog, built as a term project in fall 2023. Where it started.
+desc: "The first website, hand-written in Notepad for a 2023 course and kept as it was, beside a 2026 redesign that leads from it to a live timeline of every public repository since."
 topics:
   - html
   - css

@@ -12,7 +12,7 @@ img:
   w: 900
   h: 568
 pos: 50% 0%
-desc: "Java Swing + MySQL desktop app for an architecture office: architects, clients, projects, drawings and payments."
+desc: "Desktop app in Java Swing and MySQL for an architecture office: five linked windows for architects, clients, projects, drawings and payments. It sets up its own database and deletes dependent records in one transaction."
 topics:
   - java
   - swing

@@ -12,7 +12,7 @@ img:
   w: 900
   h: 568
 pos: 50% 0%
-desc: Java Swing + MySQL desktop app for students, departments, courses, grades and attendance.
+desc: "Desktop app in Java Swing and MySQL for students, departments, courses and attendance. It weighs midterm, homework and final at 30, 20 and 50 percent and stores the letter grade."
 topics:
   - java
   - swing

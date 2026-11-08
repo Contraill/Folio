@@ -10,7 +10,7 @@ kind: pixel
 tint:
   - "#8a5a3c"
   - "#2f3d5c"
-desc: Animated OLED desk companion on ESP32-C3 that reacts to touch, petting and shaking.
+desc: "An ESP32-C3 desk companion with 53 animated faces on a small OLED. It answers pokes, petting and shakes, and is set up from a web panel on your phone."
 topics:
   - esp32-c3
   - arduino

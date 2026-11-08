@@ -12,7 +12,7 @@ img:
   w: 900
   h: 567
 pos: 50% 0%
-desc: Bilingual PHP portal for tagging university events with sustainability criteria and exporting reports.
+desc: "Coursework PHP portal in English and Turkish that tags university events with UN SDG, THE Impact and QS Stars criteria and exports evidence lists as CSV and PDF. For local use, with JSON files instead of a database."
 topics:
   - php
   - bootstrap5

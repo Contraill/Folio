@@ -13,7 +13,7 @@ img:
   h: 562
 pos: 50% 0%
 home: https://contraill.github.io/Nodesk/
-desc: Live network topology map for home networks that runs on a Raspberry Pi and does no port scanning.
+desc: "A live map of a home network, remote homes, servers and a Tailscale tailnet, run from a Raspberry Pi that never scans ports: devices are learned from what they announce."
 topics:
   - homelab
   - network-map

@@ -1,6 +1,6 @@
 ---
 since: Mar 2026
-desc: "Hyprland duvar kâğıdından tarayıcı temasına: izin verilen sitelere Native Messaging ile CSS değişkenleri ekler."
+desc: "İzin verdiğin siteleri her Hyprland duvar kâğıdıyla yeniden renklendirir: yerel bir yardımcı değişikliği duyar, eklenti CSS değişkenlerini değiştirir."
 case:
   lede: Hyprland duvar kâğıdını değiştir, kullandığın web siteleri de onunla değişsin.
   stack: WebExtension (Manifest V2) · JavaScript · Python Native Messaging host · Shell installer · web-ext

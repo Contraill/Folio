@@ -17,7 +17,7 @@ hero:
   h: 857
 pos: 58% 50%
 home: https://heliios.vercel.app
-desc: Interactive 3D solar-system explorer with sourced NASA/JPL data, human-scale comparisons and EN/TR support.
+desc: "3D Solar System explorer asking what other worlds would feel like, on sourced NASA/JPL data that labels every approximation."
 topics:
   - react-three-fiber
   - nextjs

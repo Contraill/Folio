@@ -12,7 +12,7 @@ img:
   w: 304
   h: 369
 contain: true
-desc: Minimal Zen Browser mod with native adaptive theming and accent-aware window controls.
+desc: "Window controls for Zen Browser that stay neutral at rest, take the KDE accent on hover, turn red to close, and leave Zen’s own workspace theming alone."
 topics:
   - zen-browser
   - userchrome

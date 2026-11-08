@@ -1,6 +1,6 @@
 ---
 since: Tem 2026
-desc: Kaynağı belli NASA/JPL verisi, insan ölçeğinde karşılaştırmalar ve EN/TR desteğiyle etkileşimli 3D Güneş Sistemi gezgini.
+desc: "Başka dünyaların nasıl hissettireceğini soran, her yaklaşık değeri belirten kaynaklı NASA/JPL verisiyle 3D Güneş Sistemi gezgini."
 case:
   lede: "İnsan ölçeğinde gezegen bilimi: Mars’taki ağırlığın, Venüs’te bir günün uzunluğu, güneş ışığının Neptün’e ulaşma süresi."
   stack: Next.js 16 · React 19 · TypeScript · Three.js / React Three Fiber · Zustand · Tailwind v4 · Zod · Vitest · Playwright

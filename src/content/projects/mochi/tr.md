@@ -1,6 +1,6 @@
 ---
 since: Eki 2026
-desc: ESP32-C3 üzerinde çalışan animasyonlu OLED masa arkadaşı. Dokunmaya, sevmeye ve sallanmaya tepki verir.
+desc: "Küçük bir OLED ekranda 53 animasyonlu yüzü olan ESP32-C3 masa arkadaşı. Dürtmeye, sevmeye ve sallamaya karşılık verir; telefondan açılan bir web paneliyle ayarlanır."
 case:
   lede: "128×64 bir OLED ekranda yaşayan küçük, animasyonlu bir yüz: ona dokunduğunu, onu sevdiğini ya da yerinden kaldırdığını fark eder."
   stack: ESP32-C3 SuperMini · Arduino (C++) · U8g2 · ArduinoJson · LittleFS · Python + Pillow tooling · pytest · Playwright

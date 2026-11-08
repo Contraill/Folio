@@ -1,4 +1,4 @@
 ---
 since: Eyl 2025
-desc: Saf HTML ve CSS ile yazılmış, A4 için ayarlanmış, renk kodlu ve yazdırmaya hazır haftalık ders programı.
+desc: "BT, fizyoterapi ve psikososyal çalışmalar için düz HTML ve CSS ile yazılmış, A4’e hazır üç haftalık ders programı. Her ders, gün ve saat ızgarasına yerleşen tek bir blok."
 ---

@@ -19,7 +19,7 @@ hero:
   w: 1086
   h: 804
 pos: 0% 0%
-desc: "Hyprland wallpaper to browser theme: injects CSS variables into allowlisted sites via Native Messaging."
+desc: "Restyles the websites you allow with each Hyprland wallpaper: a native host hears the change, the extension swaps their CSS variables."
 topics:
   - hyprland
   - webextension
