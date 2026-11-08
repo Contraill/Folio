@@ -107,6 +107,7 @@ test.describe('indexing', { tag: '@once' }, () => {
     expect(xml).toContain('<loc>https://oztozlu.dev/about</loc>');
     for (const path of UNLISTED) expect(xml).not.toContain(`dev${path}<`);
     expect(xml).not.toContain('__tr');
+    expect(await (await request.get('/robots.txt')).text()).toContain('Sitemap: https://oztozlu.dev/sitemap.xml');
     for (const headers of [{}, TR]) {
       const index = await request.get('/search-index.json', { headers });
       expect(index.status()).toBe(200);

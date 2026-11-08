@@ -12,7 +12,7 @@
     // Pages and anything unknown go through the Worker, which picks the language and sets the headers; static
     // files are served directly with public/_headers. Listing the exceptions keeps /about/index.html and /__tr/*
     // from slipping past the Worker.
-    "run_worker_first": ["/*", "!/_astro/*", "!/fonts/*", "!/assets/*", "!/icons/*", "!/cv/*.pdf", "!/favicon.ico", "!/apple-touch-icon.png", "!/_build.json", "!/sitemap.xml"]
+    "run_worker_first": ["/*", "!/_astro/*", "!/fonts/*", "!/assets/*", "!/icons/*", "!/cv/*.pdf", "!/favicon.ico", "!/apple-touch-icon.png", "!/_build.json", "!/sitemap.xml", "!/robots.txt"]
   },
   // Production is reached through its custom domain only. Preview hostnames are a separate setting.
   "workers_dev": false,
