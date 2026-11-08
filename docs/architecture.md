@@ -129,7 +129,7 @@ flowchart TD
   appPush["Push to a game or lab repository"] --> appBuild["Its own workflow builds dist/,<br/>with no secrets"]
   appBuild -- "GitHub App: build finished" --> ctrl["Controller: reads site.yaml at the build's commit,<br/>checks and packs the files, keeps them by SHA-256,<br/>updates the catalogue"]
   sweep["Controller sweep, every six hours"] --> ctrl
-  ctrl -- "catalogue changed, or the sweep ran" --> sync
+  ctrl -- "catalogue changed (every target),<br/>or the sweep ran (the Preview)" --> sync
   repoEvent["A public repository is created, deleted, renamed,<br/>archived or transferred, or made private or public"] -- "GitHub App: repository event" --> sync
   sync["Sync: start each workflow in FOLIO_TARGETS"]
   push["Push to develop"] --> previewRun
@@ -147,7 +147,7 @@ flowchart TD
 
 Data is read at build, never while a visitor waits. `scripts/fetch-github.ts` reads the owner's public repositories, pins and latest commits with the job's own `GITHUB_TOKEN`, and the controller's catalogue with each app's build. Social preview images are downloaded and optimised at build, so nothing on a page points back at GitHub.
 
-The controller starts a sync of Folio's workflows every six hours, when its catalogue changes, and at once when a public repository is created, deleted, renamed, archived or transferred, or a repository is made private or public. A sync reads GitHub first and compares a hash of the data, and the commit, with the live `/_build.json`: if both are the same, nothing is built. A repository made private therefore leaves the site within one build (a few minutes), and pins, descriptions and new commits appear within six hours. If a sync can't run, the live version stays as it was. Production also has its own six-hourly schedule, in case the controller can't start it.
+The controller starts a sync of Folio's workflows when its catalogue changes and at once when a public repository is created, deleted, renamed, archived or transferred, or a repository is made private or public; its six-hourly sweep syncs the Preview, whose branch can't have a schedule of its own. A sync reads GitHub first and compares a hash of the data, and the commit, with the live `/_build.json`: if both are the same, nothing is built. A repository made private therefore leaves the site within one build (a few minutes), and pins, descriptions and new commits appear within six hours. If a sync can't run, the live version stays as it was. Production checks every six hours on its own schedule, so it doesn't depend on the controller for that.
 
 There is no faster way to remove something: the Worker doesn't look anything up per request. That is the accepted cost of a Worker with no state.
 
@@ -159,7 +159,7 @@ Games, lab experiments and separate sites live in their own repositories, made f
 
 **Games and lab apps** (`kind: play`, `kind: lab`) are part of Folio:
 
-1. The controller packs a checked build, keeps it in KV by its SHA-256 and lists it in its public catalogue with that hash.
+1. The controller packs a checked build, keeps it in KV by its SHA-256 and lists it in its catalogue with that hash. The catalogue and the builds answer only to a read token that Folio's Preview and Production builds hold, and are never cached.
 2. Folio's build downloads the catalogue and each build, and keeps a build only if its hash and size match. A missing or wrong build is left out with a warning; an unreachable catalogue fails the build.
 3. `scripts/postbuild.ts` checks every path and unpacks the builds into `/play/<id>/app/` and `/lab/<id>/app/`.
 4. The language Worker serves those folders with the app policy: the app's own files only (no third-party requests), WebAssembly and Web Workers allowed, framed only by this site (`frame-ancestors 'self'`), `noindex`. `index.html` is never cached, files with a content hash in their name are cached for a year, and an address without an extension that isn't a file gets the app's page with a `<base>`, for single-page apps.
@@ -191,7 +191,7 @@ That is acceptable only because every app is the owner's own repository, built b
 
 - **GitHub data** is read with each job's own `GITHUB_TOKEN`, which expires with the job and can't see the owner's private repositories. Private repositories are dropped before anything is written or logged, and again when projects are chosen. Folio's own repository and the profile README repository are never projects.
 - **Previews** sit behind Cloudflare Access. Production's `workers.dev` address is off, so production answers only on its domain.
-- **Secrets** are GitHub environment secrets, each usable only from its own branch: a Cloudflare token for deploying, and the Access service token the Preview's tests use. None is in the repository or in a log. The controller's credentials are in the private controller repository and its Worker, never in Folio.
+- **Secrets** are GitHub environment secrets, each usable only from its own branch: a Cloudflare token that can edit the `folio` Worker and nothing else, the catalogue's read token, and the Access service token the Preview's tests use. None is in the repository or in a log. The controller's credentials are in the private controller repository and its Worker, never in Folio.
 - **No analytics.** No analytics script, no tracking cookie; the policy would block a third-party beacon. The privacy page says what the site keeps in the browser and what Cloudflare logs.
 
 ## Environments

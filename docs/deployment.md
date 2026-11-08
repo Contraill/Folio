@@ -8,11 +8,11 @@ Every build and deploy runs in GitHub Actions (`.github/workflows/`). Code reach
 | --- | --- | --- |
 | Push to `develop` | Preview | Type check, build, unit tests and checks on the build output, deploy the Preview (`wrangler preview --name develop`), then the smoke tests against it through Access |
 | *Run workflow* on Preview, with *full* | Preview | The same, with the whole browser suite against the Preview, and its critical path in WebKit too |
-| A sync from the Folio controller (`sync: true`) | Preview | Every six hours, when the controller's catalogue changes, and at once when a public repository is created, deleted, renamed, archived or transferred, or a repository is made private or public. It reads GitHub first and compares a hash of the data, and the commit, with the live `/_build.json`: if nothing is new, nothing is built. Otherwise the same as a push |
+| A sync from the Folio controller (`sync: true`) | Preview | Every six hours (the controller's sweep), when the controller's catalogue changes, and at once when a public repository is created, deleted, renamed, archived or transferred, or a repository is made private or public. It reads GitHub first and compares a hash of the data, and the commit, with the live `/_build.json`: if nothing is new, nothing is built. Otherwise the same as a push |
 | Pull request into `main` | CI | Type check, build, unit tests and checks on the build output, the whole browser suite in Chromium and Firefox. Its `checks` job is required for merging |
 | Merge into `main` | Production | Build and `wrangler deploy`, then a check that production serves this build |
 | Every six hours (`17 */6 * * *`) | Production | The same, on `main` as it is, but only if the GitHub data or the catalogue changed. GitHub may delay or skip scheduled runs |
-| A sync from the Folio controller | Production | As on the Preview, once the controller's `FOLIO_TARGETS` includes `production.yml@main` |
+| A sync from the Folio controller | Production | When the catalogue changes and when a repository's visibility changes, as on the Preview, once the controller's `FOLIO_TARGETS` includes `production.yml@main`. The sweep leaves production to its own schedule, so the same data isn't checked twice |
 | Refresh (*Run workflow* on Production) | Production | Always builds and deploys; it can be started from the GitHub mobile app |
 
 Scheduled workflows run only on the default branch, so the Preview's regular sync comes from the controller instead of a schedule of its own. A push replaces a Preview run in progress; a sync waits for it. Production has both: the controller's syncs, and its own schedule in case the controller can't start it.
@@ -33,7 +33,7 @@ Kept as **environment** secrets, never repository secrets, so each workflow reac
 | `preview` (`develop` only) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `FOLIO_CATALOG_TOKEN`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Preview |
 | `production` (`main` only) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `FOLIO_CATALOG_TOKEN` | Production |
 
-The Cloudflare tokens can deploy Workers (*Workers Scripts: Edit*); `FOLIO_CATALOG_TOKEN` reads the controller's catalog of games and lab apps. CI has no secrets: a pull request from a fork runs with a read-only token and never reaches an environment.
+The Cloudflare tokens are account tokens that can edit one Worker only (*Individual Workers Editor*, on `folio`). `FOLIO_CATALOG_TOKEN` reads the controller's catalogue of games and lab apps, which answers nothing without it; to replace it, set the same new value here (both environments) and in the controller. CI has no secrets: a pull request from a fork runs with a read-only token and never reaches an environment.
 
 GitHub data needs no stored token: each job's own `GITHUB_TOKEN` reads it and expires with the job. Every workflow sets `permissions: contents: read`.
 
@@ -68,7 +68,7 @@ pnpm build        # GitHub data, static build, route list and /_build.json
 pnpm preview      # the build behind the language Worker, at http://localhost:4321
 ```
 
-Without `GITHUB_TOKEN` the build uses the recorded snapshot in `tests/fixtures/github.json`, the recorded catalogue in `tests/fixtures/catalog.json` and the two stand-in app builds in `tests/fixtures/builds/` (their sources are in `tests/fixtures/apps/`); in CI a missing token stops the build. `FOLIO_GITHUB=fixture` forces all three. With a token, games and lab apps come from the controller's catalogue (`FOLIO_CATALOG_URL` overrides its address), and their builds from the same Worker, by hash.
+Without `GITHUB_TOKEN` the build uses the recorded snapshot in `tests/fixtures/github.json`, the recorded catalogue in `tests/fixtures/catalog.json` and the two stand-in app builds in `tests/fixtures/builds/` (their sources are in `tests/fixtures/apps/`); in CI a missing token stops the build. `FOLIO_GITHUB=fixture` forces all three. With a token, games and lab apps come from the controller's catalogue (`FOLIO_CATALOG_URL` overrides its address), and their builds from the same Worker, by hash, both read with `FOLIO_CATALOG_TOKEN`: without it the build stops. `FOLIO_CATALOG=fixture` keeps the recorded catalogue and stand-in apps with live GitHub data, which is what CI does, since it has no secrets.
 
 ## Checks
 

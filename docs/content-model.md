@@ -53,7 +53,7 @@ The latest commit on the default branch of each public repository (at most eight
 
 ## Games and lab apps
 
-`/play` is for games and `/lab` for interactive experiments of any kind: simulations, algorithms, prototypes. Both are repositories made from `folio-play-template` or `folio-lab-template`, published by the Folio controller and listed from its catalogue (`/catalog.json` on the controller's Worker). What a card shows (title and summary in both languages, order, whether Folio frames the app, its aspect and inputs) is in the `site.yaml` at the repository's root, documented in each template's README. The repository is a project too, whose page links to the app.
+`/play` is for games and `/lab` for interactive experiments of any kind: simulations, algorithms, prototypes. Both are repositories made from `folio-play-template` or `folio-lab-template`, published by the Folio controller and listed from its catalogue (`/catalog.json` on the controller's Worker, which answers only to the read token Folio's builds hold). What a card shows (title and summary in both languages, order, whether Folio frames the app, its aspect and inputs) is in the `site.yaml` at the repository's root, documented in each template's README. The repository is a project too, whose page links to the app.
 
 Each catalogue entry names its build by SHA-256; the build is downloaded at build time and kept only if it matches. An entry that doesn't fit the schema, or whose build doesn't match, is left out with a warning; if the catalogue can't be read, the build fails. Locally and in tests, `tests/fixtures/catalog.json` and `tests/fixtures/builds/` (two stand-in apps whose sources are in `tests/fixtures/apps/`) stand in for them.
 
