@@ -149,8 +149,16 @@ export function startAquarium(canvas: HTMLCanvasElement, host: HTMLElement): () 
       vx += (dx / d) * 3; vy += (dy / d) * 3;
       eager = 2;
     } else {
-      let best: Food | null = null, bd = 380;
-      for (const f of food) { const d = Math.hypot(f.x - head.x, f.y - head.y); if (d < bd) { bd = d; best = f; } }
+      // The nearest food ahead of its nose (within about 50°) comes first, then the nearest anywhere. Going for the
+      // nearest anywhere kept a koi circling the heading written in food: a pellet always lay beside it, inside the
+      // circle it can turn in.
+      let best: Food | null = null, bd = 380, front: Food | null = null, fd = 380;
+      for (const f of food) {
+        const dx = f.x - head.x, dy = f.y - head.y, d = Math.hypot(dx, dy);
+        if (d < bd) { bd = d; best = f; }
+        if (d < fd && d > 0 && (dx * hx + dy * hy) / d > 0.64) { fd = d; front = f; }
+      }
+      if (front) { best = front; bd = fd; }
       if (best) { vx += ((best.x - head.x) / (bd || 1)) * 2.4; vy += ((best.y - head.y) / (bd || 1)) * 2.4; eager = 1; }
       else {
         // Otherwise it heads for open water, and picks new open water once it gets there or every few seconds.
