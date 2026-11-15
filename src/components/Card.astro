@@ -1,9 +1,8 @@
 ---
-import { existsSync } from 'node:fs';
 import Icon from './Icon.astro';
 import Mochi from './Mochi.astro';
 import { localePath, ui, type Locale } from '../data';
-import { repoUrl, type Project } from '../lib/projects';
+import { repoUrl, srcsetOf, type Project } from '../lib/projects';
 
 /* A project card. The whole card leads to the case study when there is one, otherwise to the repository; the live
    site and the code stay one click away as their own links. Its image carries a transition name, so it grows into the
@@ -14,9 +13,8 @@ const t = ui[locale];
 const page = p.case ? localePath(locale, `/projects/${p.id}`) : undefined;
 const code = repoUrl(p);
 const img = p.img ?? p.hero;
-// A phone shows a card about 330px wide: where a 640px copy of the image exists (name-640.webp), it gets that one.
-const small640 = img && img.w > 640 && img.src.replace(/\.webp$/, '-640.webp');
-const srcset = small640 && existsSync(`public${small640}`) ? `${small640} 640w, ${img.src} ${img.w}w` : undefined;
+// A phone shows a card about 330px wide, so it loads a smaller copy where there is one.
+const srcset = img && srcsetOf(img);
 const sizes = small ? '(max-width: 760px) 85vw, 30vw' : '(max-width: 760px) 85vw, (max-width: 1100px) 90vw, 50vw';
 ---
 <article class:list={['card', { small, wide }]}>

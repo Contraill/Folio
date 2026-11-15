@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Icon from './Icon.astro';
 import Mochi from './Mochi.astro';
 import { caseOrder, featured, localePath, ui, type Locale } from '../data';
-import { loadProjects, repoUrl } from '../lib/projects';
+import { loadProjects, repoUrl, srcsetOf } from '../lib/projects';
 import { projectSchema } from '../lib/schema';
 
 interface Props { locale: Locale; id: string }
@@ -34,7 +34,7 @@ const image = `/og/${id}-${locale}.png`;
 
     <div class="slab case-cover" transition:name={`media-${p.id}`}>
       {cover
-        ? <img src={cover.src} width={cover.w} height={cover.h} alt="" fetchpriority="high" style={p.pos ? `object-position: ${p.pos}` : undefined} />
+        ? <img src={cover.src} srcset={srcsetOf(cover)} sizes="100vw" width={cover.w} height={cover.h} alt="" fetchpriority="high" style={p.pos ? `object-position: ${p.pos}` : undefined} />
         : <div class="card-pet"><Mochi label={t.mochi} big /></div>}
     </div>
 
@@ -54,7 +54,7 @@ const image = `/og/${id}-${locale}.png`;
             {s.gal && (
               <div class="gallery">
                 {s.gal.map(([img, caption], i) => (
-                  <figure data-reveal style={`--d: ${i}`}><img src={img.src} width={img.w} height={img.h} alt={caption} loading="lazy" decoding="async" /><figcaption>{caption}</figcaption></figure>
+                  <figure data-reveal style={`--d: ${i}`}><img src={img.src} srcset={srcsetOf(img)} sizes="(max-width: 760px) 92vw, 33vw" width={img.w} height={img.h} alt={caption} loading="lazy" decoding="async" /><figcaption>{caption}</figcaption></figure>
                 ))}
               </div>
             )}
