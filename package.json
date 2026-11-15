@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && node scripts/build-info.ts",
-    "preview": "wrangler dev --port 4321",
+    "preview": "wrangler dev --port 4321 --ip 127.0.0.1",
     "check": "astro check",
     "test:e2e": "playwright test",
     "test:smoke": "playwright test --grep @smoke",

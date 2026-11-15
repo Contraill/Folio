@@ -4,6 +4,15 @@ The site is static. Cloudflare's Worker `folio` serves `dist/` as built (Workers
 `oztozlu.dev`, with no code of its own. Every build and deploy runs in GitHub Actions; code reaches `main` only through
 a pull request whose checks pass, and merging into `main` is the release.
 
+## Branches
+
+- `develop` is where work happens. It stays after every merge: each push to it updates the Preview.
+- `main` is what is live. It changes only by merging a pull request from `develop`.
+
+`main` is protected: a pull request can be merged only when CI's `checks` job has passed and the branch is up to date
+with `main`. The rule applies to administrators too, `main` can't be force-pushed or deleted, and no review is
+required.
+
 ## Workflows
 
 | Trigger | Workflow | What happens |
@@ -36,11 +45,29 @@ or in a log.
 The Cloudflare tokens are account tokens that can edit the `folio` Worker only. CI has no secrets: a pull request from
 a fork runs with a read-only token and never reaches an environment. Every workflow sets `permissions: contents: read`.
 
+## What exists on Cloudflare
+
+- The Worker `folio`, with the custom domain `oztozlu.dev`; `www.oztozlu.dev` and plain `http` are redirected to
+  `https://oztozlu.dev` by the zone.
+- Two account API tokens that can edit only that Worker, one per GitHub environment.
+- A Cloudflare Access application in front of the Preview, and the service token `develop` its tests use.
+- Web Analytics for `oztozlu.dev`, with automatic setup.
+- The zone's mail records (Zoho) and the Google Search Console verification record.
+
 ## Preview
 
 A push to `develop` updates the Preview at `https://develop-folio.<subdomain>.workers.dev`, behind Cloudflare Access.
 Tests reach it with an Access service token (`tests/e2e/access.ts` adds its headers to requests for the Preview host
 only and keeps it out of errors and traces). Cloudflare adds `X-Robots-Tag: noindex` to Preview responses.
+
+When the service token is renewed in Cloudflare, set both values in the `preview` environment without them appearing
+anywhere, from the file that holds them:
+
+```sh
+( set -a; . <token file>; set +a
+  printf %s "$CF_ACCESS_CLIENT_ID"     | gh secret set CF_ACCESS_CLIENT_ID     --env preview
+  printf %s "$CF_ACCESS_CLIENT_SECRET" | gh secret set CF_ACCESS_CLIENT_SECRET --env preview )
+```
 
 ## How the files are served
 
@@ -68,3 +95,5 @@ set `BASE_URL` and the Access token's two variables.
 1. Push `develop` and look at the Preview.
 2. Open a pull request from `develop` into `main`; CI must pass.
 3. Merge it. Production deploys and checks itself; `/_build.json` on `oztozlu.dev` names the new commit.
+4. Bring `develop` up to `main`, so the next pull request starts from the merge commit and is up to date:
+   `git switch develop && git pull --ff-only origin main && git push origin develop`.
