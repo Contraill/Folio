@@ -33,6 +33,7 @@ Two scripts prepare files that are committed rather than built every time:
 | `src/components/`, `src/layouts/` | The pages' parts |
 | `src/scripts/` | What moves: the terminal, Mochi, the koi, the constellation |
 | `src/styles/global.css` | All styles |
+| `scripts/` | The share images (`og.ts`), the CV viewer's files (`cv.mjs`), the build stamp and the live check |
 | `public/` | Images, fonts, the CV, share images, `_headers` and `robots.txt` |
 | `tests/e2e/` | The browser suite |
 
