@@ -64,7 +64,7 @@ export function startTerminal(form: HTMLFormElement, signal: AbortSignal) {
       panel?.classList.add('in');
       print(span(d.s.fastfetch, 'm'));
     },
-    mochi: () => { document.querySelector<HTMLElement>('.dock [data-mochi], [data-mochi]')?.click(); print(d.s.mochi); },
+    mochi: () => { document.querySelector<HTMLElement>('[data-mochi]')?.click(); print(d.s.mochi); },
     lang: () => { print(d.s.lang); try { localStorage.setItem('lang', document.documentElement.lang === 'tr' ? 'en' : 'tr'); } catch { /* private mode */ } location.href = d.otherHref; },
     clear: () => out.replaceChildren(),
     // Not in help: the things people type into any terminal they find.

@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { getCollection } from 'astro:content';
 import type { Locale } from '../data';
 
@@ -22,6 +23,12 @@ export async function loadProjects(locale: Locale): Promise<Map<string, Project>
     out.set(id, { ...files.en, ...(locale === 'tr' ? files.tr : {}), id } as Project);
   }
   return out;
+}
+
+/** The image with its smaller copies next to it (name-640.webp, name-960.webp), for a srcset; undefined when there are none. */
+export function srcsetOf(img: Img) {
+  const copies = [640, 960].filter((w) => w < img.w && existsSync(`public${img.src.replace(/\.webp$/, `-${w}.webp`)}`));
+  return copies.length ? [...copies.map((w) => `${img.src.replace(/\.webp$/, `-${w}.webp`)} ${w}w`), `${img.src} ${img.w}w`].join(', ') : undefined;
 }
 
 export const repoUrl = (p: Project) => (p.repo ? `https://github.com/Contraill/${p.repo}` : undefined);

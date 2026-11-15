@@ -37,8 +37,8 @@ its id in `caseOrder`.
 
 ## Images
 
-Screenshots and covers are WebP files in `public/assets/`, referenced with their width and height. A card image wider
-than 640px also gets a 640px copy next to it, which phones load instead
+Screenshots and covers are WebP files in `public/assets/`, referenced with their width and height. An image wider than
+640px also gets a 640px copy next to it, and a cover wider than 960px a 960px one; phones load those instead
 (`magick name.webp -resize 640x -quality 82 name-640.webp`). Never use a screenshot that shows third-party artwork
 (for example film posters).
 
