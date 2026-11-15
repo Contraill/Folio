@@ -1,77 +1,45 @@
-# Folio
+# oztozlu.dev
 
-The personal site of İzzet Can Öztozlu, at [oztozlu.dev](https://oztozlu.dev): projects read from GitHub, games and interactive experiments that run in the page, and a CV, in English and Turkish, with four colour skins.
+The portfolio of İzzet Can Öztozlu, a full-stack developer: selected projects with a case study each, experience,
+skills, a CV viewer and a way to get in touch, in English and Turkish.
 
-[![Production](https://github.com/Contraill/Folio/actions/workflows/production.yml/badge.svg)](https://github.com/Contraill/Folio/actions/workflows/production.yml)
-
-## How it works
-
-```mermaid
-flowchart LR
-  repos["The owner's public<br/>GitHub repositories"] -- "read at build" --> actions["GitHub Actions<br/>check, build, test"]
-  apps["Game and lab<br/>repositories"] --> controller["Folio controller<br/>checks and publishes builds"]
-  controller -- "catalogue and builds" --> actions
-  actions -- "deploy" --> worker["Cloudflare Worker<br/>static pages, English or Turkish"]
-  worker --> visitor["oztozlu.dev"]
-```
-
-- Every page is static, built ahead of time with [Astro](https://astro.build), with React for the interactive parts. One Cloudflare Worker serves the build and picks English or Turkish for each visitor; there is no database and no server-side rendering.
-- Every public repository of the owner is a project, with no file or tag needed in the repository. Pinned repositories lead the home page. A sync rebuilds the site when GitHub changes, and skips the build when nothing did.
-- Games (`/play`) and experiments (`/lab`) are built in their own repositories, from public templates, and served by Folio itself.
+It is a static site built with [Astro](https://astro.build), with no client framework. Cloudflare serves the built
+files as they are (Workers static assets); there is no server code.
 
 ## Running it
 
-Requires Node 26 (`.node-version`) and pnpm 12.
+Requires Node 26 (`.node-version`) and pnpm (the version in `package.json`, through Corepack).
 
 ```sh
 pnpm install
-pnpm dev        # development server
-pnpm build      # GitHub data, static build, route list
-pnpm preview    # the build behind the language Worker, at http://localhost:4321
-pnpm check      # types and Astro diagnostics
-pnpm test       # unit tests
-pnpm test:e2e   # browser tests against the local build
+pnpm dev          # development server
+pnpm build        # the site in dist/
+pnpm preview      # dist/ served the way Cloudflare serves it, at http://127.0.0.1:4321
+pnpm check        # types
+pnpm test:e2e     # the browser suite in Chromium and Firefox (starts the preview if it isn't running)
 ```
 
-Without a `GITHUB_TOKEN`, the build uses the recorded GitHub data and two stand-in apps in `tests/fixtures`, so it works offline.
+Two scripts prepare files that are committed rather than built every time:
 
-## Layout
+- `pnpm cv` turns the CV PDFs in `public/cv/` into page images and a text layer for the CV viewer.
+- `pnpm og` draws the share images in `public/og/` (1200×630, one for the home page and one per project).
 
-```text
-src/
-  pages/        Routes, each built in English and Turkish ([...locale])
-  layouts/      Page shell
-  components/   Astro components and React islands
-  content/      Page copy and project write-ups, their schemas, and the rules that pick projects from GitHub
-  lib/          Motion, notched panels, client state, routing, the language Worker's logic
-  i18n/         Language negotiation and interface strings
-  styles/       Design system and the four skins
-  worker.ts     The language Worker
-scripts/        GitHub data before the build, route list and /_build.json after it, release and post-deploy checks
-public/         Fonts, images, the CV PDFs
-tests/          Browser tests, the recorded GitHub data and stand-in apps
-.github/        CI, Preview and Production workflows
-docs/           Technical documentation
-```
+## Where things are
 
-## Documentation
+| Path | What it holds |
+| --- | --- |
+| `src/data.ts` | Everything the site says outside the project write-ups, in both languages |
+| `src/content/projects/` | One folder per project: `en.md`, and `tr.md` with the Turkish text |
+| `src/components/`, `src/layouts/` | The pages' parts |
+| `src/scripts/` | What moves: the terminal, Mochi, the koi, the constellation |
+| `src/styles/global.css` | All styles |
+| `public/` | Images, fonts, the CV, share images, `_headers` and `robots.txt` |
+| `tests/e2e/` | The browser suite |
 
-- [Architecture](docs/architecture.md): how the parts work together, and the limits accepted on purpose
-- [Content model](docs/content-model.md): where everything the site says comes from
-- [Deployment](docs/deployment.md): workflows, secrets, tests, releasing and rolling back
+How to change the content: [docs/content.md](docs/content.md). How it is deployed: [docs/deployment.md](docs/deployment.md).
 
-Games, experiments and separate sites are made from three public templates, each with its own README: [folio-play-template](https://github.com/Contraill/folio-play-template), [folio-lab-template](https://github.com/Contraill/folio-lab-template) and [folio-site-template](https://github.com/Contraill/folio-site-template). The controller that publishes them is private.
+## License
 
-## Contributing
-
-This is a personal site, so it doesn't take new features, but bug reports and fixes are welcome. Pull requests into `main` run the CI checks; runs for outside contributors wait for the owner's approval.
-
-Please report a security problem privately, through *Security → Report a vulnerability* on this repository, not in an issue.
-
-## Licence
-
-The code is under the [MIT licence](LICENSE).
-
-The licence doesn't cover the site's content, which remains all rights reserved: the portrait (`public/assets/portrait.webp`), the CV (`public/cv/`), the project images (`public/assets/`), the copy and write-ups (`src/content/pages/`, `src/content/projects/`), and the İC monogram, favicon and icons. Please don't reuse them as your own.
-
-Third-party parts keep their own licences: the fonts Archivo, Geist, Geist Mono and Instrument Serif are self-hosted under the SIL Open Font License (`public/fonts/OFL.txt`), and the libraries in `package.json` under theirs (MIT, ISC and Apache-2.0).
+The code is under the [MIT License](LICENSE). The text, the CV, the portrait, the project screenshots and the share
+images are not: they describe me and my work, and may not be reused. The fonts are under the SIL Open Font License
+(`public/fonts/OFL.txt`).

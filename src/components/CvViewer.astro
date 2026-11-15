@@ -1,0 +1,57 @@
+---
+/* The CV, shown without a PDF library: each page is an image prepared by scripts/cv.mjs, with the page's text and
+   links laid over it in an SVG at their exact positions, so the text can be selected, searched with the browser's
+   find and read by a screen reader, and the links work. Both languages are in the page; the hidden one's images
+   load only when it is shown. Zoom changes the page width and lets the browser pick a sharper image. */
+import Icon from './Icon.astro';
+import en from '../cv/en.json';
+import tr from '../cv/tr.json';
+import { ui, type Locale } from '../data';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const t = ui[locale];
+const docs = { en, tr } as const;
+const langs = (locale === 'tr' ? ['tr', 'en'] : ['en', 'tr']) as Locale[];
+---
+<div class="cv" data-cv data-lang={locale}>
+  <div class="cv-bar">
+    <div class="seg" role="group" aria-label={t.cvLanguage}>
+      {langs.map((l) => <button type="button" data-cv-lang={l} aria-pressed={l === locale ? 'true' : 'false'} lang={l}>{ui[l].languages[l]}</button>)}
+    </div>
+    <div class="cv-zoom" role="group" aria-label={t.zoom}>
+      <button type="button" class="circle sm" data-cv-zoom="out" aria-label={t.zoomOut}>−</button>
+      <output class="cv-level" aria-live="polite">100%</output>
+      <button type="button" class="circle sm" data-cv-zoom="in" aria-label={t.zoomIn}>+</button>
+      <button type="button" class="chip-btn" data-cv-zoom="fit">{t.fit}</button>
+    </div>
+    <div class="cv-files">
+      {langs.map((l) => (
+        <span class="cv-file" data-for={l} hidden={l !== locale}>
+          <a class="btn btn-2 btn-sm" href={`/cv/${l}.pdf`} target="_blank" rel="noopener" type="application/pdf">{t.openPdf} <Icon name="out" /></a>
+          <a class="btn btn-1 btn-sm" href={`/cv/${l}.pdf`} download={`Izzet-Can-Oztozlu-CV-${l.toUpperCase()}.pdf`}>{t.downloadPdf} <Icon name="down" /></a>
+        </span>
+      ))}
+    </div>
+  </div>
+  <div class="cv-stage" tabindex="0" aria-label={t.cvTitle}>
+    {langs.map((l) => (
+      <div class="cv-doc" data-doc={l} lang={l} hidden={l !== locale}>
+        {docs[l].pages.map((page, i) => (
+          <div class="cv-page" style={`aspect-ratio: ${page.w} / ${page.h}`} role="document" aria-label={t.cvPage.replace('{lang}', ui[locale].languages[l]).replace('{n}', String(i + 1))}>
+            <img
+              src={`/cv/${l}-${i + 1}-${docs[l].widths[1]}.webp`}
+              srcset={docs[l].widths.map((w) => `/cv/${l}-${i + 1}-${w}.webp ${w}w`).join(', ')}
+              sizes="(max-width: 900px) 100vw, 860px"
+              width={docs[l].widths[1]} height={Math.round(docs[l].widths[1] * page.h / page.w)}
+              alt="" draggable="false" decoding="async" loading={l === locale && i === 0 ? 'eager' : 'lazy'} fetchpriority={l === locale && i === 0 ? 'high' : undefined} />
+            <svg class="cv-text" viewBox={`0 0 ${page.w} ${page.h}`} preserveAspectRatio="none">
+              {page.items.map((item) => <text x={item.x} y={item.y} font-size={item.f} textLength={item.w} lengthAdjust="spacingAndGlyphs">{item.s}</text>)}
+              {page.links.map((link) => <a href={link.url} target={link.url.startsWith('mailto:') ? undefined : '_blank'} rel="noreferrer" aria-label={link.url.replace(/^(mailto:|https?:\/\/)/, '')}><rect x={link.x} y={link.y} width={link.w} height={link.h} /></a>)}
+            </svg>
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+</div>

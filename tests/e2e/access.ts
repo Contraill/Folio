@@ -33,7 +33,7 @@ const accessPages: string[] = [];
 
 async function authorize(context: BrowserContext) {
   if (headers) await context.route((url) => url.host === host, (route) => route.fallback({ headers: { ...route.request().headers(), ...headers } }));
-  // Access marks its own login and refusal pages; Folio's responses never carry this header.
+  // Access marks its own login and refusal pages; the site's responses never carry this header.
   context.on('response', (response) => { if (response.headers()['cf-access-aud']) accessPages.push(`${response.status()} ${response.url()}`); });
   return context;
 }
@@ -56,7 +56,7 @@ export const test = base.extend<{ accessGuard: void }>({
   accessGuard: [async ({}, use) => {
     accessPages.length = 0;
     await use();
-    expect(accessPages, 'Cloudflare Access answered instead of Folio').toEqual([]);
+    expect(accessPages, 'Cloudflare Access answered instead of the site').toEqual([]);
   }, { auto: true }],
 });
 

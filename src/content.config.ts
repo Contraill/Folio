@@ -1,9 +1,8 @@
-/* Content collections. Files are checked against src/content/schema.ts by src/content/load.ts, which keeps them as
-   written; a file that doesn't fit stops the build. */
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+/* Project write-ups, one folder per project with en.md and tr.md (frontmatter only). tr.md holds just what is
+   translated and is laid over en.md. */
 export const collections = {
-  pages: defineCollection({ loader: glob({ pattern: '*/{en,tr}.md', base: './src/content/pages' }) }),
   projects: defineCollection({ loader: glob({ pattern: '*/{en,tr}.md', base: './src/content/projects' }) }),
 };

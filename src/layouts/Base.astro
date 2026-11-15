@@ -1,75 +1,116 @@
 ---
 import { ClientRouter } from 'astro:transitions';
-import Footer from '@/components/Footer.astro';
-import Toasts from '@/components/Toasts';
-import Topbar from '@/components/Topbar';
-import { messages } from '@/i18n/messages';
-import { PREPAINT } from '@/lib/prepaint';
-import '@/styles/reset.css';
-import '@/styles/fonts.css';
-import '@/styles/tokens.css';
-import '@/styles/site.css';
-import '@/styles/motion.css';
-import '@/styles/pages.css';
-import '@/styles/ui.css';
-import '@/styles/adaptations.css';
+import '../styles/global.css';
+import Mark from '../components/Mark.astro';
+import Mochi from '../components/Mochi.astro';
+import { localePath, ui, type Locale } from '../data';
 
 interface Props {
+  locale: Locale;
+  /** This page's address without the language prefix, e.g. "/" or "/projects/helios". */
+  path: string;
+  /** The menu entry to mark as current on pages other than home ("work" on a project, "cv" on the CV). */
+  section?: 'work' | 'cv';
   title?: string;
   description?: string;
-  /** Unlisted and error pages stay out of search engines. */
+  /** The share image (1200×630, from `pnpm og`), as a path; the home page's by default. */
+  image?: string;
+  /** schema.org data for search engines, written into the page as JSON-LD. */
+  schema?: object;
+  /** Kept out of search results, with no canonical address (the 404 pages). */
   noindex?: boolean;
-  /** Repository of the project on this page, for the top bar's link. */
-  repo?: string;
 }
-
-const locale = Astro.locals.locale;
-const t = messages[locale];
-const { title, description = t.description, noindex = false, repo } = Astro.props;
-const fullTitle = title ? `${title} · İzzet Can` : t.title;
-
-// One clean address per page, the same in both languages: the language Worker picks the version per visitor.
-const canonical = new URL(Astro.locals.path, Astro.site);
-
-const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PREPAINT));
-Astro.csp?.insertScriptHash(`sha256-${btoa(String.fromCharCode(...new Uint8Array(digest)))}`);
+const { locale, path, section, title, description, image, schema, noindex = false } = Astro.props;
+const t = ui[locale];
+const other: Locale = locale === 'en' ? 'tr' : 'en';
+const home = localePath(locale, '/');
+const fullTitle = title ? `${title} · İzzet Can Öztozlu` : t.title;
+const url = (l: Locale) => new URL(localePath(l, path), Astro.site).href;
+const shareImage = new URL(image ?? `/og/home-${locale}.png`, Astro.site).href;
+// The same page in the other language; from a 404 page, the other language's home.
+const otherHref = localePath(other, noindex ? '/' : path);
+const links = [
+  { key: 'work', href: `${home}#work` },
+  { key: 'experience', href: `${home}#experience` },
+  { key: 'about', href: `${home}#about` },
+  { key: 'cv', href: localePath(locale, '/cv') },
+] as const;
 ---
 <!doctype html>
-<html lang={locale} data-skin="graphite">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0f0f10" />
     <title>{fullTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={description ?? t.description} />
     <meta name="author" content="İzzet Can Öztozlu" />
-    {noindex && <meta name="robots" content="noindex" />}
-    <link rel="canonical" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex" /> : (
+      <>
+        <link rel="canonical" href={url(locale)} />
+        <link rel="alternate" hreflang="en" href={url('en')} />
+        <link rel="alternate" hreflang="tr" href={url('tr')} />
+        <link rel="alternate" hreflang="x-default" href={url('en')} />
+      </>
+    )}
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
-    <link rel="icon" href="/icons/graphite.svg" type="image/svg+xml" data-skin-icon />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin />
+    <meta name="theme-color" content="#0b0c0e" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="İzzet Can Öztozlu" />
     <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    <meta property="og:description" content={description ?? t.description} />
+    {!noindex && <meta property="og:url" content={url(locale)} />}
+    <meta property="og:image" content={shareImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={fullTitle} />
     <meta property="og:locale" content={locale === 'tr' ? 'tr_TR' : 'en_US'} />
-    <meta name="twitter:card" content="summary" />
-    <script is:inline set:html={PREPAINT}></script>
-    <ClientRouter fallback="swap" />
+    <meta property="og:locale:alternate" content={locale === 'tr' ? 'en_US' : 'tr_TR'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {schema && <script type="application/ld+json" set:html={JSON.stringify(schema).replace(/</g, '\\u003c')} />}
+    <script is:inline>
+      // First visit only: a browser that prefers Turkish over English gets the Turkish page. A choice made with the
+      // language link is remembered and always wins, and crawlers (which ask for neither) keep the English address.
+      (() => {
+        document.documentElement.classList.add('js');
+        try {
+          document.addEventListener('click', (e) => { const a = e.target.closest && e.target.closest('[data-lang-switch]'); if (a) localStorage.setItem('lang', a.dataset.langSwitch); }, true);
+          if (localStorage.getItem('lang') || location.pathname.startsWith('/tr')) return;
+          const first = (navigator.languages || [navigator.language]).map((l) => String(l).slice(0, 2).toLowerCase()).find((l) => l === 'tr' || l === 'en');
+          if (first === 'tr') location.replace('/tr' + (location.pathname === '/' ? '' : location.pathname) + location.search + location.hash);
+        } catch (e) {}
+      })();
+    </script>
+    <ClientRouter fallback="animate" />
   </head>
-  <body>
+  <body data-section={section}>
     <a class="skip" href="#main">{t.skip}</a>
-    <div class="frame" id="top">
-      <Topbar client:load transition:persist="topbar" transition:persist-props t={t} path={Astro.locals.path} repo={repo} locale={locale} />
-      <main id="main" tabindex="-1" data-repo={repo}><slot /></main>
-      <Footer />
-    </div>
-    <div id="overlays" transition:persist="overlays"><Toasts client:idle /></div>
+    <header class:list={['top', { 'over-hero': path === '/' }]}>
+      <a class="brand" href={home} aria-label={`${t.home}, İzzet Can Öztozlu`}><Mark /><span>İzzet Can</span></a>
+      <nav class="nav" aria-label={t.navLabel} data-nav>
+        <span class="nav-hover" aria-hidden="true"></span>
+        <span class="nav-pill" aria-hidden="true"></span>
+        {links.map((l) => <a href={l.href} data-key={l.key} data-cv-link={l.key === 'cv' ? '' : undefined}>{t.nav[l.key]}</a>)}
+        <span class="nav-progress" aria-hidden="true"></span>
+      </nav>
+      <div class="tools">
+        <a class="lang" href={otherHref} hreflang={other} lang={other} aria-label={`${other.toUpperCase()}, ${t.language}`} data-astro-reload data-lang-switch={other}>{other.toUpperCase()}</a>
+        <a class="btn btn-1 btn-sm" href={`${home}#contact`}>{t.contactButton}</a>
+      </div>
+    </header>
+    <main id="main" tabindex="-1"><slot /></main>
+    <div class="dock" transition:persist="dock" data-dock><Mochi label={t.petLabel} /></div>
+    <footer class="foot">
+      <span>© {new Date().getFullYear()} İzzet Can Öztozlu</span>
+      <a href={otherHref} hreflang={other} lang={other} data-astro-reload data-lang-switch={other}>{t.language}</a>
+      <a href="#main" data-to-top>{t.back} ↑</a>
+    </footer>
     <script>
-      import '@/lib/shell';
+      import '../scripts/site.ts';
     </script>
   </body>
 </html>

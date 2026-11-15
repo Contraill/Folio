@@ -1,0 +1,7 @@
+---
+import ProjectPage from '../../../components/ProjectPage.astro';
+import { caseOrder } from '../../../data';
+
+export const getStaticPaths = () => caseOrder.map((id) => ({ params: { id } }));
+---
+<ProjectPage locale="tr" id={Astro.params.id} />

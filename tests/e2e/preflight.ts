@@ -1,4 +1,4 @@
-/* Against a deployed site, before any test: proves that it answers with Folio itself and, when FOLIO_EXPECTED_SHA is
+/* Against a deployed site, before any test: proves that it answers with the site itself and, when FOLIO_EXPECTED_SHA is
    set (CI), that it serves that commit. The Preview sits behind Access, so there it also proves that the service
    token gets through; production (oztozlu.dev) is open and needs none. If anything fails, no test runs and this one
    error says why. It never prints the token, only what is wrong with its shape. */
@@ -18,7 +18,7 @@ export default async function preflight() {
   if (home.headers.has('cf-access-aud') || /\.cloudflareaccess\.com$/.test(location && new URL(location, base).host))
     fail(`Cloudflare Access answered HTTP ${home.status} instead of the site: it did not accept the service token. ${shapeOf(id, secret)}`);
   const html = await home.text();
-  if (home.status !== 200 || !html.includes('<main id="main"')) fail(`expected the Folio home page, got HTTP ${home.status} (${home.headers.get('content-type')}).`);
+  if (home.status !== 200 || !html.includes('<main id="main"')) fail(`expected the home page, got HTTP ${home.status} (${home.headers.get('content-type')}).`);
 
   const expected = process.env.FOLIO_EXPECTED_SHA;
   if (!expected) return;

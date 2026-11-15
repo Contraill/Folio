@@ -1,0 +1,18 @@
+---
+/* Mochi, my ESP32 desk companion, as a small face. Like the real one it answers a poke (a smile), petting
+   (stroke it with the pointer: hearts) and being poked or shaken too much (dizzy); see src/scripts/site.ts.
+   A button, so it can be poked from the keyboard too. */
+interface Props { label: string; big?: boolean; /** A mood to start in (the 404 page’s Mochi is dizzy). */ mood?: 'dizzy' }
+const { label, big = false, mood } = Astro.props;
+---
+<button type="button" class:list={['mochi', { big }, mood && `is-${mood}`]} aria-label={label} data-mochi>
+  <svg viewBox="0 0 128 64" aria-hidden="true">
+    <g class="look">
+      <g class="eyes"><rect x="38" y="18" width="16" height="24" rx="3" /><rect x="74" y="18" width="16" height="24" rx="3" /></g>
+      <g class="happy"><path d="M37 34 46 25 55 34" /><path d="M73 34 82 25 91 34" /></g>
+      <g class="love"><circle cx="41.8" cy="27" r="4.6" /><circle cx="50.2" cy="27" r="4.6" /><path d="M37.4 28.6 46 38.5 54.6 28.6Z" /><circle cx="77.8" cy="27" r="4.6" /><circle cx="86.2" cy="27" r="4.6" /><path d="M73.4 28.6 82 38.5 90.6 28.6Z" /></g>
+      <g class="dizzy"><path d="M39 23 53 37M53 23 39 37" /><path d="M75 23 89 37M89 23 75 37" /></g>
+    </g>
+    <rect class="mouth" x="59" y="48" width="10" height="3" rx="1.5" />
+  </svg>
+</button>

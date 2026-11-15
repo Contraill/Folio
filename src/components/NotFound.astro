@@ -1,0 +1,80 @@
+---
+/* The 404 page, as a session in the site's terminal: the address that was asked for fails as a `cd`, a near miss
+   gets a "did you mean", and `ls ~/projects` lists where to go instead. Mochi is dizzy in the middle of the hero's
+   constellation. Cloudflare serves the nearest 404.html (wrangler.jsonc), so addresses under /tr get the Turkish one. */
+import Base from '../layouts/Base.astro';
+import Icon from './Icon.astro';
+import Mochi from './Mochi.astro';
+import { caseOrder, localePath, ui, type Locale } from '../data';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const t = ui[locale], n = t.notFound;
+const home = localePath(locale, '/');
+const dirs = [...caseOrder.map((id) => ({ name: id, href: localePath(locale, `/projects/${id}`) })), { name: 'cv', href: localePath(locale, '/cv') }];
+// What a mistyped address is compared with: each page's last part, the repository names people may try, and the
+// home page's sections by their names in either language.
+const pages = [
+  ...dirs.map((d) => ({ keys: [d.name], href: d.href })),
+  { keys: ['breast-cancer-tracker'], href: localePath(locale, '/projects/bct') },
+  { keys: ['nothing-kde-theme', 'nothing-kde'], href: localePath(locale, '/projects/nothing') },
+  { keys: ['projects', 'projeler', 'work'], href: `${home}#work` },
+  { keys: ['experience', 'deneyim'], href: `${home}#experience` },
+  { keys: ['about', 'hakkimda', 'hakkımda'], href: `${home}#about` },
+  { keys: ['contact', 'iletisim', 'iletişim'], href: `${home}#contact` },
+];
+---
+<Base locale={locale} path="/404" title={n.title} noindex>
+  <section class="slab pad lost">
+    <canvas class="sky" aria-hidden="true"></canvas>
+    <div class="lost-text">
+      <p class="lost-code" aria-hidden="true">{[...'404'].map((d, i) => <span style={`--i: ${i}`}>{d}</span>)}</p>
+      <h1>{n.heading}</h1>
+      <div class="lost-term" role="note">
+        <p class="l" style="--l: 0"><span class="chevron" aria-hidden="true">❯</span> cd <span data-path></span></p>
+        <p class="l lost-err" style="--l: 1">{n.error} <span data-path></span></p>
+        <p class="l lost-hint" style="--l: 2" data-suggest={JSON.stringify(pages)} hidden>{n.suggest[0]} <a href={home} data-suggest-link></a>{n.suggest[1]}</p>
+        <p class="l" style="--l: 3"><span class="chevron" aria-hidden="true">❯</span> ls ~/projects</p>
+        <p class="l lost-ls" style="--l: 4">{dirs.map((d) => <a href={d.href}>{d.name}/</a>)}</p>
+        <p class="l" style="--l: 5"><span class="chevron" aria-hidden="true">❯</span> <span class="lost-caret" aria-hidden="true"></span></p>
+      </div>
+      <p class="lost-note">{n.note}</p>
+      <div class="actions">
+        <a class="btn btn-1" href={home}><span>{t.home}</span> <Icon name="arrow" /></a>
+        <a class="btn btn-2" href={`${home}#work`}><span>{n.projects}</span></a>
+        <a class="btn btn-2" href={localePath(locale, '/cv')}><span>CV</span></a>
+      </div>
+    </div>
+    <div class="lost-pet"><Mochi label={t.mochi} big mood="dizzy" /></div>
+  </section>
+  <script is:inline>
+    (() => {
+      // The address that wasn't found, where the terminal prints it.
+      const here = decodeURI(location.pathname);
+      document.querySelectorAll('[data-path]').forEach((el) => { el.textContent = here; });
+      // A near miss of a page's name (two typos in a short one, more in a longer one) gets a "did you mean".
+      const hint = document.querySelector('[data-suggest]');
+      const typed = here.toLowerCase().replace(/\/+$/, '').split('/').pop() || '';
+      if (!hint || !typed) return;
+      const distance = (a, b) => {
+        let row = Array.from({ length: b.length + 1 }, (_, j) => j);
+        for (let i = 1; i <= a.length; i++) {
+          const next = [i];
+          for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+          row = next;
+        }
+        return row[b.length];
+      };
+      let best = null, score = Infinity;
+      for (const page of JSON.parse(hint.dataset.suggest)) for (const key of page.keys) {
+        const d = key.startsWith(typed) && typed.length > 2 ? 0 : distance(typed, key);
+        if (d < score) { score = d; best = page; }
+      }
+      if (!best || score > Math.max(2, Math.floor(typed.length / 3))) return;
+      const link = hint.querySelector('[data-suggest-link]');
+      link.href = best.href;
+      link.textContent = best.href;
+      hint.hidden = false;
+    })();
+  </script>
+</Base>

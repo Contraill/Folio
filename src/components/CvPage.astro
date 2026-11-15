@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import CvViewer from './CvViewer.astro';
+import { ui, type Locale } from '../data';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const t = ui[locale];
+---
+<Base locale={locale} path="/cv" section="cv" title={t.cvTitle} description={t.cvNote}>
+  <section class="slab pad cv-page-wrap" aria-labelledby="cv-h">
+    <h1 id="cv-h" class="title">{t.cvTitle}</h1>
+    <p class="cv-note">{t.cvNote}</p>
+    <CvViewer locale={locale} />
+  </section>
+</Base>
