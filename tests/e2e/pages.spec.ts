@@ -14,6 +14,9 @@ for (const [name, viewport] of [['desktop', { width: 1440, height: 900 }], ['pho
       await page.goto(path);
       // Through the page, so lazy images and everything that reveals itself on scroll has appeared.
       await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 30)); } });
+      // Leaving while a lazy image still loads makes Firefox report it as corrupt, so the ones that started finish first
+      // (the CV's other language never starts: its images load only when it is shown).
+      await page.waitForFunction(() => [...document.images].every((img) => img.complete || !img.currentSrc), undefined, { timeout: 15_000 });
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       expect(overflow, `${path} is wider than the screen`).toBeLessThanOrEqual(1);
     }
