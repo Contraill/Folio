@@ -2,7 +2,6 @@
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import Mark from '../components/Mark.astro';
-import Mochi from '../components/Mochi.astro';
 import { localePath, ui, type Locale } from '../data';
 
 interface Props {
@@ -103,7 +102,6 @@ const links = [
       </div>
     </header>
     <main id="main" tabindex="-1"><slot /></main>
-    <div class="dock" transition:persist="dock" data-dock><Mochi label={t.petLabel} /></div>
     <footer class="foot">
       <span>© {new Date().getFullYear()} İzzet Can Öztozlu</span>
       <a href={otherHref} hreflang={other} lang={other} data-astro-reload data-lang-switch={other}>{t.language}</a>

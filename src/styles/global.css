@@ -473,7 +473,7 @@ html.js .fetch:not(.in) .fetch-row { opacity: 0; }
 /* fastfetch prints the first box right under the title, with no empty line. */
 .fetch-title + .fetch-box { margin-top: 12px; }
 
-/* =================== the terminal, Mochi following along =================== */
+/* =================== the terminal and Mochi's moods =================== */
 /* The terminal under the fastfetch readout: the prompt that follows it, as in a real terminal. */
 .fetch-cmd { color: var(--ink); font-weight: 700; margin-bottom: 4px; }
 .fetch-cmd .chevron, .term-line .chevron { color: var(--ink); }
@@ -500,22 +500,11 @@ html.js .fetch:not(.in) .fetch-row { opacity: 0; }
 .term-in:focus-visible { outline: none; }
 .term-line:has(.term-in:focus-visible) { box-shadow: 0 1px 0 var(--sun); }
 
-/* Mochi following along in the corner. */
-.dock { position: fixed; right: 18px; bottom: 18px; z-index: 45; padding: 10px; border-radius: 20px; background: var(--slab); box-shadow: var(--raise), 0 18px 40px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(140%) scale(.8); pointer-events: none; transition: transform .7s var(--spring), opacity .4s var(--ease); }
-.dock.show { opacity: 1; transform: none; pointer-events: auto; }
-.dock .mochi { width: 92px; }
 .mochi { position: relative; }
 .mochi .eyes rect { transition: transform .35s var(--ease); }
-.mochi.is-sleep .eyes rect { transform: scaleY(.14); animation: none; }
-.mochi.is-sleep .look { transform: translate(0, 5px); }
-.mochi.is-sleep::after { content: 'z'; position: absolute; right: 6px; top: -10px; font: 700 15px var(--fm); color: var(--glint); animation: doze 2.4s ease-in-out infinite; }
-@keyframes doze { 0% { opacity: 0; transform: translate(0, 8px) scale(.6); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(12px, -18px) scale(1.25); } }
 @media (max-width: 760px) {
-  .dock { right: 10px; bottom: 10px; padding: 7px; border-radius: 16px; }
-  .dock .mochi { width: 66px; }
   .term-out { max-height: 180px; }
 }
-@media (prefers-reduced-motion: reduce) { .mochi.is-sleep::after { animation: none; opacity: 1; } }
 
 /* Mochi's other moods, as on the real device. */
 .mochi .love { opacity: 0; stroke: none; }
@@ -599,7 +588,6 @@ html.js .pet { opacity: 0; animation: drop 1s var(--spring) .7s forwards, float 
   .timeline > li::before { left: -24px; top: 4px; width: 10px; height: 10px; }
   .timeline > li + li::before { top: 14px; }
   .dots li { font-size: 15px; }
-  .dock { display: none; }
 }
 
 /* The contact heading is drawn in koi food by scripts/aquarium.ts; the text keeps its place, invisible, for screen readers. */

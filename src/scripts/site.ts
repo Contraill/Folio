@@ -220,7 +220,7 @@ document.addEventListener('astro:page-load', () => {
   // A poke makes it smile; five quick pokes make it dizzy; stroking it back and forth with the pointer, hearts.
   const moodTimers = new WeakMap<HTMLElement, number>();
   const setMood = (face: HTMLElement, mood: 'happy' | 'love' | 'dizzy', ms: number) => {
-    face.classList.remove('is-happy', 'is-love', 'is-dizzy', 'is-sleep');
+    face.classList.remove('is-happy', 'is-love', 'is-dizzy');
     void face.offsetWidth;
     face.classList.add(`is-${mood}`);
     clearTimeout(moodTimers.get(face));
@@ -308,33 +308,8 @@ document.addEventListener('astro:page-load', () => {
   };
   document.querySelectorAll('[data-cv-link]').forEach((a) => ['pointerenter', 'focus', 'touchstart'].forEach((type) => a.addEventListener(type, warm, { signal, passive: true })));
 
-  /* ---------- the terminal, and Mochi following along ---------- */
+  /* ---------- the terminal ---------- */
   document.querySelectorAll<HTMLFormElement>('[data-term]').forEach((form) => startTerminal(form, signal));
-
-  const dock = document.querySelector<HTMLElement>('[data-dock]');
-  const pet = dock?.querySelector<HTMLElement>('.mochi');
-  if (dock && pet) {
-    // On the home page Mochi joins once its own spot in the hero has scrolled away; elsewhere it is simply there.
-    const home = document.querySelector('.hero .pet');
-    if (home) {
-      const away = new IntersectionObserver(([e]) => dock.classList.toggle('show', !e.isIntersecting));
-      away.observe(home);
-      signal.addEventListener('abort', () => away.disconnect());
-    } else dock.classList.add('show');
-    // It dozes off when nothing happens for a while, and wakes as soon as something does.
-    let idle = 0;
-    const wake = () => { pet.classList.remove('is-sleep'); clearTimeout(idle); idle = window.setTimeout(() => pet.classList.add('is-sleep'), 14000); };
-    for (const type of ['pointermove', 'scroll', 'keydown', 'touchstart'] as const) addEventListener(type, wake, { passive: true, signal });
-    wake();
-    signal.addEventListener('abort', () => clearTimeout(idle));
-    // It likes the work.
-    document.querySelectorAll('.card, .principles li, .fetch').forEach((el) => el.addEventListener('pointerenter', () => {
-      pet.classList.remove('is-happy');
-      void pet.offsetWidth;
-      pet.classList.add('is-happy');
-      window.setTimeout(() => pet.classList.remove('is-happy'), 1200);
-    }, { signal }));
-  }
 
   /* ---------- the hero's background: the stack as a constellation round Mochi ---------- */
   document.querySelectorAll<HTMLCanvasElement>(':is(.hero, .lost) canvas.sky').forEach((canvas) => {

@@ -54,7 +54,6 @@ export const ui = {
     cvPage: 'CV in {lang}, page {n}',
     languages: { en: 'English', tr: 'Türkçe' },
     feedHint: 'Press the water around this card to feed the koi.',
-    petLabel: 'Mochi, following along. Press to poke it.',
     notFound: { title: 'Not found', heading: 'This page doesn’t exist.', error: 'cd: no such file or directory:', note: 'It may have moved, or there’s a typo in the address.', projects: 'Projects', suggest: ['fish: Did you mean', '?'] },
   },
   tr: {
@@ -104,7 +103,6 @@ export const ui = {
     cvPage: 'CV ({lang}), sayfa {n}',
     languages: { en: 'İngilizce', tr: 'Türkçe' },
     feedHint: 'Koi balıklarını beslemek için kartın boş bir yerine tıklayın.',
-    petLabel: 'Mochi sizi takip ediyor. Dürtmek için tıklayın.',
     notFound: { title: 'Sayfa bulunamadı', heading: 'Bu sayfa yok.', error: 'cd: böyle bir dosya ya da dizin yok:', note: 'Taşınmış olabilir ya da adreste bir yazım hatası var.', projects: 'Projeler', suggest: ['fish: Bunu mu demek istediniz:', '?'] },
   },
 } as const;
