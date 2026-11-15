@@ -1,8 +1,6 @@
 allowBuilds:
   esbuild: true
   workerd: true
-patchedDependencies:
-  '@astrojs/react': patches/@astrojs__react.patch
-# pdf.js renders in the browser; its optional Node canvas (a native binary) is never needed here.
+# pdf.js runs only in scripts/cv.mjs; its optional Node canvas (a native binary) is never needed.
 ignoredOptionalDependencies:
   - '@napi-rs/canvas'

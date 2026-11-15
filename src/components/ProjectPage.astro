@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from './Icon.astro';
+import Mochi from './Mochi.astro';
+import { caseOrder, featured, localePath, ui, type Locale } from '../data';
+import { loadProjects, repoUrl } from '../lib/projects';
+import { projectSchema } from '../lib/schema';
+
+interface Props { locale: Locale; id: string }
+const { locale, id } = Astro.props;
+const t = ui[locale];
+const projects = await loadProjects(locale);
+const p = projects.get(id)!;
+const study = p.case!;
+const kicker = featured.find((f) => f.id === id)?.kicker[locale] ?? p.lang;
+const next = projects.get(caseOrder[(caseOrder.indexOf(id) + 1) % caseOrder.length])!;
+const cover = p.hero ?? p.img;
+const code = repoUrl(p);
+const image = `/og/${id}-${locale}.png`;
+---
+<Base locale={locale} path={`/projects/${id}`} section="work" title={p.name} description={p.desc} image={image} schema={projectSchema(locale, p, new URL(image, Astro.site).href)}>
+  <article class="case">
+    <header class="slab pad case-head">
+      <a class="text-link back" href={`${localePath(locale, '/')}#work`}><span class="flip"><Icon name="arrow" /></span> {t.allWork}</a>
+      <p class="kicker">{kicker}, {p.since}</p>
+      <h1 class="case-title">{p.name}</h1>
+      <p class="lede">{study.lede}</p>
+      <div class="actions">
+        {p.home && <a class="btn btn-1" href={p.home} target="_blank" rel="noreferrer"><span>{t.live}</span> <Icon name="out" /></a>}
+        {code && <a class:list={['btn', p.home ? 'btn-2' : 'btn-1']} href={code} target="_blank" rel="noreferrer"><span>{t.code}</span> <Icon name="github" /></a>}
+      </div>
+      <p class="stackline"><span>{t.stack}</span> {study.stack}</p>
+    </header>
+
+    <div class="slab case-cover" transition:name={`media-${p.id}`}>
+      {cover
+        ? <img src={cover.src} width={cover.w} height={cover.h} alt="" fetchpriority="high" style={p.pos ? `object-position: ${p.pos}` : undefined} />
+        : <div class="card-pet"><Mochi label={t.mochi} big /></div>}
+    </div>
+
+    {study.facts && (
+      <div class="slab pad facts">
+        {study.facts.map(([n, label], i) => <div data-reveal style={`--d: ${i}`}><b data-count={n}>{n}</b><span>{label}</span></div>)}
+      </div>
+    )}
+
+    <div class="slab pad case-body">
+      {study.sections.map((s) => (
+        <section class:list={['case-sec', { wide: !!s.gal }]} data-reveal>
+          <h2>{s.title}</h2>
+          <div>
+            {s.paras?.map((para) => <p>{para}</p>)}
+            {s.list && <dl class="facts-list">{s.list.map(([k, v]) => <><dt>{k}</dt><dd>{v}</dd></>)}</dl>}
+            {s.gal && (
+              <div class="gallery">
+                {s.gal.map(([img, caption], i) => (
+                  <figure data-reveal style={`--d: ${i}`}><img src={img.src} width={img.w} height={img.h} alt={caption} loading="lazy" decoding="async" /><figcaption>{caption}</figcaption></figure>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <a class="slab pad next" href={localePath(locale, `/projects/${next.id}`)}>
+      <span class="kicker">{t.next}</span>
+      <span class="next-name">{next.name} <Icon name="arrow" /></span>
+      <span class="card-desc">{next.desc}</span>
+    </a>
+  </article>
+</Base>
