@@ -10,5 +10,7 @@
     "not_found_handling": "404-page"
   },
   "workers_dev": false,
-  "preview_urls": true
+  "preview_urls": true,
+  // `wrangler preview` (the Preview of develop) requires this block; the Preview uses the settings above as they are.
+  "previews": {}
 }
