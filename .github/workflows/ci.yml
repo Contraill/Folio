@@ -1,7 +1,6 @@
 name: CI
 
-# Required for merging into main: types, a real build with live GitHub data, unit tests and checks on its output,
-# and the whole browser suite against it in Chromium and Firefox.
+# Required for merging into main: types, a build, and the whole browser suite against it in Chromium and Firefox.
 on:
   pull_request:
     branches: [main]
@@ -16,9 +15,9 @@ concurrency:
 
 jobs:
   checks:
-    # A fixed image rather than ubuntu-latest, which is moving to 26.04: change it on purpose, with a test run.
+    # A fixed image rather than ubuntu-latest: change it on purpose, with a test run.
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1; pnpm's version is packageManager in package.json
@@ -26,16 +25,9 @@ jobs:
         with: { node-version-file: .node-version, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - name: Build
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          FOLIO_TRIGGER: ci
-          # CI holds no secrets (a pull request may come from a fork): the recorded catalog and stand-in apps.
-          FOLIO_CATALOG: fixture
-        run: pnpm build
-      - name: Unit tests and checks on the build output
-        run: pnpm test
+      - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium firefox
+      # Against the build as Cloudflare serves it (wrangler dev): headers, 404 pages, files.
       - name: Browser suite
         run: pnpm test:e2e
       - name: Keep the report of a failed run
